@@ -9,7 +9,6 @@ data/
 
 # Claude Code (personal settings)
 .claude/
-CLAUDE.md
 
 # Python
 __pycache__/
