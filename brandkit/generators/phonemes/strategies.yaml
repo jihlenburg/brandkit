@@ -1,0 +1,900 @@
+# Phoneme Generation Strategies & Sound Psychology
+# ================================================
+# Shared configuration for all generators.
+# Contains phonotactics, sound symbolism, and generation strategies.
+
+# =============================================================================
+# Sound Symbolism (Brand Psychology)
+# =============================================================================
+# Research shows certain sounds evoke specific associations.
+# Reference: Sound symbolism studies (Klink, 2000; Yorkston & Menon, 2004)
+
+sound_symbolism:
+  # Plosives/stops - convey power, strength, decisiveness
+  power:
+    consonants: [k, t, p, d, b, g]
+    associations: ["strength", "power", "decisive", "bold", "impact"]
+    suitable_for: ["energy products", "automotive", "tools", "sports"]
+
+  # Fricatives - convey sophistication, smoothness
+  sophistication:
+    consonants: [f, v, s, z, sh, th]
+    associations: ["smooth", "elegant", "refined", "sleek"]
+    suitable_for: ["luxury", "cosmetics", "finance", "fashion"]
+
+  # Liquids - convey fluidity, ease, naturalness
+  flow:
+    consonants: [l, r]
+    associations: ["flowing", "natural", "easy", "organic"]
+    suitable_for: ["beverages", "wellness", "eco-products", "travel"]
+
+  # Nasals - convey warmth, comfort
+  warmth:
+    consonants: [m, n, ng]
+    associations: ["comfortable", "warm", "familiar", "home"]
+    suitable_for: ["food", "home products", "family brands"]
+
+  # Front vowels - perceived as smaller, lighter, faster
+  lightness:
+    vowels: [e, i]
+    associations: ["fast", "light", "small", "sharp", "modern"]
+    suitable_for: ["tech", "speed", "compact products"]
+
+  # Back vowels - perceived as larger, heavier, slower
+  weight:
+    vowels: [o, u, a]
+    associations: ["big", "heavy", "slow", "solid", "powerful"]
+    suitable_for: ["automotive", "heavy equipment", "luxury"]
+
+# =============================================================================
+# Phonotactic Rules
+# =============================================================================
+# Rules for what sound combinations are allowed/preferred
+
+phonotactics:
+  # Initial consonant clusters (can start a word)
+  onset_clusters:
+    allowed:
+      - [s, t]    # st-
+      - [s, k]    # sk-
+      - [s, p]    # sp-
+      - [t, r]    # tr-
+      - [k, r]    # kr-
+      - [p, r]    # pr-
+      - [b, r]    # br-
+      - [d, r]    # dr-
+      - [g, r]    # gr-
+      - [f, r]    # fr-
+      - [k, l]    # kl-
+      - [p, l]    # pl-
+      - [b, l]    # bl-
+      - [g, l]    # gl-
+      - [f, l]    # fl-
+    discouraged:  # Hard for German/English speakers
+      - [zh]
+      - [cz]
+      - [sz]
+      - [dz]
+      - [ts]     # at start
+      - [pf]     # complex in English
+
+  # Final consonant clusters (can end a word)
+  coda_clusters:
+    allowed:
+      - [s, t]    # -st
+      - [n, t]    # -nt
+      - [n, d]    # -nd
+      - [l, t]    # -lt
+      - [r, t]    # -rt
+      - [x]       # -x
+      - [s]       # -s
+      - [n]       # -n
+    discouraged:
+      - [k, s, t] # too complex
+      - [m, p, s] # too complex
+      - [tsch]    # German-only
+
+  # What consonants can follow vowels
+  vowel_followers:
+    after_a: [b, c, d, f, g, k, l, m, n, p, r, s, t, v, x, z]
+    after_e: [b, c, d, f, g, k, l, m, n, p, r, s, t, v, x]
+    after_i: [c, d, f, g, k, l, m, n, p, r, s, t, x, z]
+    after_o: [b, d, g, k, l, m, n, p, r, s, t, x]
+    after_u: [b, d, g, k, l, m, n, p, r, s, t]
+
+# =============================================================================
+# Vowel Harmony (Turkic languages)
+# =============================================================================
+vowel_harmony:
+  # Back vowels go together
+  back_vowels: [a, o, u]
+  # Front vowels go together
+  front_vowels: [e, i]
+  # Rounded vowels
+  rounded: [o, u]
+  # Unrounded vowels
+  unrounded: [a, e, i]
+
+  # If first vowel is back, subsequent should be back
+  rules:
+    - name: "palatal harmony"
+      description: "Front/back vowels should match within a word"
+      strength: 0.7  # 70% enforcement
+
+    - name: "labial harmony"
+      description: "Rounded/unrounded should tend to match"
+      strength: 0.5  # 50% enforcement
+
+# =============================================================================
+# Syllable Patterns
+# =============================================================================
+syllables:
+  # Common syllable structures (C=consonant, V=vowel)
+  patterns:
+    simple:
+      - CV        # ta, ko, me
+      - CVC       # tan, kor, mel
+      - VC        # at, ok, em
+    complex:
+      - CCV       # tra, kro, bla
+      - CCVC      # tran, kros, blast
+      - CVCC      # kost, mark, belt
+
+  # Weight classes (affects rhythm/stress)
+  weight:
+    light: [V, CV]           # Short, unstressed
+    heavy: [VC, CVC, CVV]    # Can carry stress
+    superheavy: [CVCC, CVVC] # Strongly stressed
+
+  # Preferred patterns for brand names
+  brand_patterns:
+    start_strong:
+      - "CV-CVC"      # Ta-kan
+      - "CVC-CV"      # Tan-ko
+      - "CCV-CV"      # Tra-vo
+    end_strong:
+      - "CV-CVC"      # Ve-lor
+      - "CVC-CVC"     # Vol-tix
+    balanced:
+      - "CV-CV-CV"    # Ta-ra-no
+      - "CVC-CV"      # Tur-an
+
+# =============================================================================
+# Generation Strategies
+# =============================================================================
+strategies:
+  # Methods and their weights (how often to use each)
+  methods:
+    root_suffix:
+      weight: 25
+      description: "Base root + suffix"
+      produces: "classic brand names"
+
+    root_combo:
+      weight: 20
+      description: "Combine two roots"
+      produces: "compound names with dual meaning"
+
+    truncate_suffix:
+      weight: 15
+      description: "Shortened root + strong suffix"
+      produces: "punchy, modern names"
+
+    prefix_root:
+      weight: 10
+      description: "Prefix + root"
+      produces: "enhanced/modified concepts"
+
+    pattern:
+      weight: 10
+      description: "Pure phonetic pattern"
+      produces: "novel, unique-sounding names"
+
+    fusion:
+      weight: 20
+      description: "Cross-cultural blend"
+      produces: "international-sounding names"
+
+  # Suffix selection strategies
+  suffix_selection:
+    by_category:
+      power: [tech, latin]
+      travel: [neutral, modern]
+      nature: [neutral, greek]
+      celestial: [latin, modern]
+      abstract: [greek, latin]
+
+    by_target_market:
+      tech:
+        suffixes: [ix, ex, on, ik, tek, tron]
+        weight: high
+      automotive:
+        suffixes: [an, or, us, on, ar]
+        weight: high
+      consumer:
+        suffixes: [a, ia, o, io]
+        weight: high
+
+# =============================================================================
+# Junction Rules (connecting roots/suffixes)
+# =============================================================================
+junctions:
+  # When root ends in vowel and suffix starts with vowel
+  vowel_vowel:
+    strategies:
+      - insert: [n, r, x, l, s]  # Add connector consonant
+      - drop_first: true         # Drop ending vowel
+      - drop_second: true        # Drop starting vowel
+
+  # When root ends in consonant and suffix starts with consonant
+  consonant_consonant:
+    strategies:
+      - insert: [a, i, o, e]     # Add connector vowel
+      - overlap: true            # Look for overlapping sounds
+
+  # Specific problematic junctions to avoid
+  avoid_junctions:
+    - [k, k]    # no kk
+    - [t, t]    # no tt
+    - [s, s]    # no ss
+    - [n, n]    # no nn
+    - [a, a]    # no aa
+    - [i, i]    # no ii
+    - [o, o]    # no oo
+
+# =============================================================================
+# Scoring Parameters
+# =============================================================================
+scoring:
+  # Length preferences
+  length:
+    ideal_min: 5
+    ideal_max: 7
+    absolute_min: 4
+    absolute_max: 9
+    penalties:
+      too_short: -0.3    # < absolute_min
+      too_long: -0.2     # > absolute_max
+    bonuses:
+      ideal_length: 0.1  # Within ideal range
+
+  # Pattern penalties
+  pattern_penalties:
+    double_vowel: -0.5   # aa, ee, etc. - very bad
+    triple_consonant: -0.2
+    triple_vowel: -0.2
+    bad_cluster: -0.3    # unpleasant consonant clusters
+    hard_junction: -0.1
+    unpronounceable_ending: -0.8  # truly awful endings like -fn, -gn
+
+  # Pattern bonuses
+  pattern_bonuses:
+    good_ending: 0.1       # ends in aeiounrsx
+    strong_start: 0.1      # starts with kptbdgvr
+    turkic_ending: 0.1     # an, ay, kan, etc.
+    greek_ending: 0.1      # os, is, on, etc.
+    balanced_syllables: 0.1
+
+  # Bad clusters (language-specific)
+  bad_clusters:
+    german_hard:
+      - tsch
+      - dsch
+      - ck   # after short vowels
+    english_hard:
+      - zh
+      - szcz
+      - cz
+    universal:
+      - thr  # hard in non-English
+      - phr
+      - chr
+      - sch  # German sch vs English sh confusion
+    # Difficult final consonant clusters
+    hard_endings:
+      - fn    # Resafafn issue
+      - gn    # hard word-final
+      - hn    # awkward
+      - kn    # awkward word-final
+      - vn    # awkward
+      - bn    # awkward
+      - dn    # awkward word-final
+      - pn    # awkward
+      - tn    # awkward
+      - mn    # except in common words
+      - ln    # awkward
+      - rn    # borderline but often harsh
+      - pm    # awkward
+      - bm    # awkward
+      - dm    # awkward
+      - gm    # awkward
+      - km    # awkward
+      - tm    # awkward
+      - sr    # awkward in middle/end
+      - nr    # awkward
+      - mr    # awkward
+      - lr    # awkward
+      - ml    # awkward
+      - nl    # awkward
+      - fv    # awkward
+      - vf    # awkward
+    # Harsh sounding combinations
+    harsh_combos:
+      - xk
+      - kx
+      - gx
+      - xg
+      - fx
+      - xf
+      - zx
+      - xz
+      - dg    # not at start
+      - gd
+      - pb
+      - bp
+      - dk
+      - kd
+      - bz
+      - zb
+      - gz
+      - zg
+      - pz
+      - zp
+      - kz
+      - zk
+      - tz    # at start
+      - dz    # at start
+    # Triple consonants
+    triple_cons:
+      - fff
+      - sss
+      - nnn
+      - mmm
+      - lll
+      - rrr
+      - ttt
+      - ppp
+      - kkk
+
+# =============================================================================
+# Rhythm & Stress Patterns (Metrical Phonology)
+# =============================================================================
+# Based on linguistic research on prosody and brand name memorability.
+# English and German are "trochaic" languages - stress on first syllable preferred.
+
+rhythm:
+  # Stress pattern preferences (1.0 = ideal, 0.0 = poor)
+  # Pattern notation: S = stressed, U = unstressed
+  stress_patterns:
+    # Trochaic patterns - BEST for English/German brand names
+    trochaic:
+      SU: 1.0        # 2 syllables: VOL-tix, AP-ple
+      SUU: 0.95      # 3 syllables: AM-a-zon (dactylic, also good)
+      SUSU: 0.9      # 4 syllables: ca-ta-MA-ran... less ideal
+      SUS: 0.85      # 3 syllables with final stress
+
+    # Iambic patterns - acceptable but less punchy
+    iambic:
+      US: 0.7        # 2 syllables: a-DOBE
+      USU: 0.65      # 3 syllables
+      USUS: 0.6      # 4 syllables
+
+    # Spondaic (equal stress) - can work for short names
+    spondaic:
+      SS: 0.8        # 2 equal: FACE-BOOK (compound feel)
+
+    # Problematic patterns
+    poor:
+      UU: 0.3        # No stress - sounds weak
+      UUU: 0.2       # Very weak
+      UUUU: 0.1      # Monotonous
+
+  # Syllable weight rules
+  # Heavy syllables (CVC, CVV, CVCC) attract stress
+  # Light syllables (CV) typically unstressed
+  syllable_weight:
+    heavy_codas: [b, c, d, f, g, k, l, m, n, p, r, s, t, v, x, z]  # consonants that close syllables
+    heavy_clusters: [st, nt, nd, nk, lt, rt, rn, rm, ks, ps, ts, xt, lk, rk]
+
+  # Ideal syllable counts for brand names
+  ideal_syllable_count:
+    minimum: 2
+    maximum: 3
+    optimal: 2      # Research shows 2-syllable names most memorable
+
+  # Onset strength (strong onsets = more stressed feel)
+  strong_onsets: [k, t, p, b, d, g, v, str, kr, tr, pr, br, dr, gr]
+  weak_onsets: [h, w, y, th, wh]
+
+  # Rhythmic bonuses
+  bonuses:
+    trochaic_2syl: 0.15      # Perfect rhythm: VOL-tix
+    heavy_first_syl: 0.1     # Strong opening
+    alternating_weight: 0.05  # Heavy-light-heavy pattern
+
+  # Rhythmic penalties
+  penalties:
+    iambic_start: -0.1       # Weak opening
+    too_many_syllables: -0.1  # 4+ syllables
+    monotonous: -0.15        # All same weight
+    clash: -0.1              # Adjacent stressed syllables (SS in middle)
+
+# =============================================================================
+# Pronounceability Rules
+# =============================================================================
+# Hard gates for filtering out unpronounceable names.
+# Based on Sonority Sequencing Principle and English/German phonotactics.
+
+pronounceability:
+  # Valid word-final single characters (any of these can end a name)
+  # Vowels are always valid endings; consonants listed are pronounceable in final position
+  valid_final_vowels: [a, e, i, o, u]
+  valid_final_consonants: [r, s, n, l, t, x, k, p, m, d, b, g, f, z, v, h, w, y]
+
+  # Valid word-final consonant clusters
+  valid_final_clusters:
+    common:
+      - st
+      - nt
+      - nd
+      - nk
+      - ng
+      - lt
+      - rt
+      - rn
+      - rm
+      - rk
+      - rd
+      - th   # zenith, stealth, growth
+    extended:
+      - lk
+      - lm
+      - lf
+      - lp
+      - ls
+      - ld
+      - rp
+      - rs
+      - rf
+      - rv
+      - mp
+      - ms
+      - ns
+      - nz
+      - ts
+      - ks
+      - ps
+      - ft
+      - pt
+      - kt
+      - xt
+      - sk
+      - sp
+      - ct
+    brand_friendly:  # -x endings common in brand names
+      - nx
+      - rx
+      - lx
+      - ix
+      - ex
+      - ax
+      - ox
+      - ux
+
+  # IMPOSSIBLE word-final clusters (Sonority Violations)
+  # These make a name completely unpronounceable
+  impossible_endings:
+    # Nasal after obstruent - violates sonority
+    obstruent_nasal:
+      - fn
+      - gn
+      - bn
+      - pn
+      - dn
+      - tn
+      - kn
+      - vn
+      - zn
+      - sn
+      - fm
+      - gm
+      - bm
+      - pm
+      - dm
+      - tm
+      - km
+      - vm
+      - zm
+      - sm
+    # Liquid after obstruent at word-final (unlike word-initial bl-, fl-, etc.)
+    obstruent_liquid:
+      - fl
+      - gl
+      - bl
+      - pl
+      - dl
+      - tl
+      - kl
+      - vl
+      - zl
+      - sl
+      - fr
+      - gr
+      - br
+      - pr
+      - dr
+      - tr
+      - kr
+      - vr
+      - zr
+      - sr
+    # Sonorant clusters that don't work word-finally
+    sonorant_clusters:
+      - ln
+      - lm
+      - rl
+      - lr
+      - mn
+      - nm
+      - nr
+      - mr
+    # Other impossible finals
+    other:
+      - cn
+      - cm
+      - cr
+      - cl
+      - hn
+      - hm
+      - hr
+      - hl
+
+  # Awkward initial clusters (hard for English/German speakers)
+  awkward_initial_clusters:
+    - sv   # Swedish/Nordic, not natural for English
+    - stj  # Nordic, very foreign
+    - hj   # Nordic
+    - bj   # Nordic
+    - fj   # Nordic (fjord ok as word, not as brand start)
+    - gn   # Greek, silent g in English
+    - pn   # Greek, silent p
+    - ps   # Greek, silent p
+    - pt   # unnatural
+    - wr   # archaic English
+    - kn   # silent k in English
+    - lly  # Welsh, difficult
+    - gwy  # Welsh, difficult
+
+  # Chemical/pharmaceutical endings to avoid (sound like drugs/elements)
+  chemical_endings:
+    - ode   # electrode, diode
+    - ude   # crude
+    - ase   # enzyme (lipase, protease)
+    - ium   # element (titanium, chromium)
+    - yne   # chemical compound
+
+  # Impossible clusters anywhere in the word
+  impossible_internal:
+    - tsd
+    - tsg
+    - dsd
+    - dsg
+    - bdb
+    - bdg
+    - gdb
+    - gdg
+    - pbp
+    - pbk
+    - kpk
+    - kpb
+    - zcz
+    - szs
+    # Awkward z/x clusters
+    - zzx
+    - xzz
+    - zxz
+    - xzx
+    - xxz
+    - zxx
+    # Awkward r-vowel-r patterns with close vowels (hard to pronounce)
+    # Note: rar, ror, rur are OK (open vowels flow better)
+    - rir
+    - rer
+    # Repetitive consonant-vowel-consonant patterns
+    - dod
+    - ded
+    - xax
+    - xix
+    - xux
+    - kak
+    - gug
+    - lyl
+    # Harsh consonant clusters
+    - lfh
+    - ngw
+    - nwy
+    - stl
+    - dwr
+    - ydd
+    - mmh
+    - spj
+    - nfj
+
+  # Triple consonants/vowels to reject
+  triple_reject:
+    - fff
+    - sss
+    - zzz
+    - vvv
+    - bbb
+    - ddd
+    - ggg
+    - ppp
+    - ttt
+    - kkk
+    - nnn
+    - mmm
+    - lll
+    - rrr
+    - aaa
+    - eee
+    - iii
+    - ooo
+    - uuu
+
+# =============================================================================
+# Cross-Language Euphony
+# =============================================================================
+# Rules for names that sound good in both German and English
+
+euphony:
+  german_english:
+    # Sounds that work well in both
+    safe_consonants: [k, t, p, b, d, g, f, v, s, m, n, l, r]
+    safe_vowels: [a, e, i, o, u]
+
+    # Sounds to avoid (different pronunciation)
+    avoid:
+      - j      # German y vs English j
+      - w      # German v vs English w
+      - ch     # German ich/ach vs English ch
+      - th     # English only
+      - ng     # different in each
+
+    # Preferred endings
+    good_endings:
+      - a      # Same in both
+      - o      # Same in both
+      - us     # Latin, same in both
+      - "on"     # Same in both
+      - an     # Same in both
+      - or     # Similar
+      - er     # Similar
+
+    # Problematic endings
+    bad_endings:
+      - ough   # English-only
+      - tion   # Different pronunciation
+      - ight   # English-only
+
+# =============================================================================
+# Brand Name Archetypes
+# =============================================================================
+# Different name "personalities" to generate
+
+archetypes:
+  power:
+    description: "Strong, commanding, powerful"
+    preferred_sounds: [k, t, p, d, g, b]
+    preferred_vowels: [a, o, u]
+    preferred_suffixes: [ix, ax, or, us, on]
+    examples: ["Voltix", "Kraton", "Dynax"]
+
+  elegant:
+    description: "Sophisticated, refined, premium"
+    preferred_sounds: [s, f, v, l, r]
+    preferred_vowels: [e, i, a]
+    preferred_suffixes: [ia, is, ara, eon]
+    examples: ["Selenia", "Veritas", "Lumara"]
+
+  dynamic:
+    description: "Fast, energetic, modern"
+    preferred_sounds: [z, v, r, k, t]
+    preferred_vowels: [e, i]
+    preferred_suffixes: [ex, ix, on, ek]
+    examples: ["Zenix", "Vektor", "Kinex"]
+
+  natural:
+    description: "Organic, earth, eco-friendly"
+    preferred_sounds: [l, r, n, m, s]
+    preferred_vowels: [a, e, o]
+    preferred_suffixes: [a, o, ara, era]
+    examples: ["Terra", "Flora", "Natura"]
+
+  mythic:
+    description: "Legendary, timeless, epic"
+    preferred_sounds: [t, k, s, n, r]
+    preferred_vowels: [a, o, i]
+    preferred_suffixes: [os, is, on, us, an]
+    examples: ["Titan", "Kronos", "Atlas"]
+
+# =============================================================================
+# Phonaesthetic Quality (Sound Beauty Research)
+# =============================================================================
+# Based on latest research in phonaesthetics and brand naming science.
+# References:
+#   - Matzinger & Kosic (2025): Pleasant words are easier to remember
+#   - Nemestothy et al. (2024): Front vowels rated more pleasant
+#   - David Crystal: Beautiful word characteristics
+#   - Yorkston & Menon (2004): Sound symbolism in brand names
+#   - Klink (2000): Frontness/backness effects on perception
+
+phonaesthetic_quality:
+  # === CONSONANT QUALITY ===
+  # David Crystal's research: beautiful words favor l, m, s, n
+  # But plosives (k,t,p,b,d,g) correlate with brand profitability
+  consonant_scores:
+    # "Beautiful" consonants (Crystal's research)
+    pleasant:
+      consonants: [l, m, n, s, r]
+      score_bonus: 0.02  # Per occurrence
+      description: "Sonorants and soft fricatives - elegant, flowing"
+
+    # Plosives - powerful but can be harsh
+    powerful:
+      consonants: [k, t, p, b, d, g]
+      score_bonus: 0.01  # Moderate bonus - commercial success link
+      description: "Plosives - decisive, memorable, commercially successful"
+
+    # Problematic consonants
+    awkward:
+      consonants: [x, z, q]
+      score_penalty: -0.03
+      description: "Unusual sounds - can be distinctive or off-putting"
+
+    # Avoid sounds (Crystal's research)
+    avoid:
+      patterns: [zh, dj]  # As in "measure", "judge"
+      score_penalty: -0.05
+      description: "Palatoalveolar affricates - less aesthetically pleasing"
+
+  # === VOWEL QUALITY ===
+  # Nemestothy et al. (2024): Front vowels perceived as more pleasant
+  # But back vowels convey power/size (useful for some brands)
+  vowel_scores:
+    # Front vowels - aesthetically preferred
+    front:
+      vowels: [e, i]
+      score_bonus: 0.02
+      description: "Front vowels - lighter, more pleasant, modern"
+
+    # Back vowels - power/size but less pleasant
+    back:
+      vowels: [o, u]
+      score_bonus: 0.0  # Neutral - useful for power brands
+      description: "Back vowels - powerful, heavy, solid"
+
+    # Central vowel
+    central:
+      vowels: [a]
+      score_bonus: 0.01  # Slightly positive - open, grand
+      description: "Low central vowel - open, accessible"
+
+  # === PROCESSING FLUENCY ===
+  # Research shows easier-to-process names are more liked
+  fluency:
+    # Optimal consonant-vowel ratio (CV balance)
+    cv_ratio:
+      ideal_min: 0.8  # consonants / vowels
+      ideal_max: 1.5
+      bonus: 0.05  # Within ideal range
+      penalty: -0.05  # Outside ideal range
+
+    # Letter repetition (mild) - can enhance fluency
+    # Full reduplication (Coca-Cola, Kit-Kat) increases liking
+    mild_repetition:
+      patterns:
+        - pattern: "(.).*\\1"  # Same letter appears twice
+          bonus: 0.01
+        - pattern: "(..).*\\1"  # Same 2-letter pattern appears twice (not adjacent)
+          bonus: 0.02
+      description: "Mild repetition enhances processing fluency"
+
+    # Alternating CV structure
+    cv_alternation:
+      patterns: [CVCV, CVCVC, VCVCV]
+      bonus: 0.03
+      description: "Clean CV alternation - easy to pronounce"
+
+  # === SOUND SYMBOLISM FIT ===
+  # Names whose sounds match product category are liked more
+  # This maps to industry profiles in industries.yaml
+  category_sound_fit:
+    tech:
+      preferred: [x, z, k, t, i, e]
+      description: "Sharp, precise, modern sounds"
+
+    luxury:
+      preferred: [l, s, v, f, a, e]
+      description: "Soft, flowing, elegant sounds"
+
+    power:
+      preferred: [k, t, g, b, r, o, a]
+      description: "Strong, bold, impactful sounds"
+
+    nature:
+      preferred: [l, n, r, m, a, e, o]
+      description: "Organic, flowing, natural sounds"
+
+    speed:
+      preferred: [z, v, s, r, i, e]
+      description: "Quick, dynamic sounds"
+
+  # === PHONOTACTIC NATURALNESS ===
+  # How natural the sound combinations feel
+  naturalness:
+    # Common, natural patterns get bonus
+    natural_patterns:
+      - pattern: "^[kptbdg][lr]"  # Word-initial stop+liquid
+        bonus: 0.02
+      - pattern: "[aeiou][nsr][aeiou]"  # Intervocalic sonorant
+        bonus: 0.01
+      - pattern: "[aeiou]x$"  # Vowel + x ending (tech feel)
+        bonus: 0.02
+
+    # Rare patterns - not penalized but no bonus
+    unusual_but_acceptable:
+      - "[xz][aeiou]"  # x/z before vowel
+      - "^v"           # V-initial (uncommon in English)
+
+  # === OVERALL SCORING WEIGHTS ===
+  # How much each factor contributes to final phonaesthetic score
+  weights:
+    consonant_quality: 0.22
+    vowel_quality: 0.15
+    fluency: 0.20
+    naturalness: 0.13
+    rhythm: 0.10        # Reduced - was over-inflating scores
+    cluster_quality: 0.10  # NEW - penalize harsh clusters
+    ending_quality: 0.10   # NEW - reward good endings
+
+  # === CLUSTER QUALITY ===
+  # Penalize harsh consonant clusters even if pronounceable
+  cluster_quality:
+    harsh_clusters:
+      - sph   # sphinx - unusual
+      - gry   # angry sound
+      - bry   # harsh
+      - scr   # scratchy
+      - spr   # spritzy
+    penalty_per_cluster: -0.05
+
+    # 3x same consonant is awkward
+    triple_consonant_penalty: -0.08
+
+  # === ENDING QUALITY ===
+  # Good endings enhance memorability, bad ones detract
+  ending_quality:
+    good_endings:
+      tier1: [a, o, ia, io]           # Very pleasant, open
+      tier2: [is, us, on, an, or, er] # Classic, solid
+      tier3: [ix, ex, ax]             # Modern, tech-friendly
+    good_bonus: 0.04
+
+    bad_endings:
+      - ode   # chemical
+      - ude   # crude
+      - ydd   # Welsh, foreign
+      - wyn   # Welsh, foreign
+      - gda   # Slavic, harsh
+      - wrd   # unnatural
+    bad_penalty: -0.06
+
+  # === THRESHOLDS ===
+  # Calibrated to actual score distribution (base ~0.5, max bonuses ~0.15)
+  # Top ~10% = excellent, next ~30% = good
+  thresholds:
+    excellent: 0.605  # Top ~10% - very pleasant sounding
+    good: 0.57        # Pleasant, above average
+    acceptable: 0.52  # Neutral, workable
+    poor: 0.45        # Below this is problematic

@@ -1,0 +1,284 @@
+# Celtic Phoneme Database
+# ========================
+# Roots from Irish, Scottish Gaelic, Welsh, Breton, Cornish.
+# All anglicized for international pronounceability.
+#
+# Great for: Nature brands, mystical/spiritual, craft products, heritage brands
+
+roots:
+  # ---------------------------------------------------------------------------
+  # Nature & Landscape
+  # ---------------------------------------------------------------------------
+  nature:
+    # Irish/Scottish Gaelic
+    - [glen, "valley"]
+    - [loch, "lake"]
+    - [ben, "mountain peak"]
+    - [craig, "rock, cliff"]
+    - [brae, "hillside"]
+    - [moor, "heathland"]
+    - [cairn, "stone pile"]
+    - [tor, "rocky peak"]
+    - [cove, "small bay"]
+    - [dell, "small valley"]
+    # Welsh
+    - [cwm, "valley"]
+    - [afon, "river"]
+    - [coed, "forest, wood"]
+    - [maes, "field"]
+    - [bryn, "hill"]
+    - [llyn, "lake"]
+    - [nant, "stream"]
+    # Trees
+    - [oak, "oak tree"]
+    - [rowan, "rowan tree"]
+    - [alder, "alder tree"]
+    - [yew, "yew tree"]
+    - [ash, "ash tree"]
+    - [birch, "birch tree"]
+    - [hazel, "hazel tree"]
+    - [willow, "willow tree"]
+    - [holly, "holly tree"]
+    - [elder, "elder tree"]
+
+  # ---------------------------------------------------------------------------
+  # Elements & Weather
+  # ---------------------------------------------------------------------------
+  elements:
+    - [gale, "strong wind"]
+    - [mist, "fog, mist"]
+    - [storm, "storm"]
+    - [rain, "rain"]
+    - [frost, "frost"]
+    - [dew, "dew"]
+    - [tide, "tide"]
+    - [wave, "wave"]
+    - [fire, "fire"]
+    - [stone, "stone"]
+    - [earth, "earth"]
+    - [sky, "sky"]
+
+  # ---------------------------------------------------------------------------
+  # Celtic Mythology
+  # ---------------------------------------------------------------------------
+  mythology:
+    # Irish gods/figures
+    - [dana, "mother goddess"]
+    - [lugh, "light god"]
+    - [brigid, "goddess of fire"]
+    - [morrigan, "phantom queen"]
+    - [dagda, "good god"]
+    - [nuada, "silver hand"]
+    - [ogma, "god of eloquence"]
+    - [anu, "earth goddess"]
+    - [dian, "swift, god"]
+    # Welsh figures
+    - [rhiannon, "great queen"]
+    - [arawn, "underworld king"]
+    - [gwydion, "magician"]
+    - [cerridwen, "cauldron goddess"]
+    - [blodeuedd, "flower maiden"]
+    # Scottish
+    - [scota, "Scotland personified"]
+    - [caledonia, "Scotland"]
+    # Creatures
+    - [selkie, "seal people"]
+    - [sidhe, "fairy folk"]
+    - [banshee, "wailing spirit"]
+    - [kelpie, "water horse"]
+    - [pooka, "shape-shifter"]
+
+  # ---------------------------------------------------------------------------
+  # Concepts & Qualities
+  # ---------------------------------------------------------------------------
+  concepts:
+    - [awen, "poetic inspiration"]
+    - [druid, "wise one"]
+    - [bard, "poet, storyteller"]
+    - [clan, "family, tribe"]
+    - [celt, "Celtic people"]
+    - [rune, "secret, mystery"]
+    - [fae, "fairy"]
+    - [wyrd, "fate"]
+    - [oath, "sacred promise"]
+    - [lore, "tradition, knowledge"]
+    - [saga, "story"]
+    - [quest, "journey, search"]
+    - [haven, "safe place"]
+    - [hearth, "home fire"]
+    - [kin, "family"]
+    - [kith, "friends"]
+
+  # ---------------------------------------------------------------------------
+  # Animals
+  # ---------------------------------------------------------------------------
+  animals:
+    - [stag, "male deer"]
+    - [hart, "male deer"]
+    - [hind, "female deer"]
+    - [raven, "raven"]
+    - [crow, "crow"]
+    - [wolf, "wolf"]
+    - [boar, "wild boar"]
+    - [salmon, "salmon"]
+    - [heron, "heron"]
+    - [otter, "otter"]
+    - [badger, "badger"]
+    - [fox, "fox"]
+    - [hare, "hare"]
+    - [seal, "seal"]
+    - [swan, "swan"]
+    - [wren, "wren"]
+    - [hawk, "hawk"]
+    - [owl, "owl"]
+
+  # ---------------------------------------------------------------------------
+  # Colors (Celtic symbolism)
+  # ---------------------------------------------------------------------------
+  colors:
+    - [glas, "green, blue, grey"]
+    - [ruadh, "red"]
+    - [dubh, "black"]
+    - [ban, "white"]
+    - [dearg, "red"]
+    - [gorm, "blue"]
+    - [uaine, "green"]
+
+  # ---------------------------------------------------------------------------
+  # Craft & Heritage
+  # ---------------------------------------------------------------------------
+  craft:
+    - [weave, "weaving"]
+    - [forge, "metalwork"]
+    - [brew, "brewing"]
+    - [mead, "honey wine"]
+    - [knot, "Celtic knot"]
+    - [tartan, "plaid pattern"]
+    - [thistle, "Scottish symbol"]
+    - [clover, "shamrock"]
+    - [harp, "Celtic harp"]
+    - [stone, "standing stone"]
+
+  # ---------------------------------------------------------------------------
+  # Welsh Roots (brand-friendly)
+  # ---------------------------------------------------------------------------
+  welsh:
+    - [gwynn, "white, fair"]
+    - [mor, "sea"]
+    - [nos, "night"]
+    - [haul, "sun"]
+    - [lloer, "moon"]
+    - [seren, "star"]
+    - [gwynt, "wind"]
+    - [glaw, "rain"]
+    - [eira, "snow"]
+    - [tan, "fire"]
+    - [dwr, "water"]
+    - [derw, "oak"]
+    - [aderyn, "bird"]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  celtic:
+    - an       # diminutive
+    - en       # common ending
+    - wen      # white, blessed (Welsh)
+    - wyn      # white, fair (Welsh)
+    - ach      # place suffix
+    - och      # place suffix
+    - in       # diminutive
+    - een      # diminutive (Irish)
+
+  gaelic:
+    - agh      # place
+    - more     # great, big
+    - beg      # small
+    - dubh     # black
+    - ban      # white
+
+  neutral:
+    - a
+    - o
+    - er
+    - en
+    - ar
+
+  tech:
+    - ix
+    - ex
+    - "on"
+
+  european:
+    - en
+    - er
+    - "on"
+    - or
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", ""]
+  celtic:
+    - mac      # son of
+    - ben      # peak
+    - glen     # valley
+    - kil      # church
+    - bal      # town
+    - dun      # fort
+    - ard      # high
+  international:
+    - neo
+    - e
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+patterns:
+  celtic_style:
+    - CVCC     # glen, loch
+    - CVCVC    # rowan
+    - CVCCVC   # brigid
+    - CCVn     # bryn
+    - CVCen    # raven
+
+  gaelic:
+    - CVCagh   # ending in -agh
+    - CVCan    # ending in -an
+    - CVCoch   # ending in -och
+
+  welsh:
+    - CCVn     # bryn, gwyn
+    - CVCwyn   # ending in -wyn
+    - CVCVC    # seren
+
+  nature:
+    - CVCC     # glen, loch
+    - CVCV     # rowan
+    - CVCer    # alder
+
+# =============================================================================
+# Phonetics
+# =============================================================================
+phonetics:
+  consonants:
+    all: [b, c, d, f, g, h, l, m, n, p, r, s, t, w, y]
+    celtic_common: [c, g, l, n, r, w, d, m]
+    soft: [l, n, m, w, y]
+    hard: [c, g, t, d, k]
+
+  vowels:
+    all: [a, e, i, o, u, y]
+    common: [a, e, i, o]
+
+# =============================================================================
+# Avoid
+# =============================================================================
+avoid:
+  clusters:
+    - difficult Gaelic spelling (use anglicized)
+    - bh, mh, dh (Gaelic mutations - simplify)
+  sounds:
+    - guttural ch (use k or c)

@@ -1,0 +1,229 @@
+# Japanese-Inspired Phoneme Database
+# ===================================
+# Roots from Japanese for minimalist, tech-forward brand names.
+# All romanized for international use.
+#
+# Great for: Tech, gaming, minimalist design, precision products
+#
+# Note: Avoid shi (death), ku (suffering), number 4
+
+roots:
+  # ---------------------------------------------------------------------------
+  # Nature & Elements
+  # ---------------------------------------------------------------------------
+  nature:
+    - [yama, "mountain"]
+    - [kawa, "river"]
+    - [umi, "sea, ocean"]
+    - [sora, "sky"]
+    - [tsuki, "moon"]
+    - [hoshi, "star"]
+    - [kumo, "cloud"]
+    - [kaze, "wind"]
+    - [ame, "rain"]
+    - [yuki, "snow"]
+    - [hi, "sun, fire"]
+    - [mizu, "water"]
+    - [tsuchi, "earth"]
+    - [mori, "forest"]
+    - [hana, "flower"]
+    - [sakura, "cherry blossom"]
+    - [take, "bamboo"]
+    - [matsu, "pine"]
+    - [nami, "wave"]
+    - [ishi, "stone"]
+
+  # ---------------------------------------------------------------------------
+  # Light & Energy
+  # ---------------------------------------------------------------------------
+  light:
+    - [hikari, "light"]
+    - [kagayaki, "radiance, shine"]
+    - [akari, "brightness, lamp"]
+    - [terasu, "illuminate"]
+    - [kira, "sparkle"]
+    - [ryu, "flow, current"]
+    - [den, "electricity"]
+    - [raito, "light (loanword)"]
+    - [niji, "rainbow"]
+    - [gin, "silver"]
+    - [kin, "gold"]
+
+  # ---------------------------------------------------------------------------
+  # Movement & Speed
+  # ---------------------------------------------------------------------------
+  movement:
+    - [hayai, "fast"]
+    - [tori, "bird"]
+    - [tobu, "fly"]
+    - [hashiru, "run"]
+    - [nagare, "flow"]
+    - [fuku, "blow (wind)"]
+    - [mawaru, "spin, rotate"]
+    - [noboru, "climb, rise"]
+    - [susumu, "advance, progress"]
+    - [aruku, "walk"]
+
+  # ---------------------------------------------------------------------------
+  # Concepts & Qualities
+  # ---------------------------------------------------------------------------
+  concepts:
+    - [zen, "meditation, wholeness"]
+    - [wa, "harmony, peace"]
+    - [rei, "spirit, zero"]
+    - [ki, "energy, spirit"]
+    - [do, "way, path"]
+    - [mu, "nothing, void"]
+    - [shin, "truth, new"]
+    - [ai, "love"]
+    - [yume, "dream"]
+    - [kokoro, "heart, mind"]
+    - [tamashi, "soul"]
+    - [chikara, "power, force"]
+    - [katana, "sword"]
+    - [taka, "hawk, high"]
+    - [ryu, "dragon"]
+    - [koi, "carp, love"]
+    - [oni, "demon, ogre"]
+    - [tengu, "mythical creature"]
+
+  # ---------------------------------------------------------------------------
+  # Technology & Modern
+  # ---------------------------------------------------------------------------
+  tech:
+    - [denki, "electric"]
+    - [kikai, "machine"]
+    - [robo, "robot"]
+    - [netto, "net"]
+    - [gijutsu, "technology"]
+    - [mirai, "future"]
+    - [sekai, "world"]
+    - [uchuu, "universe, space"]
+    - [kodo, "pulse, heartbeat"]
+    - [shinka, "evolution"]
+
+  # ---------------------------------------------------------------------------
+  # Colors (brand-friendly)
+  # ---------------------------------------------------------------------------
+  colors:
+    - [ao, "blue"]
+    - [aka, "red"]
+    - [midori, "green"]
+    - [kuro, "black"]
+    - [shiro, "white"]
+    - [murasaki, "purple"]
+    - [orenji, "orange"]
+    - [sumi, "ink black"]
+
+  # ---------------------------------------------------------------------------
+  # Animals
+  # ---------------------------------------------------------------------------
+  animals:
+    - [tora, "tiger"]
+    - [ryu, "dragon"]
+    - [kitsune, "fox"]
+    - [tanuki, "raccoon dog"]
+    - [usagi, "rabbit"]
+    - [kuma, "bear"]
+    - [ookami, "wolf"]
+    - [washi, "eagle"]
+    - [tsuru, "crane"]
+    - [uma, "horse"]
+    - [neko, "cat"]
+    - [inu, "dog"]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  japanese:
+    - ra       # plural/group
+    - ta       # past/completed
+    - "no"     # possessive
+    - ya       # shop/place
+    - ko       # child (feminine)
+    - ro       # suffix
+    - ka       # change/transformation
+    - mi       # beauty/taste
+    - ri       # logic/reason
+    - to       # door/place
+
+  tech:
+    - ix
+    - ex
+    - "on"
+    - a
+    - o
+
+  neutral:
+    - a
+    - o
+    - i
+    - en
+    - er
+
+  european:
+    - en
+    - er
+    - "on"
+    - or
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", ""]
+  japanese:
+    - dai     # great, large
+    - ko      # small
+    - shin    # new
+    - chou    # super
+  international:
+    - neo
+    - pro
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+patterns:
+  japanese_style:
+    - CVCV      # sake, ramen
+    - CVCCV     # sakura
+    - VCVCV     # akira
+    - CVCVCV    # toyota
+    - CVn       # zen, san
+    - CVCVri    # hikari
+
+  tech_fusion:
+    - CVCix     # tech suffix
+    - CVCon     # latin suffix
+    - CVCa      # simple ending
+
+# =============================================================================
+# Phonetics
+# =============================================================================
+phonetics:
+  consonants:
+    all: [k, s, t, n, h, m, y, r, w]
+    # Note: No L in native Japanese
+    soft: [n, m, y, w]
+    hard: [k, t, s]
+
+  vowels:
+    all: [a, i, u, e, o]
+    common: [a, i, o]
+
+# =============================================================================
+# Avoid
+# =============================================================================
+avoid:
+  # Sounds associated with death/bad luck
+  unlucky:
+    - shi      # sounds like death (死)
+    - ku       # sounds like suffering (苦)
+  # Clusters not in Japanese
+  clusters:
+    - consonant clusters (Japanese is mostly CV)
+    - l        # not native
+    - v        # not native
+    - th       # not native

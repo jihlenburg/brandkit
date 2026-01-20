@@ -1,0 +1,429 @@
+# Nordic/Scandinavian Phoneme Database
+# =====================================
+# Roots from Old Norse, Swedish, Norwegian, Danish, Icelandic.
+# All transliterated to Latin alphabet for international pronounceability.
+#
+# Great for: power products, outdoor/nature brands, tech with heritage feel
+#
+# Format: [phoneme, meaning]
+
+roots:
+  # ---------------------------------------------------------------------------
+  # Gods & Mythological Figures
+  # ---------------------------------------------------------------------------
+  gods:
+    # Aesir (main gods)
+    - [odin, "all-father, wisdom"]
+    - [thor, "thunder, strength"]
+    - [tyr, "war, justice"]
+    - [freyr, "prosperity, fertility"]
+    - [heimdal, "guardian, watcher"]
+    - [balder, "light, beauty"]
+    - [vidar, "silence, vengeance"]
+    - [bragi, "poetry, eloquence"]
+    - [forseti, "justice, arbitration"]
+    # Vanir (nature gods)
+    - [freya, "love, beauty, war"]
+    - [njord, "sea, wind, wealth"]
+    - [skadi, "winter, mountains, hunt"]
+    # Other figures
+    - [loki, "trickster, change"]
+    - [hel, "underworld, death"]
+    - [ran, "sea goddess"]
+    - [aegir, "ocean, brewing"]
+    - [idun, "youth, renewal"]
+    - [sif, "earth, harvest"]
+    - [ull, "hunt, archery, winter"]
+
+  # ---------------------------------------------------------------------------
+  # Mythological Creatures & Beasts
+  # ---------------------------------------------------------------------------
+  beasts:
+    # Wolves
+    - [fenrir, "giant wolf, power"]
+    - [geri, "ravenous wolf"]
+    - [freki, "greedy wolf"]
+    - [skoll, "wolf chasing sun"]
+    - [hati, "wolf chasing moon"]
+    # Serpents/Dragons
+    - [jormun, "world serpent"]
+    - [nidhogg, "dragon, destruction"]
+    - [fafnir, "dragon, greed"]
+    # Horses
+    - [sleipnir, "eight-legged horse"]
+    - [gullfax, "golden mane"]
+    - [svadilfar, "swift horse"]
+    # Birds
+    - [hugin, "thought (Odin's raven)"]
+    - [munin, "memory (Odin's raven)"]
+    # Other
+    - [ratatosk, "squirrel messenger"]
+    - [kraken, "sea monster"]
+    - [draugr, "undead warrior"]
+    - [valkyr, "chooser of slain"]
+
+  # ---------------------------------------------------------------------------
+  # Power & Strength
+  # ---------------------------------------------------------------------------
+  power:
+    # Old Norse
+    - [kraft, "power, force"]
+    - [stark, "strong"]
+    - [makt, "might, power"]
+    - [styrk, "strength"]
+    - [vald, "power, control"]
+    - [mod, "courage, spirit"]
+    - [eld, "fire"]
+    - [blixt, "lightning"]
+    - [dunder, "thunder"]
+    - [storm, "storm"]
+    # Weapons/War
+    - [strid, "battle"]
+    - [svar, "sword"]
+    - [skjold, "shield"]
+    - [hammar, "hammer"]
+    - [spjut, "spear"]
+    - [borg, "fortress"]
+    # Energy
+    - [glod, "ember, glow"]
+    - [flam, "flame"]
+    - [gnist, "spark"]
+    - [varme, "heat, warmth"]
+
+  # ---------------------------------------------------------------------------
+  # Nature & Landscape
+  # ---------------------------------------------------------------------------
+  nature:
+    # Water
+    - [fjord, "inlet, fjord"]
+    - [fors, "waterfall, rapids"]
+    - [sjo, "sea, lake"]
+    - [hav, "ocean"]
+    - [strom, "stream, current"]
+    - [vatn, "water"]
+    - [is, "ice"]
+    - [bro, "bridge"]
+    # Mountains/Land
+    - [berg, "mountain, rock"]
+    - [fjall, "mountain"]
+    - [dal, "valley"]
+    - [holm, "island"]
+    - [vik, "bay, inlet"]
+    - [nes, "headland, cape"]
+    - [sand, "sand, beach"]
+    - [sten, "stone"]
+    - [klipp, "cliff, rock"]
+    # Forest
+    - [skog, "forest"]
+    - [lund, "grove"]
+    - [mark, "land, field"]
+    - [ang, "meadow"]
+    - [trad, "tree"]
+    - [gran, "spruce"]
+    - [bjork, "birch"]
+    - [ek, "oak"]
+
+  # ---------------------------------------------------------------------------
+  # Sky & Celestial
+  # ---------------------------------------------------------------------------
+  celestial:
+    - [sol, "sun"]
+    - [mane, "moon"]
+    - [stjarna, "star"]
+    - [himmel, "sky, heaven"]
+    - [nord, "north"]
+    - [oster, "east"]
+    - [vester, "west"]
+    - [suder, "south"]
+    - [gry, "dawn"]
+    - [skymning, "dusk, twilight"]
+    - [natt, "night"]
+    - [dag, "day"]
+    - [ljus, "light"]
+    - [morker, "darkness"]
+    - [dimma, "mist, fog"]
+    - [moln, "cloud"]
+
+  # ---------------------------------------------------------------------------
+  # Runes & Magic
+  # ---------------------------------------------------------------------------
+  runes:
+    # Elder Futhark rune names
+    - [fehu, "wealth, cattle"]
+    - [uruz, "strength, aurochs"]
+    - [ansuz, "god, divine"]
+    - [raido, "journey, ride"]
+    - [kenaz, "torch, knowledge"]
+    - [gebo, "gift, exchange"]
+    - [wunjo, "joy, pleasure"]
+    - [hagal, "hail, destruction"]
+    - [nauthiz, "need, necessity"]
+    - [isa, "ice, stillness"]
+    - [jera, "year, harvest"]
+    - [eihwaz, "yew, endurance"]
+    - [pertho, "mystery, fate"]
+    - [algiz, "protection, elk"]
+    - [sowilo, "sun, victory"]
+    - [tiwaz, "victory, justice"]
+    - [berkano, "birch, growth"]
+    - [ehwaz, "horse, movement"]
+    - [mannaz, "man, humanity"]
+    - [laguz, "water, flow"]
+    - [ingwaz, "fertility, potential"]
+    - [dagaz, "day, breakthrough"]
+    - [othala, "heritage, home"]
+    # Magic concepts
+    - [seid, "magic, sorcery"]
+    - [galdr, "spell, incantation"]
+    - [runa, "rune, secret"]
+    - [volva, "seeress, prophecy"]
+
+  # ---------------------------------------------------------------------------
+  # Realms & Places (Norse Cosmology)
+  # ---------------------------------------------------------------------------
+  realms:
+    - [asgard, "realm of gods"]
+    - [midgard, "realm of humans"]
+    - [vanaheim, "realm of Vanir"]
+    - [alfheim, "realm of elves"]
+    - [niflheim, "realm of ice"]
+    - [muspel, "realm of fire"]
+    - [helheim, "realm of dead"]
+    - [jotun, "realm of giants"]
+    - [svartal, "realm of dwarves"]
+    - [yggdra, "world tree"]
+    - [bifrost, "rainbow bridge"]
+    - [valhall, "hall of slain"]
+    - [glaðsheim, "hall of gods"]
+
+  # ---------------------------------------------------------------------------
+  # Qualities & Concepts
+  # ---------------------------------------------------------------------------
+  concepts:
+    # Virtues
+    - [tro, "faith, loyalty"]
+    - [ara, "honor"]
+    - [visdom, "wisdom"]
+    - [sanning, "truth"]
+    - [frihet, "freedom"]
+    - [fred, "peace"]
+    - [hopp, "hope"]
+    # Time/Fate
+    - [tid, "time"]
+    - [ode, "fate, destiny"]
+    - [saga, "story, legend"]
+    - [norn, "fate (the Norns)"]
+    - [wyrd, "fate, destiny"]
+    # Action
+    - [fard, "journey, voyage"]
+    - [resa, "travel"]
+    - [segel, "sail"]
+    - [rodd, "rowing"]
+    - [jakt, "hunt"]
+
+  # ---------------------------------------------------------------------------
+  # Materials & Crafts
+  # ---------------------------------------------------------------------------
+  materials:
+    - [gull, "gold"]
+    - [silv, "silver"]
+    - [stal, "steel"]
+    - [jarn, "iron"]
+    - [koppar, "copper"]
+    - [brons, "bronze"]
+    - [tra, "wood"]
+    - [lader, "leather"]
+    - [ull, "wool"]
+    - [lin, "linen"]
+
+  # ---------------------------------------------------------------------------
+  # Animals (non-mythological)
+  # ---------------------------------------------------------------------------
+  animals:
+    - [varg, "wolf"]
+    - [bjorn, "bear"]
+    - [orn, "eagle"]
+    - [falk, "falcon"]
+    - [korp, "raven"]
+    - [alg, "elk, moose"]
+    - [hjort, "deer"]
+    - [ren, "reindeer"]
+    - [svan, "swan"]
+    - [lax, "salmon"]
+    - [val, "whale"]
+    - [sel, "seal"]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  # Pure Nordic suffixes
+  nordic:
+    - en       # definite article
+    - ar       # plural/agent
+    - er       # agent
+    - ung      # action/result
+    - heim     # home, realm
+    - gard     # enclosure, realm
+    - vik      # bay
+    - dal      # valley
+    - berg     # mountain
+    - holm     # island
+    - by       # village
+    - stad     # place
+
+  # Old Norse style
+  norse:
+    - ir       # masculine plural
+    - ur       # masculine singular
+    - in       # definite
+    - and      # present participle
+    - ung      # action noun
+
+  # Tech/Modern blend
+  tech:
+    - ix
+    - ex
+    - "on"    # quoted to avoid YAML boolean
+    - ax
+    - ik
+    - tek
+
+  # Latin influenced
+  latin:
+    - or
+    - us
+    - um
+    - is
+    - ax
+
+  # Neutral/International
+  neutral:
+    - a
+    - o
+    - i
+    - an
+    - en
+    - er
+    - al
+
+  # European blend
+  european:
+    - en
+    - er
+    - ner
+    - tor
+    - van
+    - ron
+    - lan
+    - tan
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", ""]  # Weighted towards no prefix
+  nordic:
+    - stor     # great, large
+    - ny       # new
+    - hog      # high
+    - ur       # original, ancient
+    - all      # all
+  international:
+    - e
+    - neo
+    - pro
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+# Pattern language:
+#   C = consonant, V = vowel
+#   K = strong (k, t, p, b, d, g, r)
+#   S = soft (s, l, m, n, f, v)
+#   N = nasal (m, n)
+#   L = liquid (l, r)
+#   Other lowercase = literal
+
+patterns:
+  # Classic Nordic style
+  nordic_style:
+    - CVCC      # fjord, kraft
+    - CVCVC     # odin, thor
+    - CVCCVC    # fenrir, balder
+    - CCVCC     # storm, stark
+    - CVCen     # ending in -en
+    - CVCar     # ending in -ar
+
+  # God/Hero names
+  heroic:
+    - KVCVC     # thor, odin
+    - KVCVL     # balder
+    - CVLCVC    # fenrir
+    - KVCVR     # vidar
+    - KVLVR     # power feel
+
+  # Nature names
+  nature:
+    - CVCC      # fjord, berg
+    - CCVC      # skog, sten
+    - CVCV      # hav, dal
+    - CVCholm   # island suffix
+    - CVCberg   # mountain suffix
+
+  # Rune-inspired
+  runic:
+    - CVCVC     # fehu, uruz
+    - CVCCV     # ansuz
+    - CVCVS     # ending in s
+    - VCVz      # ending in z
+
+  # Tech fusion
+  tech_fusion:
+    - CVCix     # thor + ix
+    - KVCon     # kraft + on
+    - CVCex     # berg + ex
+    - KVLax     # power ending
+
+# =============================================================================
+# Consonant/Vowel Sets
+# =============================================================================
+phonetics:
+  consonants:
+    # Strong Nordic consonants
+    strong: [k, t, r, d, g, b, p]
+    # Soft consonants
+    soft: [s, l, m, n, f, v, h]
+    # All common
+    all: [k, t, r, d, g, b, p, s, l, m, n, f, v, h]
+
+  vowels:
+    all: [a, e, i, o, u]
+    # Nordic tends toward these
+    common: [a, e, i, o]
+    # Back (darker, heavier)
+    back: [a, o, u]
+    # Front (lighter)
+    front: [e, i]
+
+# =============================================================================
+# Bad Patterns to Avoid
+# =============================================================================
+avoid:
+  clusters:
+    - aa       # double vowels
+    - ee
+    - ii
+    - oo
+    - uu
+    - tsch     # German-specific
+    - sch      # ambiguous
+    - th       # English-specific pronunciation
+  # Characters to never use (transliterate instead)
+  special_chars:
+    - ö        # use o
+    - ä        # use a or e
+    - å        # use a or o
+    - þ        # use th
+    - ð        # use d
+    - æ        # use ae or e

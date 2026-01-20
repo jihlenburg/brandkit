@@ -1,0 +1,312 @@
+# Celestial Bodies Phoneme Database
+# =================================
+# Roots from astronomy, space exploration, and celestial phenomena.
+# Scientific and mythological names for cosmic objects.
+#
+# Great for: Tech, aerospace, energy, premium brands, futuristic products
+
+roots:
+  # ---------------------------------------------------------------------------
+  # Stars & Stellar Objects
+  # ---------------------------------------------------------------------------
+  stars:
+    - [sol, "the Sun"]
+    - [stellar, "star-related"]
+    - [astro, "star"]
+    - [nova, "new star, explosion"]
+    - [pulsar, "pulsating star"]
+    - [quasar, "quasi-stellar object"]
+    - [vega, "bright star"]
+    - [rigel, "blue supergiant"]
+    - [sirius, "brightest star"]
+    - [polaris, "north star"]
+    - [altair, "flying eagle star"]
+    - [deneb, "tail star"]
+    - [capella, "little goat star"]
+    - [arcturus, "bear guardian"]
+    - [spica, "ear of wheat"]
+    - [antares, "rival of Mars"]
+    - [betel, "from Betelgeuse"]
+    - [proxima, "nearest"]
+    - [alpha, "first, primary"]
+    - [beta, "second"]
+
+  # ---------------------------------------------------------------------------
+  # Planets & Moons
+  # ---------------------------------------------------------------------------
+  planets:
+    - [terra, "Earth"]
+    - [luna, "Moon"]
+    - [mars, "red planet"]
+    - [venus, "morning star"]
+    - [jupiter, "king planet"]
+    - [saturn, "ringed planet"]
+    - [neptune, "blue giant"]
+    - [titan, "Saturn's moon"]
+    - [europa, "Jupiter's moon"]
+    - [io, "volcanic moon"]
+    - [ganymede, "largest moon"]
+    - [callisto, "Jupiter's moon"]
+    - [triton, "Neptune's moon"]
+    - [phobos, "Mars moon, fear"]
+    - [deimos, "Mars moon, dread"]
+    - [charon, "Pluto's moon"]
+    - [ceres, "dwarf planet"]
+    - [eris, "dwarf planet"]
+    - [pluto, "dwarf planet"]
+    - [orbital, "orbit-related"]
+
+  # ---------------------------------------------------------------------------
+  # Galaxies & Cosmic Structures
+  # ---------------------------------------------------------------------------
+  galaxies:
+    - [galaxy, "star system"]
+    - [nebula, "cloud, mist"]
+    - [cosmos, "universe, order"]
+    - [andromeda, "nearest galaxy"]
+    - [spiral, "spiral shape"]
+    - [cluster, "star group"]
+    - [void, "empty space"]
+    - [helix, "spiral shape"]
+    - [vortex, "whirlpool"]
+    - [nexus, "connection point"]
+    - [vertex, "highest point"]
+    - [apex, "peak, summit"]
+    - [zenith, "highest point"]
+    - [nadir, "lowest point"]
+    - [horizon, "sky meets earth"]
+
+  # ---------------------------------------------------------------------------
+  # Light & Energy
+  # ---------------------------------------------------------------------------
+  light:
+    - [lux, "light"]
+    - [lumen, "light unit"]
+    - [photon, "light particle"]
+    - [radiant, "emitting light"]
+    - [aurora, "dawn light"]
+    - [corona, "crown, halo"]
+    - [flare, "bright burst"]
+    - [glow, "soft light"]
+    - [beam, "ray of light"]
+    - [ray, "light beam"]
+    - [spectrum, "light range"]
+    - [prism, "light splitter"]
+    - [flux, "flow, change"]
+    - [plasma, "ionized gas"]
+    - [ion, "charged particle"]
+
+  # ---------------------------------------------------------------------------
+  # Space & Motion
+  # ---------------------------------------------------------------------------
+  space:
+    - [orbit, "circular path"]
+    - [comet, "hairy star"]
+    - [meteor, "shooting star"]
+    - [asteroid, "minor planet"]
+    - [cosmic, "of the cosmos"]
+    - [stellar, "of stars"]
+    - [lunar, "of the moon"]
+    - [solar, "of the sun"]
+    - [astral, "of stars"]
+    - [celest, "heavenly"]
+    - [ether, "upper air"]
+    - [aether, "pure air"]
+    - [void, "emptiness"]
+    - [infinity, "endless"]
+    - [eternal, "timeless"]
+
+  # ---------------------------------------------------------------------------
+  # Constellations
+  # ---------------------------------------------------------------------------
+  constellations:
+    - [orion, "the hunter"]
+    - [draco, "the dragon"]
+    - [lyra, "the lyre"]
+    - [aquila, "the eagle"]
+    - [cygnus, "the swan"]
+    - [leo, "the lion"]
+    - [aries, "the ram"]
+    - [taurus, "the bull"]
+    - [gemini, "the twins"]
+    - [scorpio, "the scorpion"]
+    - [virgo, "the maiden"]
+    - [libra, "the scales"]
+    - [phoenix, "the firebird"]
+    - [pegasus, "winged horse"]
+    - [perseus, "the hero"]
+    - [cassio, "from Cassiopeia"]
+    - [centaur, "half-horse"]
+
+  # ---------------------------------------------------------------------------
+  # Space Exploration
+  # ---------------------------------------------------------------------------
+  exploration:
+    - [voyager, "traveler"]
+    - [pioneer, "first explorer"]
+    - [apollo, "space program"]
+    - [artemis, "moon program"]
+    - [horizon, "boundary"]
+    - [frontier, "edge, boundary"]
+    - [vector, "direction"]
+    - [trajectory, "path"]
+    - [mission, "purpose"]
+    - [probe, "explorer"]
+    - [ranger, "explorer"]
+    - [scout, "advance explorer"]
+    - [pathfinder, "trail maker"]
+
+  # ---------------------------------------------------------------------------
+  # Cosmic Phenomena
+  # ---------------------------------------------------------------------------
+  phenomena:
+    - [eclipse, "blocking light"]
+    - [transit, "crossing"]
+    - [occult, "hidden, blocked"]
+    - [phase, "stage, cycle"]
+    - [wax, "growing"]
+    - [wane, "shrinking"]
+    - [solstice, "sun standing"]
+    - [equinox, "equal night"]
+    - [perihelion, "nearest sun"]
+    - [aphelion, "farthest sun"]
+    - [syzygy, "alignment"]
+    - [conjunction, "meeting"]
+
+  # ---------------------------------------------------------------------------
+  # Scientific Terms
+  # ---------------------------------------------------------------------------
+  science:
+    - [quantum, "discrete amount"]
+    - [photon, "light particle"]
+    - [neutron, "neutral particle"]
+    - [proton, "positive particle"]
+    - [electron, "negative particle"]
+    - [fusion, "combining"]
+    - [fission, "splitting"]
+    - [plasma, "fourth state"]
+    - [gravity, "attraction"]
+    - [mass, "matter amount"]
+    - [energy, "power, force"]
+    - [wave, "oscillation"]
+    - [field, "force area"]
+    - [core, "center"]
+    - [mantle, "layer"]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  celestial:
+    - a         # feminine/elegant
+    - is        # Latin noun
+    - us        # Latin masculine
+    - ar        # relating to
+    - on        # particle/unit
+    - ix        # tech feel
+    - ex        # tech feel
+    - um        # Latin neuter
+    - ia        # place/quality
+
+  tech:
+    - ix
+    - ex
+    - "on"
+    - ar
+    - or
+
+  science:
+    - on        # particle
+    - um        # element
+    - ium       # element
+    - ar        # relating to
+    - ic        # adjective
+
+  neutral:
+    - a
+    - o
+    - i
+    - er
+    - ar
+
+  european:
+    - en
+    - er
+    - "on"
+    - or
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", ""]
+  celestial:
+    - astro     # star
+    - cosmo     # universe
+    - stellar   # star
+    - solar     # sun
+    - lunar     # moon
+    - neo       # new
+    - nova      # new
+    - ultra     # beyond
+    - hyper     # above
+    - super     # above
+  scientific:
+    - proto     # first
+    - meta      # beyond
+    - mega      # large
+    - micro     # small
+    - nano      # tiny
+  international:
+    - neo
+    - pro
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+patterns:
+  celestial_style:
+    - CVCar     # solar, lunar
+    - CVCis     # orbis, astris
+    - CVCa      # nova, vega
+    - CVCon     # photon, neutron
+    - CVCix     # tech suffix
+    - CVCex     # tech suffix
+
+  scientific:
+    - CVCum     # quantum, spectrum
+    - CVCon     # proton, neutron
+    - CVCar     # stellar, solar
+
+  exploration:
+    - CVCer     # voyager, ranger
+    - CVCor     # vector, sector
+
+# =============================================================================
+# Phonetics
+# =============================================================================
+phonetics:
+  consonants:
+    all: [b, c, d, f, g, l, m, n, p, r, s, t, v, x, z]
+    strong: [c, g, k, p, t, x]
+    soft: [l, m, n, r, s, v]
+    tech: [x, z, k, v]
+
+  vowels:
+    all: [a, e, i, o, u]
+    common: [a, e, i, o]
+    bright: [i, e]
+    deep: [o, u]
+
+# =============================================================================
+# Avoid
+# =============================================================================
+avoid:
+  sounds:
+    - harsh double consonants
+    - difficult clusters (thr, phr, scr)
+  cultural:
+    - nothing specific for celestial theme
+  names:
+    - existing space company names (SpaceX, NASA, ESA)
+    - trademarked star names

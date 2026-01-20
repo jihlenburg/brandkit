@@ -1,0 +1,308 @@
+# Latin/Romance Phoneme Database
+# ===============================
+# Classical Latin and Romance language roots for elegant, premium brands.
+# Includes Italian, French, Spanish, Portuguese influences.
+#
+# Great for: Luxury, fashion, cosmetics, wine, premium products, pharma
+
+roots:
+  # ---------------------------------------------------------------------------
+  # Light & Brilliance
+  # ---------------------------------------------------------------------------
+  light:
+    - [lux, "light"]
+    - [lumen, "light, lamp"]
+    - [lucis, "of light"]
+    - [clara, "bright, clear"]
+    - [splendor, "brilliance"]
+    - [aurora, "dawn"]
+    - [stella, "star"]
+    - [sol, "sun"]
+    - [luna, "moon"]
+    - [radix, "ray"]
+    - [fulgor, "flash, lightning"]
+    - [nitor, "brightness, elegance"]
+    - [candor, "whiteness, brilliance"]
+
+  # ---------------------------------------------------------------------------
+  # Beauty & Elegance
+  # ---------------------------------------------------------------------------
+  beauty:
+    - [bella, "beautiful"]
+    - [pulchra, "beautiful"]
+    - [venus, "beauty, love"]
+    - [gratia, "grace"]
+    - [forma, "form, beauty"]
+    - [decor, "elegance"]
+    - [venusta, "charming"]
+    - [elegans, "elegant"]
+    - [nobilis, "noble"]
+    - [sublimis, "lofty, sublime"]
+    - [serena, "serene, calm"]
+    - [divina, "divine"]
+
+  # ---------------------------------------------------------------------------
+  # Strength & Power
+  # ---------------------------------------------------------------------------
+  power:
+    - [fortis, "strong"]
+    - [potens, "powerful"]
+    - [virtus, "virtue, strength"]
+    - [vigor, "vigor, energy"]
+    - [robur, "strength, oak"]
+    - [firmus, "firm, strong"]
+    - [validus, "strong, powerful"]
+    - [magnus, "great"]
+    - [maximus, "greatest"]
+    - [rex, "king"]
+    - [victor, "victor, winner"]
+    - [imperium, "power, empire"]
+    - [dominus, "lord, master"]
+
+  # ---------------------------------------------------------------------------
+  # Nature & Elements
+  # ---------------------------------------------------------------------------
+  nature:
+    - [terra, "earth"]
+    - [aqua, "water"]
+    - [mare, "sea"]
+    - [silva, "forest"]
+    - [flora, "flower"]
+    - [rosa, "rose"]
+    - [viola, "violet"]
+    - [lilium, "lily"]
+    - [vita, "life"]
+    - [natura, "nature"]
+    - [arbor, "tree"]
+    - [fons, "fountain, source"]
+    - [rivus, "stream"]
+    - [ventus, "wind"]
+    - [ignis, "fire"]
+    - [petra, "rock, stone"]
+    - [aurum, "gold"]
+    - [argentum, "silver"]
+
+  # ---------------------------------------------------------------------------
+  # Quality & Excellence
+  # ---------------------------------------------------------------------------
+  quality:
+    - [prima, "first, prime"]
+    - [optima, "best"]
+    - [vera, "true"]
+    - [pura, "pure"]
+    - [nova, "new"]
+    - [alta, "high, deep"]
+    - [perfecta, "perfect"]
+    - [integra, "whole, complete"]
+    - [genuina, "genuine"]
+    - [selecta, "selected, choice"]
+    - [rara, "rare"]
+    - [unica, "unique"]
+
+  # ---------------------------------------------------------------------------
+  # Movement & Action
+  # ---------------------------------------------------------------------------
+  movement:
+    - [velox, "swift"]
+    - [celer, "fast"]
+    - [curro, "run"]
+    - [volo, "fly"]
+    - [fero, "carry, bear"]
+    - [motus, "motion"]
+    - [fluo, "flow"]
+    - [impetus, "impulse, force"]
+    - [cursus, "course, journey"]
+    - [iter, "journey, way"]
+    - [via, "way, road"]
+
+  # ---------------------------------------------------------------------------
+  # Italian Additions
+  # ---------------------------------------------------------------------------
+  italian:
+    - [bello, "beautiful"]
+    - [dolce, "sweet"]
+    - [forte, "strong"]
+    - [vero, "true"]
+    - [puro, "pure"]
+    - [primo, "first"]
+    - [oro, "gold"]
+    - [sole, "sun"]
+    - [cielo, "sky"]
+    - [amore, "love"]
+    - [vita, "life"]
+    - [notte, "night"]
+    - [bianco, "white"]
+    - [nero, "black"]
+    - [rosso, "red"]
+
+  # ---------------------------------------------------------------------------
+  # French Additions
+  # ---------------------------------------------------------------------------
+  french:
+    - [belle, "beautiful"]
+    - [jolie, "pretty"]
+    - [chic, "stylish"]
+    - [luxe, "luxury"]
+    - [noir, "black"]
+    - [blanc, "white"]
+    - [rouge, "red"]
+    - [vert, "green"]
+    - [ciel, "sky"]
+    - [mer, "sea"]
+    - [fleur, "flower"]
+    - [reve, "dream"]
+    - [coeur, "heart"]
+    - [amour, "love"]
+    - [charme, "charm"]
+
+  # ---------------------------------------------------------------------------
+  # Spanish/Portuguese Additions
+  # ---------------------------------------------------------------------------
+  iberian:
+    - [oro, "gold"]
+    - [plata, "silver"]
+    - [sol, "sun"]
+    - [luna, "moon"]
+    - [mar, "sea"]
+    - [tierra, "earth"]
+    - [vida, "life"]
+    - [amor, "love"]
+    - [luz, "light"]
+    - [fuego, "fire"]
+    - [viento, "wind"]
+    - [estrella, "star"]
+
+  # ---------------------------------------------------------------------------
+  # Abstract & Philosophical
+  # ---------------------------------------------------------------------------
+  abstract:
+    - [veritas, "truth"]
+    - [fides, "faith, trust"]
+    - [spes, "hope"]
+    - [pax, "peace"]
+    - [amor, "love"]
+    - [anima, "soul"]
+    - [spiritus, "spirit"]
+    - [libertas, "freedom"]
+    - [sapientia, "wisdom"]
+    - [scientia, "knowledge"]
+    - [ratio, "reason"]
+    - [tempus, "time"]
+    - [aeterna, "eternal"]
+    - [infinita, "infinite"]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  latin:
+    - us       # masculine singular
+    - a        # feminine singular
+    - um       # neuter singular
+    - is       # genitive
+    - or       # agent noun
+    - ix       # feminine agent
+    - tas      # abstract noun
+    - tio      # action noun
+
+  italian:
+    - o        # masculine
+    - a        # feminine
+    - i        # plural
+    - ino      # diminutive
+    - etto     # diminutive
+    - ella     # diminutive feminine
+    - issimo   # superlative
+
+  french:
+    - e        # common ending
+    - ique     # adjective
+    - elle     # feminine
+    - eur      # agent
+    - oir      # place/tool
+
+  modern:
+    - ia
+    - io
+    - ium
+    - ex
+    - ix
+
+  neutral:
+    - a
+    - o
+    - i
+    - ar
+    - er
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", ""]
+  latin:
+    - pre      # before
+    - pro      # forward
+    - super    # above
+    - ultra    # beyond
+    - multi    # many
+    - omni     # all
+    - semi     # half
+    - trans    # across
+  french:
+    - le       # the
+    - la       # the (feminine)
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+patterns:
+  latin_style:
+    - CVCus    # marcus
+    - CVCa     # rosa
+    - CVCis    # fortis
+    - CVCor    # victor
+    - CVCum    # aurum
+
+  italian_style:
+    - CVCV     # bella, vita
+    - CVCVo    # amore
+    - CVCVC    # rosso
+
+  french_style:
+    - CVCe     # belle
+    - CVCeur   # coeur
+    - CVCoir   # noir
+
+  luxury:
+    - CVCia    # italia
+    - CVCella  # stella
+    - CVCini   # bellini
+
+# =============================================================================
+# Phonetics
+# =============================================================================
+phonetics:
+  consonants:
+    all: [b, c, d, f, g, l, m, n, p, r, s, t, v]
+    elegant: [l, r, s, v, n, f]
+    strong: [c, t, p, d, g]
+
+  vowels:
+    all: [a, e, i, o, u]
+    common: [a, e, i, o]
+
+# =============================================================================
+# Avoid
+# =============================================================================
+avoid:
+  clusters:
+    - harsh Germanic clusters
+    - th (not Latin)
+    - w (not classical Latin)
+  double_vowels:
+    - aa
+    - ee
+    - ii
+    - oo
+    - uu

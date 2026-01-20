@@ -1,0 +1,850 @@
+# Cross-Linguistic Hazards Database
+# ==================================
+# Words and patterns that are problematic in certain languages/markets.
+# Essential for international brand validation.
+#
+# Severity levels:
+#   critical: Vulgar/offensive - never use
+#   high: Strong negative meaning - avoid
+#   medium: Awkward/negative connotation - consider carefully
+#   low: Minor issue - acceptable with awareness
+
+# =============================================================================
+# Exact Word Hazards
+# =============================================================================
+words:
+  # German market hazards
+  gift:
+    language: german
+    meaning: "poison"
+    severity: critical
+    note: "Famous example - avoid completely"
+
+  mist:
+    language: german
+    meaning: "manure, crap"
+    severity: high
+    note: "Mitsubishi Pajero had issues"
+
+  kot:
+    language: german
+    meaning: "feces"
+    severity: critical
+
+  after:
+    language: german
+    meaning: "anus"
+    severity: critical
+
+  dick:
+    language: german
+    meaning: "thick, fat"
+    severity: medium
+    note: "Also vulgar in English"
+
+  fahrt:
+    language: german
+    meaning: "journey, trip"
+    severity: medium
+    note: "Sounds vulgar to English speakers"
+
+  # Spanish market hazards
+  nova:
+    language: spanish
+    meaning: "no va (doesn't go)"
+    severity: high
+    note: "Chevy Nova urban legend - actually sold fine, but worth noting"
+
+  pedo:
+    language: spanish
+    meaning: "fart, drunk"
+    severity: high
+
+  culo:
+    language: spanish
+    meaning: "ass, butt"
+    severity: critical
+
+  puta:
+    language: spanish
+    meaning: "prostitute"
+    severity: critical
+
+  moco:
+    language: spanish
+    meaning: "snot, mucus"
+    severity: high
+
+  caca:
+    language: spanish
+    meaning: "poop"
+    severity: high
+
+  foca:
+    language: spanish
+    meaning: "seal (animal), but sounds like vulgar English"
+    severity: medium
+
+  # French market hazards
+  con:
+    language: french
+    meaning: "idiot, vulgar term"
+    severity: critical
+
+  bite:
+    language: french
+    meaning: "penis"
+    severity: critical
+
+  pet:
+    language: french
+    meaning: "fart"
+    severity: high
+
+  sale:
+    language: french
+    meaning: "dirty"
+    severity: medium
+
+  laid:
+    language: french
+    meaning: "ugly"
+    severity: medium
+
+  pur:
+    language: french
+    meaning: "pure (fine), but 'peur' = fear"
+    severity: low
+
+  # Italian market hazards
+  cazzo:
+    language: italian
+    meaning: "penis (vulgar)"
+    severity: critical
+
+  fica:
+    language: italian
+    meaning: "vulgar term for female genitalia"
+    severity: critical
+
+  cagna:
+    language: italian
+    meaning: "bitch (female dog, derogatory)"
+    severity: high
+
+  figa:
+    language: italian
+    meaning: "vulgar slang"
+    severity: critical
+
+  # Portuguese market hazards
+  pica:
+    language: portuguese
+    meaning: "penis"
+    severity: critical
+
+  bunda:
+    language: portuguese
+    meaning: "butt, ass"
+    severity: high
+
+  cu:
+    language: portuguese
+    meaning: "ass"
+    severity: critical
+
+  # Japanese market hazards
+  shi:
+    language: japanese
+    meaning: "four, but also death"
+    severity: medium
+    note: "Number 4 is unlucky"
+
+  ku:
+    language: japanese
+    meaning: "nine, but sounds like suffering"
+    severity: medium
+
+  chin:
+    language: japanese
+    meaning: "penis (slang)"
+    severity: high
+
+  kin:
+    language: japanese
+    meaning: "gold (fine), but 'kinko' is taboo"
+    severity: low
+
+  # Chinese market hazards
+  si:
+    language: chinese
+    meaning: "four, sounds like death"
+    severity: high
+    note: "Tetraphobia - avoid 4, 14, 44, etc."
+
+  fan:
+    language: chinese
+    meaning: "can mean trouble, overturn"
+    severity: medium
+
+  # Arabic market hazards
+  kalb:
+    language: arabic
+    meaning: "dog (highly insulting)"
+    severity: high
+
+  khara:
+    language: arabic
+    meaning: "shit"
+    severity: critical
+
+  # Hindi market hazards
+  chut:
+    language: hindi
+    meaning: "vulgar female anatomy"
+    severity: critical
+
+  lund:
+    language: hindi
+    meaning: "penis"
+    severity: critical
+
+  gand:
+    language: hindi
+    meaning: "ass"
+    severity: critical
+
+  # Dutch market hazards
+  lull:
+    language: dutch
+    meaning: "penis"
+    severity: critical
+
+  kut:
+    language: dutch
+    meaning: "vulgar female anatomy"
+    severity: critical
+
+  # Turkish market hazards
+  sik:
+    language: turkish
+    meaning: "penis"
+    severity: critical
+
+  am:
+    language: turkish
+    meaning: "vulgar female anatomy"
+    severity: critical
+
+  # Polish market hazards
+  kur:
+    language: polish
+    meaning: "cock/rooster, vulgar slang"
+    severity: high
+
+  dupa:
+    language: polish
+    meaning: "ass"
+    severity: high
+
+  # Russian market hazards
+  hui:
+    language: russian
+    meaning: "penis (extremely vulgar)"
+    severity: critical
+
+  blyad:
+    language: russian
+    meaning: "whore"
+    severity: critical
+
+  # Swedish market hazards
+  fart:
+    language: swedish
+    meaning: "speed (fine in Swedish, vulgar in English)"
+    severity: medium
+    note: "Only issue for English speakers"
+
+  slut:
+    language: swedish
+    meaning: "end, finish (fine in Swedish, vulgar in English)"
+    severity: medium
+
+  # Korean market hazards
+  ssi:
+    language: korean
+    meaning: "seed, but can be vulgar in compounds"
+    severity: low
+
+  # English vulgar (for non-English markets using English names)
+  ass:
+    language: english
+    meaning: "buttocks, donkey"
+    severity: high
+
+  damn:
+    language: english
+    meaning: "curse word"
+    severity: medium
+
+  crap:
+    language: english
+    meaning: "excrement, rubbish"
+    severity: medium
+
+  piss:
+    language: english
+    meaning: "urine"
+    severity: high
+
+  puke:
+    language: english
+    meaning: "vomit"
+    severity: high
+
+  suck:
+    language: english
+    meaning: "negative slang"
+    severity: medium
+
+# =============================================================================
+# Sound Pattern Hazards
+# =============================================================================
+# Patterns that sound like vulgar words in various languages
+
+patterns:
+  # Sounds like English vulgar words
+  fuk:
+    similar_to: "fuck"
+    severity: critical
+    languages: [english]
+
+  fuc:
+    similar_to: "fuck"
+    severity: critical
+    languages: [english]
+
+  shyt:
+    similar_to: "shit"
+    severity: critical
+    languages: [english]
+
+  sht:
+    similar_to: "shit"
+    severity: high
+    languages: [english]
+
+  cnt:
+    similar_to: "cunt"
+    severity: critical
+    languages: [english]
+
+  dik:
+    similar_to: "dick"
+    severity: high
+    languages: [english]
+
+  cok:
+    similar_to: "cock"
+    severity: high
+    languages: [english]
+
+  kok:
+    similar_to: "cock"
+    severity: high
+    languages: [english]
+
+  tit:
+    similar_to: "tit"
+    severity: medium
+    languages: [english]
+
+  # Patterns problematic in German
+  scheis:
+    similar_to: "scheisse (shit)"
+    severity: high
+    languages: [german]
+
+  arsch:
+    similar_to: "arsch (ass)"
+    severity: high
+    languages: [german]
+
+  # Patterns problematic in multiple languages
+  pis:
+    similar_to: "piss"
+    severity: medium
+    languages: [english, french]
+
+  kak:
+    similar_to: "caca"
+    severity: medium
+    languages: [spanish, portuguese, russian]
+
+  poop:
+    similar_to: "poop"
+    severity: medium
+    languages: [english]
+
+  pedo:
+    similar_to: "pedophile/fart"
+    severity: critical
+    languages: [english, spanish]
+
+# =============================================================================
+# Phonetic/Sound-Alike Hazards
+# =============================================================================
+# Words that SOUND like vulgar terms when spoken, regardless of spelling.
+# These are especially problematic in advertising/spoken media.
+
+sound_alikes:
+  # Sounds like body parts / vulgar anatomy
+  uranus:
+    sounds_like: "your anus"
+    severity: high
+    note: "Classic example - the planet name"
+
+  analyte:
+    sounds_like: "anal + ite"
+    severity: medium
+
+  analist:
+    sounds_like: "anal + ist"
+    severity: medium
+
+  arsenal:
+    sounds_like: "arse + nal"
+    severity: low
+    note: "Established brand, but new brands should avoid"
+
+  aspen:
+    sounds_like: "ass + pen"
+    severity: low
+    note: "Minor, established brand"
+
+  assassin:
+    sounds_like: "ass + ass + in"
+    severity: low
+    note: "Real word, but consider for brand names"
+
+  # Sounds like excrement
+  shitake:
+    sounds_like: "shit + ake"
+    severity: medium
+    note: "Real mushroom name, avoid for brands"
+
+  shiatsu:
+    sounds_like: "she + at + su (shit)"
+    severity: low
+
+  shipper:
+    sounds_like: "shit + per (in some accents)"
+    severity: low
+
+  # Sounds like sexual terms
+  fokker:
+    sounds_like: "fucker"
+    severity: high
+    note: "Dutch aircraft company had issues"
+
+  fukui:
+    sounds_like: "fuck we"
+    severity: medium
+
+  fukuoka:
+    sounds_like: "fuck you + oka"
+    severity: medium
+
+  phuc:
+    sounds_like: "fuck"
+    severity: high
+    note: "Vietnamese name, problematic in English markets"
+
+  fuk:
+    sounds_like: "fuck"
+    severity: critical
+
+  fook:
+    sounds_like: "fuck (UK pronunciation)"
+    severity: high
+
+  farquhar:
+    sounds_like: "fuck + er"
+    severity: medium
+
+  # Sounds like "cock"
+  cockburn:
+    sounds_like: "cock + burn"
+    severity: high
+    note: "Real surname, avoid for brands"
+
+  hancock:
+    sounds_like: "hand + cock"
+    severity: medium
+
+  peacock:
+    sounds_like: "pea + cock"
+    severity: low
+    note: "Real word but contains 'cock'"
+
+  cockatoo:
+    sounds_like: "cock + a + too"
+    severity: low
+
+  # Sounds like "dick"
+  dickens:
+    sounds_like: "dick + ens"
+    severity: low
+
+  dickson:
+    sounds_like: "dick + son"
+    severity: medium
+
+  moby:
+    sounds_like: "adjacent to 'Moby Dick'"
+    severity: low
+
+  # Sounds like "tit"
+  titalin:
+    sounds_like: "tit + alin"
+    severity: medium
+
+  titania:
+    sounds_like: "tit + ania"
+    severity: low
+    note: "Shakespeare character, still risky"
+
+  # Sounds like "cum"
+  cumulus:
+    sounds_like: "cum + ulus"
+    severity: medium
+
+  cucumber:
+    sounds_like: "cu + cum + ber"
+    severity: low
+
+  cumberland:
+    sounds_like: "cum + berland"
+    severity: low
+
+  # Sounds like "piss"
+  piston:
+    sounds_like: "piss + ton"
+    severity: low
+
+  pisces:
+    sounds_like: "piss + ces"
+    severity: low
+
+  # Sounds like "ass"
+  asset:
+    sounds_like: "ass + et"
+    severity: low
+    note: "Real word, generally fine"
+
+  assume:
+    sounds_like: "ass + ume"
+    severity: low
+
+  massive:
+    sounds_like: "mass + ive (m + ass + ive)"
+    severity: low
+
+  # Sounds like "whore"
+  horace:
+    sounds_like: "whore + ace (in some accents)"
+    severity: low
+
+  horrible:
+    sounds_like: "whore + ible"
+    severity: low
+
+  # Sounds like "balls"
+  balsa:
+    sounds_like: "balls + a"
+    severity: low
+
+  # Sounds like "fart"
+  fartin:
+    sounds_like: "fart + in"
+    severity: high
+
+  # Sounds like "boner"
+  bonera:
+    sounds_like: "boner + a"
+    severity: high
+
+  # Compound sound issues
+  penisland:
+    sounds_like: "pen island vs penis land"
+    severity: critical
+    note: "Famous URL example"
+
+  analrapist:
+    sounds_like: "analyst therapist vs anal rapist"
+    severity: critical
+    note: "Arrested Development joke"
+
+  expertsexchange:
+    sounds_like: "expert sex change"
+    severity: high
+    note: "Real website had to add hyphen"
+
+  kidsexchange:
+    sounds_like: "kids exchange vs kid sex change"
+    severity: critical
+
+  therapist:
+    sounds_like: "the rapist"
+    severity: medium
+    note: "Real word, be careful with spacing"
+
+  # German-English sound issues
+  fahren:
+    sounds_like: "fart + en (to English ears)"
+    severity: medium
+
+  dicke:
+    sounds_like: "dick + e"
+    severity: medium
+    note: "German for 'thick'"
+
+  # Japanese-English sound issues
+  kin:
+    sounds_like: "adjacent to vulgar in compounds"
+    severity: low
+
+  # Sounds vulgar when said fast
+  sofa_king:
+    sounds_like: "so fucking"
+    severity: high
+
+  fork_handles:
+    sounds_like: "four candles (harmless) but rapid speech issues"
+    severity: low
+
+  # Innocent words that sound bad
+  caulk:
+    sounds_like: "cock"
+    severity: medium
+
+  seaman:
+    sounds_like: "semen"
+    severity: high
+
+  semen:
+    sounds_like: "semen"
+    severity: critical
+    note: "Avoid anything close to this"
+
+  spunk:
+    sounds_like: "spunk (slang for semen in UK)"
+    severity: high
+    note: "US = courage, UK = vulgar"
+
+  wank:
+    sounds_like: "wank (UK vulgar)"
+    severity: high
+
+  shag:
+    sounds_like: "shag (UK slang for sex)"
+    severity: high
+
+  # Childish but problematic
+  poo:
+    sounds_like: "poo"
+    severity: medium
+
+  wee:
+    sounds_like: "wee (urine)"
+    severity: medium
+
+  bum:
+    sounds_like: "bum (UK for butt)"
+    severity: medium
+
+  # Regional pronunciation issues
+  cant:
+    sounds_like: "cunt (in some accents)"
+    severity: medium
+    note: "Irish/Scottish pronunciation"
+
+  clint:
+    sounds_like: "clit (in rapid speech)"
+    severity: low
+
+  flick:
+    sounds_like: "fuck (in some accents)"
+    severity: low
+
+# Phonetic patterns to check against
+phonetic_patterns:
+  # Patterns that sound vulgar when pronounced
+  fuk_sound:
+    regex: "[fp][aouüö][ck]+"
+    sounds_like: "fuck"
+    severity: high
+
+  shyt_sound:
+    regex: "sh[iy]t"
+    sounds_like: "shit"
+    severity: high
+
+  kak_sound:
+    regex: "[ck]a[ck]"
+    sounds_like: "caca/cack"
+    severity: medium
+
+  pis_sound:
+    regex: "p[iy]ss?"
+    sounds_like: "piss"
+    severity: medium
+
+  ass_sound:
+    regex: "[aä]ss"
+    sounds_like: "ass"
+    severity: medium
+
+  dik_sound:
+    regex: "d[iy][ck]+"
+    sounds_like: "dick"
+    severity: medium
+
+  kok_sound:
+    regex: "[ck]o[ck]+"
+    sounds_like: "cock"
+    severity: medium
+
+  kum_sound:
+    regex: "[ck][uü]m"
+    sounds_like: "cum"
+    severity: high
+
+  tit_sound:
+    regex: "t[iy]t"
+    sounds_like: "tit"
+    severity: medium
+
+  fart_sound:
+    regex: "f[aä]rt"
+    sounds_like: "fart"
+    severity: medium
+
+  poop_sound:
+    regex: "p[oö][oö]p"
+    sounds_like: "poop"
+    severity: medium
+
+  # Words ending in these sounds are risky
+  risky_endings:
+    - uck
+    - ock
+    - ick
+    - unt
+    - orn   # porn
+    - enis  # penis
+    - agina # vagina
+    - ussy
+    - oob   # boob
+    - rape
+    - ape   # can sound like rape
+
+# =============================================================================
+# Unfortunate Acronyms to Avoid
+# =============================================================================
+acronyms:
+  # These should not be formed from initials
+  - wtf
+  - omg
+  - fml
+  - stfu
+  - pos   # piece of shit
+  - sob   # son of a bitch
+  - bs    # bullshit
+  - aids
+  - std
+  - kkk
+  - isis
+  - nazi
+  - ss
+  - fu
+  - sob
+
+# =============================================================================
+# Cultural/Religious Sensitivities
+# =============================================================================
+cultural:
+  # Religious terms - use carefully
+  allah:
+    context: "Islamic - sacred name"
+    severity: high
+    note: "Inappropriate for commercial use"
+
+  jesus:
+    context: "Christian - sacred name"
+    severity: medium
+    note: "May offend if used commercially"
+
+  buddha:
+    context: "Buddhist - sacred figure"
+    severity: medium
+    note: "Some markets may object"
+
+  krishna:
+    context: "Hindu - sacred deity"
+    severity: medium
+
+  shiva:
+    context: "Hindu - sacred deity"
+    severity: medium
+
+  # Political/Historical
+  fuhrer:
+    context: "Nazi association"
+    severity: critical
+
+  reich:
+    context: "Nazi association in certain contexts"
+    severity: high
+
+  swastik:
+    context: "Nazi association (despite Hindu origin)"
+    severity: critical
+    note: "In Western markets"
+
+# =============================================================================
+# Market-Specific Notes
+# =============================================================================
+market_notes:
+  china:
+    - "Avoid number 4 (sounds like death)"
+    - "8 is lucky (sounds like prosperity)"
+    - "Red is positive, white can mean death/mourning"
+    - "Green hats = infidelity"
+
+  japan:
+    - "Avoid number 4 (shi = death) and 9 (ku = suffering)"
+    - "Gifts in 4s are taboo"
+    - "White/black = mourning"
+
+  middle_east:
+    - "Left hand is unclean - avoid 'left' associations"
+    - "Dogs are considered unclean"
+    - "Pork/pig references are taboo"
+
+  india:
+    - "Cow is sacred - beef references taboo"
+    - "Left hand is unclean"
+    - "Certain number combinations have meanings"
+
+  korea:
+    - "Number 4 is unlucky (sa = death)"
+    - "Red ink for names = death"
+
+  brazil:
+    - "OK gesture is vulgar"
+    - "Purple = mourning"
+
+  germany:
+    - "Nazi-era terminology strictly regulated by law"
+    - "Certain symbols are illegal"

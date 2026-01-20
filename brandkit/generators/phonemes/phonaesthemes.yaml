@@ -1,0 +1,407 @@
+# Phonaesthemes - Sound Symbolism Database
+# =========================================
+# Maps sound patterns to semantic associations based on linguistic research.
+# References: Hinton et al. (1994), Klink (2000), Yorkston & Menon (2004)
+#
+# Phonaesthemes are sound clusters that carry consistent meaning associations
+# across speakers, even in nonsense words.
+
+# =============================================================================
+# Initial Consonant Clusters (Onsets)
+# =============================================================================
+onsets:
+  # Light & Vision
+  gl:
+    meanings: [light, shine, vision, sparkle]
+    examples: [glow, glitter, gleam, glint, glisten, glare, glass]
+    brand_feel: [bright, premium, clean]
+
+  fl:
+    meanings: [movement, flow, fluid, light]
+    examples: [flow, flutter, fly, flame, flash, flicker]
+    brand_feel: [dynamic, graceful, fast]
+
+  sp:
+    meanings: [scatter, spray, speed, spark]
+    examples: [spark, spray, speed, spin, splash, sprint]
+    brand_feel: [energetic, dispersive, quick]
+
+  sw:
+    meanings: [sweeping, smooth, swift]
+    examples: [sweep, swift, swing, swirl, switch]
+    brand_feel: [elegant, smooth, flowing]
+
+  # Nose/Mouth (often negative - use carefully)
+  sn:
+    meanings: [nose, sneaky, negative]
+    examples: [sniff, snore, sneeze, sneer, snap, snag]
+    brand_feel: [sharp, quick, potentially negative]
+    caution: true
+
+  sl:
+    meanings: [slippery, slow, slimy]
+    examples: [slide, slip, slow, slick, sludge]
+    brand_feel: [smooth, but can be negative]
+    caution: true
+
+  # Strength & Impact
+  str:
+    meanings: [strength, straight, stretch]
+    examples: [strong, strike, stream, stride, stress]
+    brand_feel: [powerful, direct, forceful]
+
+  cr:
+    meanings: [breaking, harsh, crisp]
+    examples: [crack, crash, crush, crisp, crunch]
+    brand_feel: [sharp, decisive, impactful]
+
+  gr:
+    meanings: [grip, growth, ground]
+    examples: [grip, grow, ground, grand, great]
+    brand_feel: [solid, substantial, grounded]
+
+  tr:
+    meanings: [movement, trail, traverse]
+    examples: [track, trail, travel, trek, true]
+    brand_feel: [journey, progress, reliable]
+
+  # Technology & Precision
+  sc/sk:
+    meanings: [cutting, sharp, scanning]
+    examples: [scan, scale, scope, skill, sketch]
+    brand_feel: [precise, technical, analytical]
+
+  pr:
+    meanings: [forward, professional, prime]
+    examples: [pro, prime, proud, precise, press]
+    brand_feel: [professional, premium, progressive]
+
+  # Soft & Gentle
+  wh:
+    meanings: [breath, whisper, soft]
+    examples: [whisper, white, whirl, whole]
+    brand_feel: [gentle, pure, airy]
+
+  th:
+    meanings: [thought, through, thin]
+    examples: [think, through, theory, thrive]
+    brand_feel: [intellectual, penetrating]
+
+  # Power & Force
+  bl:
+    meanings: [burst, block, blow]
+    examples: [blast, blow, block, blaze, bold]
+    brand_feel: [powerful, bold, impactful]
+
+  br:
+    meanings: [break, brave, bright]
+    examples: [brave, bright, break, brand, broad]
+    brand_feel: [bold, brilliant, strong]
+
+  dr:
+    meanings: [drive, draw, dramatic]
+    examples: [drive, dream, draw, drop, dramatic]
+    brand_feel: [dynamic, dramatic, directed]
+
+# =============================================================================
+# Final Consonant Clusters (Codas)
+# =============================================================================
+codas:
+  # Completeness & Finality
+  -ck:
+    meanings: [quick, sharp end, compact]
+    examples: [quick, click, pack, lock]
+    brand_feel: [decisive, compact, memorable]
+
+  -nk:
+    meanings: [solid, definite]
+    examples: [think, link, tank, rank]
+    brand_feel: [solid, connected]
+
+  -ng:
+    meanings: [ongoing, resonant]
+    examples: [strong, ring, swing, king]
+    brand_feel: [lasting, resonant, powerful]
+
+  -mp:
+    meanings: [impact, bump]
+    examples: [jump, pump, camp, stamp]
+    brand_feel: [impactful, energetic]
+
+  # Smooth endings
+  -ft:
+    meanings: [soft, lift, craft]
+    examples: [soft, lift, craft, drift, swift]
+    brand_feel: [refined, skilled]
+
+  -lm:
+    meanings: [calm, realm]
+    examples: [calm, realm, helm, film]
+    brand_feel: [peaceful, encompassing]
+
+  # Sharp endings
+  -xt:
+    meanings: [next, text, complex]
+    examples: [next, text, context]
+    brand_feel: [modern, forward, complex]
+
+  -sk:
+    meanings: [task, risk]
+    examples: [task, risk, desk, mask]
+    brand_feel: [challenging, active]
+
+# =============================================================================
+# Single Consonant Associations
+# =============================================================================
+consonants:
+  # Plosives - Power & Impact
+  k:
+    type: plosive
+    voicing: unvoiced
+    feel: [hard, sharp, powerful, crisp]
+    associations: [strength, precision, tech]
+
+  t:
+    type: plosive
+    voicing: unvoiced
+    feel: [sharp, clean, technical]
+    associations: [precision, technology, clarity]
+
+  p:
+    type: plosive
+    voicing: unvoiced
+    feel: [punchy, pop, precise]
+    associations: [pop, energy, precision]
+
+  b:
+    type: plosive
+    voicing: voiced
+    feel: [bold, big, booming]
+    associations: [boldness, size, impact]
+
+  d:
+    type: plosive
+    voicing: voiced
+    feel: [solid, definite, grounded]
+    associations: [reliability, solidity]
+
+  g:
+    type: plosive
+    voicing: voiced
+    feel: [grand, strong, guttural]
+    associations: [grandeur, power, earth]
+
+  # Fricatives - Flow & Sophistication
+  f:
+    type: fricative
+    voicing: unvoiced
+    feel: [flowing, fine, refined]
+    associations: [elegance, finesse, flow]
+
+  v:
+    type: fricative
+    voicing: voiced
+    feel: [vibrant, vital, velocity]
+    associations: [energy, vitality, movement]
+
+  s:
+    type: fricative
+    voicing: unvoiced
+    feel: [smooth, sleek, sharp]
+    associations: [speed, sophistication, precision]
+
+  z:
+    type: fricative
+    voicing: voiced
+    feel: [buzzing, electric, zippy]
+    associations: [energy, electricity, modernity]
+
+  # Nasals - Warmth & Comfort
+  m:
+    type: nasal
+    feel: [warm, maternal, mellow]
+    associations: [comfort, nurture, home]
+
+  n:
+    type: nasal
+    feel: [natural, neutral, nice]
+    associations: [nature, neutrality, ease]
+
+  # Liquids - Flow & Elegance
+  l:
+    type: liquid
+    feel: [light, liquid, luxurious]
+    associations: [elegance, lightness, luxury]
+
+  r:
+    type: liquid
+    feel: [rolling, robust, rugged]
+    associations: [strength, adventure, reliability]
+
+# =============================================================================
+# Vowel Associations
+# =============================================================================
+vowels:
+  # Front vowels - Small, Light, Fast
+  i:
+    position: front
+    height: high
+    feel: [small, quick, light, precise]
+    associations: [speed, smallness, precision, tech]
+    examples: [mini, quick, swift, crisp]
+
+  e:
+    position: front
+    height: mid
+    feel: [elegant, efficient, easy]
+    associations: [efficiency, elegance, ease]
+    examples: [excel, elegant, energy]
+
+  # Back vowels - Big, Heavy, Slow, Powerful
+  o:
+    position: back
+    height: mid
+    feel: [round, whole, bold, solid]
+    associations: [completeness, power, solidity]
+    examples: [bold, whole, strong, power]
+
+  u:
+    position: back
+    height: high
+    feel: [deep, powerful, ultimate]
+    associations: [depth, power, ultimate]
+    examples: [ultra, supreme, truth]
+
+  a:
+    position: central
+    height: low
+    feel: [open, grand, alpha]
+    associations: [openness, grandeur, beginning]
+    examples: [alpha, grand, vast, master]
+
+# =============================================================================
+# Sound Patterns by Brand Archetype
+# =============================================================================
+archetypes:
+  power:
+    description: "Strong, commanding, forceful"
+    preferred_onsets: [str, kr, gr, br, tr, bl]
+    preferred_consonants: [k, t, g, r, d]
+    preferred_vowels: [a, o, u]
+    preferred_codas: [-ng, -ck, -nk, -mp]
+    avoid_onsets: [sl, sn, wh]
+    avoid_consonants: [w, y]
+    example_names: [Kratos, Titan, Voltex, Bruton]
+
+  elegance:
+    description: "Sophisticated, refined, luxurious"
+    preferred_onsets: [fl, sw, gl, pr]
+    preferred_consonants: [l, s, f, v, n]
+    preferred_vowels: [e, i, a]
+    preferred_codas: [-ft, -lm]
+    avoid_onsets: [cr, gr, sn]
+    avoid_consonants: [k, g, ck]
+    example_names: [Velara, Silven, Floria, Lumina]
+
+  speed:
+    description: "Fast, dynamic, energetic"
+    preferred_onsets: [sp, fl, sw, str, tr]
+    preferred_consonants: [z, v, s, r, t]
+    preferred_vowels: [i, e]
+    preferred_codas: [-ck, -xt]
+    avoid_onsets: [sl]
+    avoid_consonants: [m, w]
+    example_names: [Zephix, Vektor, Sprint, Trix]
+
+  nature:
+    description: "Natural, organic, earthy"
+    preferred_onsets: [gr, fl, tr]
+    preferred_consonants: [n, l, r, m, f]
+    preferred_vowels: [a, o, e]
+    preferred_codas: [-lm, -nd]
+    avoid_onsets: [cr, str]
+    avoid_consonants: [z, x]
+    example_names: [Terra, Flora, Verdant, Gaia]
+
+  tech:
+    description: "Modern, innovative, precise"
+    preferred_onsets: [tr, pr, sc, sp]
+    preferred_consonants: [x, z, k, t, s]
+    preferred_vowels: [i, e, o]
+    preferred_codas: [-xt, -ck, -sk]
+    avoid_onsets: [wh, sl]
+    avoid_consonants: [w]
+    example_names: [Nexix, Tekron, Proxel, Syntex]
+
+  trust:
+    description: "Reliable, solid, dependable"
+    preferred_onsets: [tr, gr, str, br]
+    preferred_consonants: [t, r, n, d, s]
+    preferred_vowels: [o, a, u]
+    preferred_codas: [-nd, -nk, -st]
+    avoid_onsets: [sl, sn]
+    avoid_consonants: []
+    example_names: [Truston, Reliant, Solidex, Fortis]
+
+  innovation:
+    description: "Creative, forward-thinking, novel"
+    preferred_onsets: [sp, fl, br, pr]
+    preferred_consonants: [v, z, n, x]
+    preferred_vowels: [i, o, e]
+    preferred_codas: [-xt, -on]
+    avoid_onsets: []
+    avoid_consonants: []
+    example_names: [Novex, Innova, Sparkon, Neovix]
+
+# =============================================================================
+# Sound-Meaning Mappings (for semantic generation)
+# =============================================================================
+semantic_sounds:
+  # What sounds "feel like" specific concepts
+  brightness:
+    sounds: [gl, fl, l, i, e]
+    explanation: "Front vowels and liquid consonants evoke lightness"
+
+  darkness:
+    sounds: [dr, gr, d, u, o]
+    explanation: "Back vowels and voiced stops evoke depth/darkness"
+
+  speed:
+    sounds: [sp, sw, z, v, i, ck]
+    explanation: "Fricatives and front vowels feel fast"
+
+  heaviness:
+    sounds: [gr, dr, b, d, g, u, o, mp]
+    explanation: "Voiced stops and back vowels feel heavy"
+
+  smoothness:
+    sounds: [sl, sw, fl, l, s, m]
+    explanation: "Fricatives and liquids feel smooth"
+
+  sharpness:
+    sounds: [cr, sp, k, t, ck, sk]
+    explanation: "Voiceless stops and affricates feel sharp"
+
+  warmth:
+    sounds: [m, n, w, a, o]
+    explanation: "Nasals and open vowels feel warm"
+
+  coldness:
+    sounds: [k, cr, i, s]
+    explanation: "Voiceless stops and front vowels feel cold"
+
+  size_large:
+    sounds: [gr, br, b, g, a, o, u]
+    explanation: "Voiced stops and back vowels feel big"
+
+  size_small:
+    sounds: [t, p, i, e]
+    explanation: "Voiceless stops and front vowels feel small"
+
+  energy:
+    sounds: [sp, z, v, k, i, ck]
+    explanation: "Fricatives and stops feel energetic"
+
+  calm:
+    sounds: [fl, sw, l, m, n, a, lm]
+    explanation: "Liquids and nasals feel calm"

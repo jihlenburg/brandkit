@@ -1,0 +1,415 @@
+# Greek Mythology Phoneme Database
+# ================================
+# Roots, suffixes, and patterns for Greek-inspired brand names.
+# Focus on power, light, movement, and elemental forces.
+#
+# Format: [phoneme, meaning/association]
+
+roots:
+  # ---------------------------------------------------------------------------
+  # Titans & Primordial Beings
+  # ---------------------------------------------------------------------------
+  titans:
+    - [titan, "giant, powerful"]
+    - [atlas, "endurance, support"]
+    - [kronos, "time, eternity"]
+    - [prometheus, "forethought, fire-bringer"]
+    - [hyperion, "high one, light"]
+    - [iapetos, "piercer, ancestor"]
+    - [koios, "intelligence, inquiry"]
+    - [krios, "ram, constellation"]
+    - [theia, "divine, sight"]
+    - [rhea, "flow, ease"]
+    - [themis, "law, order"]
+    - [mnemosyne, "memory"]
+    - [tethys, "fresh water"]
+    - [phoebe, "bright, prophetic"]
+    - [okeanos, "ocean river"]
+
+  # ---------------------------------------------------------------------------
+  # Mythological Beasts & Creatures
+  # ---------------------------------------------------------------------------
+  beasts:
+    # Winged creatures
+    - [pegasos, "winged horse, inspiration"]
+    - [phoenix, "rebirth, immortality"]
+    - [griffin, "guardian, strength"]
+    - [hippogriff, "swift flight"]
+    # Multi-headed / Powerful
+    - [hydra, "water serpent, regeneration"]
+    - [cerberus, "guardian, protection"]
+    - [chimera, "hybrid, power"]
+    - [typhon, "storm giant"]
+    # Guardians & Wise
+    - [sphinx, "riddle, wisdom"]
+    - [ladon, "dragon guardian"]
+    - [argos, "all-seeing, vigilant"]
+    - [talos, "bronze guardian, automation"]
+    # Sea creatures
+    - [triton, "sea messenger"]
+    - [scylla, "sea power"]
+    - [charybdis, "whirlpool force"]
+    - [hippocampus, "sea horse"]
+    # Serpents & Dragons
+    - [python, "earth serpent"]
+    - [drakon, "dragon, sharp-sighted"]
+    - [echidna, "mother of monsters"]
+    # Speed & Grace
+    - [centaur, "dual nature, speed"]
+    - [satyr, "wild energy"]
+    - [nymph, "nature spirit"]
+
+  # ---------------------------------------------------------------------------
+  # Light & Celestial
+  # ---------------------------------------------------------------------------
+  light:
+    # Greek
+    - [helios, "sun"]
+    - [selene, "moon"]
+    - [eos, "dawn"]
+    - [astra, "star"]
+    - [aether, "upper air, pure light"]
+    - [phos, "light"]
+    - [phanes, "light-bringer, creation"]
+    - [hemera, "day"]
+    # Latin additions (common in brand names)
+    - [lux, "light"]
+    - [sol, "sun"]
+    - [luna, "moon"]
+    - [aurora, "dawn"]
+    - [stella, "star"]
+    - [radix, "ray, beam"]
+    - [claros, "bright, clear"]
+    - [lampros, "shining, brilliant"]
+
+  # ---------------------------------------------------------------------------
+  # Elements & Forces
+  # ---------------------------------------------------------------------------
+  elements:
+    # Fire
+    - [pyros, "fire"]
+    - [phlox, "flame"]
+    - [kauma, "burning heat"]
+    # Water
+    - [hydor, "water"]
+    - [naias, "water nymph"]
+    - [potamos, "river"]
+    # Earth
+    - [gaia, "earth"]
+    - [geos, "ground, land"]
+    - [lithos, "stone"]
+    - [petra, "rock"]
+    # Air
+    - [aeros, "air"]
+    - [pneuma, "breath, spirit"]
+    - [atmos, "vapor"]
+    # Energy/Force
+    - [elektra, "amber, electric"]
+    - [magnes, "magnet"]
+    - [dynamis, "power, force"]
+    - [energeia, "energy, activity"]
+    - [kinesis, "movement"]
+    - [therma, "heat"]
+    - [tonos, "tension, power"]
+    - [sthenos, "strength"]
+    - [bia, "force, power"]
+    - [menos, "might, fury"]
+
+  # ---------------------------------------------------------------------------
+  # Wind Gods & Movement
+  # ---------------------------------------------------------------------------
+  winds:
+    - [zephyros, "west wind, gentle breeze"]
+    - [boreas, "north wind, swift"]
+    - [notos, "south wind, storm"]
+    - [euros, "east wind"]
+    - [aeolus, "wind keeper"]
+    - [aura, "breeze, air"]
+    - [anemos, "wind"]
+    - [thyella, "storm wind"]
+    - [lailaps, "hurricane, whirlwind"]
+
+  # ---------------------------------------------------------------------------
+  # Abstract & Philosophical Concepts
+  # ---------------------------------------------------------------------------
+  abstract:
+    # Time & Existence
+    - [aion, "eternity, age"]
+    - [kairos, "opportunity, right moment"]
+    - [chronos, "time"]
+    # Mind & Reason
+    - [logos, "word, reason, logic"]
+    - [nous, "mind, intellect"]
+    - [gnosis, "knowledge"]
+    - [sophia, "wisdom"]
+    - [episteme, "understanding"]
+    # Purpose & Order
+    - [telos, "end, purpose, goal"]
+    - [arche, "origin, principle"]
+    - [kosmos, "order, harmony"]
+    - [techne, "craft, skill, art"]
+    - [praxis, "action, practice"]
+    # Virtues & Qualities
+    - [nike, "victory"]
+    - [kratos, "strength, rule"]
+    - [arete, "excellence, virtue"]
+    - [axios, "worthy"]
+    - [kalos, "beauty, good"]
+    - [aletheia, "truth"]
+    - [dike, "justice"]
+    - [elpis, "hope"]
+    - [charis, "grace"]
+
+  # ---------------------------------------------------------------------------
+  # Nature & Cosmos
+  # ---------------------------------------------------------------------------
+  nature:
+    # Earth features
+    - [oros, "mountain"]
+    - [dendron, "tree"]
+    - [phyllon, "leaf"]
+    - [anthos, "flower"]
+    - [karpos, "fruit"]
+    - [rhiza, "root"]
+    # Water features
+    - [thalassa, "sea"]
+    - [pelagos, "open sea"]
+    - [limne, "lake"]
+    - [krene, "spring, fountain"]
+    # Sky & Space
+    - [ouranos, "sky, heaven"]
+    - [olympos, "peak, heaven"]
+    - [chaos, "void, primordial gap"]
+    - [erebos, "darkness, shadow"]
+    - [nyx, "night"]
+    - [tartaros, "abyss, depth"]
+
+  # ---------------------------------------------------------------------------
+  # Heroes & Deities (shortened forms)
+  # ---------------------------------------------------------------------------
+  heroes:
+    # Hero qualities
+    - [heros, "hero, protector"]
+    - [aristos, "best, excellent"]
+    - [protos, "first"]
+    - [megas, "great"]
+    - [archos, "leader, chief"]
+    # Greek letters (brand-friendly)
+    - [alpha, "first, beginning"]
+    - [omega, "last, completion"]
+    - [delta, "change, triangle"]
+    - [sigma, "sum, totality"]
+    - [theta, "thought"]
+    # Deity associations
+    - [zeus, "sky father, power"]
+    - [ares, "war, strength"]
+    - [hermes, "messenger, speed"]
+    - [hephaestos, "forge, craft"]
+    - [apollo, "light, music"]
+    - [athena, "wisdom, strategy"]
+    - [artemis, "hunt, nature"]
+    - [poseidon, "sea, power"]
+
+  # ---------------------------------------------------------------------------
+  # Power & Movement (additional)
+  # ---------------------------------------------------------------------------
+  power:
+    - [ischys, "strength, might"]
+    - [dunamis, "capability"]
+    - [exousia, "authority"]
+    - [thumos, "spirit, courage"]
+    - [orge, "energy, passion"]
+    - [hormos, "impulse, drive"]
+    - [taxis, "order, arrangement"]
+    - [ergon, "work, deed"]
+    - [dromos, "running, course"]
+    - [tachos, "speed"]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  # Tech/Modern - strong brand endings
+  tech:
+    - ix
+    - ex
+    - "on"
+    - ax
+    - ox
+    - ik
+    - tek
+    - tron
+
+  # Latin-influenced
+  latin:
+    - or
+    - us
+    - um
+    - ax
+    - is
+    - er
+    - al
+
+  # Modern brand style
+  modern:
+    - ia
+    - io
+    - ara
+    - ora
+    - ium
+    - eon
+    - ius
+
+  # Classical Greek
+  greek:
+    - os
+    - is
+    - as
+    - "on"
+    - es
+    - ys
+
+  # Neutral/International
+  neutral:
+    - a
+    - o
+    - i
+    - an
+    - en
+    - er
+    - al
+    - ar
+
+  # European style (German/Scandinavian influenced)
+  european:
+    - en
+    - er
+    - ner
+    - tor
+    - sor
+    - kan
+    - van
+    - ron
+    - lan
+    - tan
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", ""]  # Weighted towards no prefix
+  greek:
+    - e
+    - eu      # good
+    - neo     # new
+    - pro     # forward
+    - hyper   # beyond
+    - meta    # beyond
+    - poly    # many
+    - pan     # all
+    - auto    # self
+    - iso     # equal
+  power:
+    - ultra
+    - mega
+    - super
+    - omni
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+# Pattern language:
+#   C = consonant (from consonants pool)
+#   V = vowel (from vowels pool)
+#   S = 's' (literal)
+#   H = 'h' (literal, for aspirated sounds)
+#   X = 'x' (literal)
+#   N = nasal (m, n)
+#   L = liquid (l, r)
+#   P = plosive (k, p, t, b, d, g)
+#   F = fricative (s, f, v, z)
+#   Other chars = literal
+
+patterns:
+  # Classic Greek mythology style
+  greek_style:
+    - CVCVC      # titan, koios
+    - CVCCV      # atlas, helios
+    - CVCVS      # helios-like
+    - CVCCVS     # boreas-style
+    - VCVCV      # arete, olympos
+    - VCCVC      # argos
+
+  # Heroic names (powerful, memorable)
+  heroic:
+    - PVCVC      # titan
+    - PVLVS      # talos
+    - CVLVS      # kalos
+    - PVCVL      # poder (power-like)
+    - CVPVX      # kratos-like
+
+  # Elemental names (nature, forces)
+  elemental:
+    - CVCV       # gaia, pyro
+    - VCLV       # aero
+    - CVLV       # thero
+    - NVCVC      # notos
+    - FVLVC      # zelos
+
+  # Beast names (creatures, monsters)
+  beast:
+    - CVCCVS     # typhon, python
+    - CVLVX      # phoenix
+    - PVCVS      # pegasos
+    - CVCCLV     # griffin
+    - CVLCVS     # cerberus
+
+  # Tech fusion (modern brand style)
+  tech_fusion:
+    - CVCix      # kronix
+    - CVCex      # titex
+    - CVCon      # kraton
+    - CVCax      # dynax
+    - PVLon      # talon
+
+  # Soft/Elegant names
+  elegant:
+    - LVNV       # luna
+    - VCLV       # aura
+    - CVLV       # sera
+    - LVNVS      # lunas
+    - FVLV       # flora
+
+# =============================================================================
+# Consonant/Vowel Sets
+# =============================================================================
+phonetics:
+  consonants:
+    soft: [l, m, n, r, s]
+    hard: [k, p, t, d]
+    medium: [f, v, z, th]
+    greek_common: [k, l, m, n, p, r, s, t]
+
+  vowels:
+    all: [a, e, i, o, u]
+    strong: [a, o]
+    soft: [e, i]
+
+# =============================================================================
+# Bad patterns to avoid
+# =============================================================================
+avoid:
+  clusters:
+    - thr
+    - phr
+    - chr
+    - sch
+    - cks
+    - ght
+    - tch
+  double_vowels:
+    - aa
+    - ee
+    - ii
+    - oo
+    - uu

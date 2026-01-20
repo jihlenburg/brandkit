@@ -1,0 +1,489 @@
+# Turkic Language Phoneme Database
+# =================================
+# Roots from multiple Turkic branches for brand name generation.
+# All roots are Latin-alphabet friendly for German/English pronounceability.
+#
+# Branches represented:
+# - Oghuz (Turkish, Azerbaijani, Turkmen)
+# - Kipchak (Kazakh, Kyrgyz, Tatar, Kumyk, Bashkir)
+# - Siberian (Yakut/Sakha, Tuvan, Altai, Khakas)
+# - Karluk (Uzbek, Uyghur)
+# - Ancient/Proto-Turkic (common roots)
+#
+# Format: [phoneme, meaning, branch]
+
+roots:
+  # ---------------------------------------------------------------------------
+  # Power & Energy
+  # ---------------------------------------------------------------------------
+  power:
+    # Oghuz branch
+    - [erk, "power, energy", oghuz]
+    - [guc, "strength (güç)", oghuz]
+    - [kuv, "force (kuvvet)", oghuz]
+    - [od, "fire, flame", oghuz]
+    - [akim, "current, flow", oghuz]
+    - [boran, "blizzard, tempest", oghuz]
+    - [yildirim, "lightning", oghuz]
+    - [sahin, "falcon, power", oghuz]
+    # Kipchak branch
+    - [kush, "strength (күш)", kipchak]
+    - [tok, "current, electricity", kipchak]
+    - [kuat, "power (қуат)", kipchak]
+    - [orkyn, "energy, vigor", kipchak]
+    - [kudret, "might", kipchak]
+    - [kurek, "thunder", kipchak]
+    # Siberian branch
+    - [kus, "force", siberian]
+    - [uot, "fire", siberian]
+    - [timir, "iron, strong", siberian]
+    - [ot, "fire (common)", siberian]
+    - [chalban, "lightning", siberian]
+    # Ancient/Common Turkic
+    - [tengri, "sky power, divine", proto]
+    - [kut, "sacred power, fortune", proto]
+    - [bilge, "wise, powerful", proto]
+
+  # ---------------------------------------------------------------------------
+  # Fire & Heat (subset of power, specialized)
+  # ---------------------------------------------------------------------------
+  fire:
+    - [od, "fire", oghuz]
+    - [ot, "fire", kipchak]
+    - [uot, "fire", siberian]
+    - [alov, "flame", oghuz]
+    - [yalyn, "flame", kipchak]
+    - [kyzyl, "red, burning", kipchak]
+    - [issi, "hot", kipchak]
+    - [kos, "ember", siberian]
+
+  # ---------------------------------------------------------------------------
+  # Travel & Movement
+  # ---------------------------------------------------------------------------
+  travel:
+    # Oghuz
+    - [yol, "road, path", oghuz]
+    - [goc, "migration (göç)", oghuz]
+    - [vay, "way, manner", oghuz]
+    - [sefer, "journey", oghuz]
+    - [gez, "wander", oghuz]
+    # Kipchak
+    - [zhol, "road (жол)", kipchak]
+    - [kosh, "migrate (көш)", kipchak]
+    - [ayak, "foot, step", kipchak]
+    - [zhur, "walk, go", kipchak]
+    - [ket, "go, leave", kipchak]
+    - [sap, "path, route", kipchak]
+    # Siberian
+    - [suol, "road", siberian]
+    - [ayaan, "journey", siberian]
+    - [kol, "path", siberian]
+    - [bars, "go fast", siberian]
+    # Ancient
+    - [konak, "station, rest", proto]
+    - [kervak, "caravan route", proto]
+
+  # ---------------------------------------------------------------------------
+  # Sky & Celestial
+  # ---------------------------------------------------------------------------
+  celestial:
+    # Oghuz
+    - [gok, "sky (gök)", oghuz]
+    - [ay, "moon", oghuz]
+    - [tan, "dawn", oghuz]
+    - [isik, "light (ışık)", oghuz]
+    - [yildiz, "star", oghuz]
+    # Kipchak
+    - [aspan, "sky (аспан)", kipchak]
+    - [ai, "moon (ай)", kipchak]
+    - [zharyk, "light (жарық)", kipchak]
+    - [tang, "dawn (таң)", kipchak]
+    - [nur, "light, ray (нұр)", kipchak]
+    - [zhuldyz, "star (жұлдыз)", kipchak]
+    - [shugyla, "ray, beam", kipchak]
+    - [koyash, "sun (Tatar)", kipchak]
+    # Siberian
+    - [kun, "sun, day", siberian]
+    - [sulus, "star", siberian]
+    - [iy, "moon", siberian]
+    - [sardana, "bright lily", siberian]
+    - [kyn, "day, sun (Khakas)", siberian]
+    - [saian, "mountain range/sky", siberian]
+    # Ancient
+    - [tengri, "sky, heaven", proto]
+    - [umay, "fertility goddess", proto]
+
+  # ---------------------------------------------------------------------------
+  # Nature & Land
+  # ---------------------------------------------------------------------------
+  nature:
+    # Oghuz
+    - [dag, "mountain (dağ)", oghuz]
+    - [deniz, "sea", oghuz]
+    - [su, "water", oghuz]
+    - [ova, "plain", oghuz]
+    - [tepe, "hill", oghuz]
+    - [tas, "stone (taş)", oghuz]
+    - [dal, "branch", oghuz]
+    - [orman, "forest", oghuz]
+    - [cimen, "meadow", oghuz]
+    # Kipchak
+    - [tau, "mountain (тау)", kipchak]
+    - [kol, "lake (көл)", kipchak]
+    - [dala, "steppe (дала)", kipchak]
+    - [zher, "earth, land (жер)", kipchak]
+    - [tash, "stone", kipchak]
+    - [bulak, "spring, source", kipchak]
+    - [arka, "ridge, back", kipchak]
+    - [arys, "river (Kazakh)", kipchak]
+    - [tokay, "forest", kipchak]
+    # Siberian
+    - [siri, "earth", siberian]
+    - [muus, "ice", siberian]
+    - [khaya, "mountain", siberian]
+    - [dalai, "sea, ocean", siberian]
+    - [taiga, "northern forest", siberian]
+    - [bylyt, "cloud", siberian]
+    # Ancient
+    - [step, "steppe", proto]
+    - [yurt, "land, dwelling", proto]
+
+  # ---------------------------------------------------------------------------
+  # Water (subset of nature, specialized)
+  # ---------------------------------------------------------------------------
+  water:
+    - [su, "water", oghuz]
+    - [deniz, "sea", oghuz]
+    - [derya, "river, sea", oghuz]
+    - [dalga, "wave", oghuz]
+    - [kol, "lake", kipchak]
+    - [ozen, "river", kipchak]
+    - [bulak, "spring", kipchak]
+    - [muus, "ice", siberian]
+    - [dalai, "ocean", siberian]
+    - [us, "water (ancient)", proto]
+
+  # ---------------------------------------------------------------------------
+  # Spirit & Abstract
+  # ---------------------------------------------------------------------------
+  spirit:
+    # Oghuz
+    - [can, "soul, life (can)", oghuz]
+    - [oz, "self, essence (öz)", oghuz]
+    - [er, "man, hero", oghuz]
+    - [bek, "chief, lord", oghuz]
+    - [han, "ruler, khan", oghuz]
+    - [bay, "rich, noble", oghuz]
+    - [alp, "hero, brave", oghuz]
+    - [ata, "ancestor, father", oghuz]
+    - [ana, "mother, origin", oghuz]
+    # Kipchak
+    - [zhan, "soul (жан)", kipchak]
+    - [batyr, "hero, warrior (батыр)", kipchak]
+    - [bi, "lord, judge", kipchak]
+    - [bai, "rich", kipchak]
+    - [akyn, "poet, bard", kipchak]
+    - [zhyrak, "vision, foresight", kipchak]
+    # Colors (spiritual symbolism)
+    - [ak, "white, pure", proto]
+    - [kara, "black, strong", proto]
+    - [kok, "blue, sky-like (kök)", proto]
+    - [altyn, "golden (алтын)", kipchak]
+    - [kumis, "silver", kipchak]
+    # Siberian
+    - [toyon, "chief, lord", siberian]
+    - [baatur, "hero", siberian]
+    - [saha, "Yakut, noble", siberian]
+    - [udagan, "shaman (female)", siberian]
+    - [oyun, "shaman", siberian]
+
+  # ---------------------------------------------------------------------------
+  # Animals (Nomadic & Symbolic)
+  # ---------------------------------------------------------------------------
+  animal:
+    # Horses (central to nomadic culture)
+    - [at, "horse", oghuz]
+    - [tay, "foal", oghuz]
+    - [tulpar, "winged horse (тұлпар)", kipchak]
+    - [sylgy, "horse", siberian]
+    - [alasha, "gelding", kipchak]
+    # Wolves (tribal symbol)
+    - [boru, "wolf (börü)", oghuz]
+    - [buri, "wolf (бөрі)", kipchak]
+    - [kasyr, "wolf (қасқыр)", kipchak]
+    - [kok bori, "grey wolf", proto]
+    # Eagles/Falcons (power symbols)
+    - [kartal, "eagle", oghuz]
+    - [burkut, "golden eagle (бүркіт)", kipchak]
+    - [kyrgyz, "eagle people", kipchak]
+    - [sunkar, "falcon", kipchak]
+    - [lahin, "falcon", oghuz]
+    # Big cats
+    - [bars, "leopard, snow leopard", proto]
+    - [arslan, "lion (арыстан)", kipchak]
+    - [kaplan, "tiger", oghuz]
+    - [ilbis, "snow leopard", siberian]
+    # Other
+    - [ayyu, "bear", siberian]
+    - [bulan, "elk, moose", siberian]
+    - [kiyik, "wild animal", proto]
+
+  # ---------------------------------------------------------------------------
+  # Concepts & Modern
+  # ---------------------------------------------------------------------------
+  concept:
+    # Cultural
+    - [turan, "homeland, origin", proto]
+    - [orda, "camp, horde, center", proto]
+    - [yurt, "home, dwelling", proto]
+    - [tamga, "seal, mark, brand", proto]
+    - [kurultay, "assembly, council", proto]
+    # Knowledge
+    - [bilim, "knowledge", proto]
+    - [soz, "word", proto]
+    - [oyum, "thought", proto]
+    - [akyl, "wisdom, mind", kipchak]
+    # Action
+    - [basla, "begin, start", kipchak]
+    - [zhasa, "create, make", kipchak]
+    - [kur, "build, establish", oghuz]
+    # Victory/Success
+    - [zhenga, "victory (жеңіс)", kipchak]
+    - [utys, "victory", siberian]
+    - [galip, "winner", oghuz]
+
+  # ---------------------------------------------------------------------------
+  # Directions & Positions
+  # ---------------------------------------------------------------------------
+  direction:
+    - [batur, "west", siberian]
+    - [ilin, "east", siberian]
+    - [arka, "north, back", kipchak]
+    - [ontustik, "south", kipchak]
+    - [orta, "center, middle", proto]
+    - [ust, "top, upper", proto]
+    - [tub, "bottom, deep", proto]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  # Pure Turkic suffixes
+  turkic:
+    - an      # common noun/adj ending
+    - ay      # moon, brightness connotation
+    - kan     # blood, noble
+    - tan     # dawn, from
+    - lan     # action, becoming
+    - lar     # plural
+    - lik     # quality, state
+    - chi     # profession, doer
+    - ish     # action
+    - ar      # present/agent
+    - er      # present/agent
+    - ik      # diminutive
+    - ak      # intensifier
+    - yk      # common ending
+
+  # Latin-influenced (international appeal)
+  latin:
+    - or
+    - us
+    - um
+    - ax
+    - ex
+    - is
+    - os
+
+  # Tech/Modern
+  tech:
+    - ix
+    - ex
+    - "on"
+    - ik
+    - ak
+    - tek
+    - tron
+
+  # Power-related
+  power:
+    - volt
+    - amp
+    - watt
+    - flux
+    - ergy
+
+  # Neutral/International
+  neutral:
+    - a
+    - o
+    - i
+    - an
+    - en
+    - ar
+    - er
+    - al
+    - is
+
+  # Modern brand style
+  modern:
+    - ia
+    - io
+    - eo
+    - ara
+    - ora
+    - ium
+
+  # European style (German/Scandinavian blend)
+  european:
+    - en
+    - er
+    - ner
+    - tor
+    - van
+    - ron
+    - lan
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", ""]  # Weighted towards no prefix
+  turkic:
+    - ak      # white, pure
+    - kara    # black, strong
+    - kok     # blue
+    - ulu     # great
+    - boz     # grey
+  international:
+    - e
+    - neo
+    - pro
+    - v
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+# Pattern language:
+#   C = consonant (from consonants pool)
+#   V = vowel (from vowels pool)
+#   B = back vowel (a, o, u) - for harmony
+#   F = front vowel (e, i) - for harmony
+#   K = strong consonant (k, t, b, d, g, r)
+#   S = soft consonant (s, l, m, n)
+#   R = 'r' (literal)
+#   N = nasal (m, n)
+#   L = liquid (l, r)
+#   Other chars = literal
+
+patterns:
+  # Classic Turkic style (like Taycan, Touran)
+  turkic_style:
+    - CVCVC     # taykan, turan
+    - CVCan     # turan, konan
+    - CVCay     # koshay, batay
+    - CVCCV     # batyr, tulpar
+    - CVCVR     # batyr ending
+    - CVCar     # alsar, konar
+    - CVCer     # taker, kuler
+    - VCCVC     # arkan, ordan
+
+  # Oghuz style (Turkish/Azerbaijani feel)
+  oghuz:
+    - KVBVK     # strong consonants, back vowels
+    - KVBVR     # taykar
+    - CVCan     # turan, konan
+    - KVBVY     # ending in y
+    - SVBVK     # softer start
+
+  # Kipchak style (Kazakh/Kyrgyz feel)
+  kipchak:
+    - CVCCVR    # batyr style
+    - KVBCV     # strong, compound
+    - CVLBR     # tulpar style
+    - BCCVC     # arlan style
+    - CVRVK     # ending in k
+
+  # Siberian style (Yakut/Tuvan feel)
+  siberian:
+    - CVVLV     # double vowel patterns (suol)
+    - SVBVC     # softer sounds
+    - CVNVC     # nasal patterns
+    - CVCVN     # ending in n
+    - LVBVC     # liquid start
+
+  # Power names (energy, strength)
+  power:
+    - KVCan     # strong start, turkic ending
+    - KVKVL     # double strong
+    - CVKax     # tech suffix
+    - KVRon     # european blend
+    - KVCor     # latin blend
+
+  # Travel/Movement names
+  travel:
+    - CVLan     # flowing
+    - SVLVC     # smooth
+    - CVCay     # journey ending
+    - LVNVC     # liquid start
+    - CVLor     # path/way feel
+
+  # Nomadic/Animal names
+  nomadic:
+    - KVLPVR    # tulpar style
+    - BRLVN     # arlan style
+    - CVRCVK    # burkut style
+    - KVLVK     # strong animal
+    - SVNKVR    # sunkar style
+
+  # Brand fusion (international appeal)
+  brand_fusion:
+    - CVCix     # tech suffix
+    - CVCon     # latin suffix
+    - CVCus     # latin suffix
+    - KVLan     # turkic-european
+    - CVRor     # power suffix
+
+# =============================================================================
+# Consonant/Vowel Sets (Turkic-specific)
+# =============================================================================
+phonetics:
+  consonants:
+    strong: [k, t, b, d, g, r]    # Forceful, Turkic-typical
+    medium: [s, l, m, n, v, y, z, p]
+    soft: [l, m, n, s, y]
+
+  vowels:
+    # Back vowels (go together in vowel harmony)
+    back: [a, o, u]
+    # Front vowels (go together in vowel harmony)
+    front: [e, i]
+
+  # Vowel harmony - back and front vowels don't mix
+  harmony:
+    back_word_vowels: [a, o, u]
+    front_word_vowels: [e, i]
+
+# =============================================================================
+# Bad Patterns to Avoid
+# =============================================================================
+avoid:
+  clusters:
+    - zh      # Hard for English
+    - cz      # Slavic, not Turkic
+    - szcz    # Polish
+    - ck      # After short vowel
+    - tsch    # German-specific
+    - dsch    # German-specific
+    - shch    # Russian
+  double_vowels:
+    - aa
+    - ee
+    - ii
+    - oo
+    - uu
+  double_consonants:
+    - kk
+    - tt
+    - pp
+    - ss      # Exception: some words

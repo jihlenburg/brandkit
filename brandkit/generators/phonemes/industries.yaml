@@ -1,0 +1,402 @@
+# Industry-Specific Naming Conventions
+# =====================================
+# Different industries have distinct naming patterns and preferences.
+# This config helps generate industry-appropriate brand names.
+
+industries:
+  # ---------------------------------------------------------------------------
+  # Technology & Software
+  # ---------------------------------------------------------------------------
+  tech:
+    description: "Software, apps, SaaS, digital products"
+    characteristics:
+      - Short, punchy names (1-2 syllables preferred)
+      - Often verbs or action words
+      - Invented/coined words common
+      - Dropping vowels acceptable (Flickr, Tumblr)
+    phonetics:
+      preferred_sounds: [z, x, k, v, t]
+      preferred_vowels: [i, o]
+      preferred_suffixes: [ix, ex, "on", ly, ify, io, er]
+      preferred_endings: [ck, x, t, r]
+      avoid_sounds: [th, wh]
+    length:
+      ideal_min: 4
+      ideal_max: 7
+      syllables: [1, 2]
+    cultural_sources: [greek, nordic, latin, celestial]
+    archetypes: [tech, speed, innovation]
+    examples:
+      - Zoom
+      - Slack
+      - Stripe
+      - Figma
+      - Notion
+      - Vercel
+      - Prisma
+
+  # ---------------------------------------------------------------------------
+  # Automotive
+  # ---------------------------------------------------------------------------
+  automotive:
+    description: "Cars, motorcycles, vehicles"
+    characteristics:
+      - Strong consonants, especially initial
+      - Germanic or Turkic influences popular
+      - Names suggesting power, speed, or exploration
+      - Often 2-3 syllables
+    phonetics:
+      preferred_sounds: [t, k, r, g, v, n]
+      preferred_vowels: [a, o, u]
+      preferred_suffixes: [an, "on", ar, or, us, a]
+      preferred_endings: [n, r, s, a, o]
+      avoid_sounds: [w, y]
+    length:
+      ideal_min: 5
+      ideal_max: 8
+      syllables: [2, 3]
+    cultural_sources: [turkic, nordic, latin, greek]
+    archetypes: [power, speed, trust]
+    examples:
+      - Taycan
+      - Tiguan
+      - Touran
+      - Qashqai
+      - Volvo
+      - Tesla
+      - Audi
+      - Lexus
+
+  # ---------------------------------------------------------------------------
+  # Pharmaceutical / Healthcare
+  # ---------------------------------------------------------------------------
+  pharma:
+    description: "Drugs, medical devices, healthcare products"
+    characteristics:
+      - Latin/Greek roots strongly preferred
+      - Scientific-sounding endings (-ol, -in, -ex, -or)
+      - Often reflects mechanism or condition
+      - Complex but pronounceable
+    phonetics:
+      preferred_sounds: [x, z, v, l, r, n]
+      preferred_vowels: [i, o, e, a]
+      preferred_suffixes: [ol, in, ex, or, ix, il, ax, an, um]
+      preferred_endings: [l, n, x, r]
+      avoid_sounds: [w, y, ck]
+    length:
+      ideal_min: 5
+      ideal_max: 10
+      syllables: [2, 3, 4]
+    cultural_sources: [latin, greek]
+    archetypes: [trust, innovation]
+    examples:
+      - Tylenol
+      - Prozac
+      - Viagra
+      - Nexium
+      - Lipitor
+      - Advil
+      - Xanax
+
+  # ---------------------------------------------------------------------------
+  # Luxury / Fashion
+  # ---------------------------------------------------------------------------
+  luxury:
+    description: "High-end fashion, jewelry, premium goods"
+    characteristics:
+      - French/Italian influences dominant
+      - Elegant, flowing sounds
+      - Often founder names or place names
+      - Longer names acceptable
+    phonetics:
+      preferred_sounds: [l, r, s, v, n, f]
+      preferred_vowels: [a, e, i, o]
+      preferred_suffixes: [a, ia, o, i, elle, ier, ini]
+      preferred_endings: [a, i, o, e, s]
+      avoid_sounds: [k, ck, g]
+    length:
+      ideal_min: 5
+      ideal_max: 10
+      syllables: [2, 3, 4]
+    cultural_sources: [latin, celtic]
+    archetypes: [elegance, trust]
+    examples:
+      - Chanel
+      - Hermès
+      - Versace
+      - Prada
+      - Cartier
+      - Bulgari
+      - Armani
+
+  # ---------------------------------------------------------------------------
+  # Food & Beverage
+  # ---------------------------------------------------------------------------
+  food_beverage:
+    description: "Food products, restaurants, beverages"
+    characteristics:
+      - Warm, approachable sounds
+      - Often descriptive or evocative
+      - Short, memorable names
+      - Can be playful or invented
+    phonetics:
+      preferred_sounds: [m, n, l, r, s, b, d]
+      preferred_vowels: [a, o, e]
+      preferred_suffixes: [a, o, y, ie, s]
+      preferred_endings: [a, y, o, n, s]
+      avoid_sounds: [x, z]
+    length:
+      ideal_min: 4
+      ideal_max: 8
+      syllables: [1, 2, 3]
+    cultural_sources: [latin, celtic, nordic]
+    archetypes: [warmth, nature, trust]
+    examples:
+      - Nestlé
+      - Pepsi
+      - Coca-Cola
+      - Starbucks
+      - Chipotle
+      - Oreo
+      - Nutella
+
+  # ---------------------------------------------------------------------------
+  # Finance / Banking
+  # ---------------------------------------------------------------------------
+  finance:
+    description: "Banks, investment, insurance, fintech"
+    characteristics:
+      - Trustworthy, solid sounds
+      - Often classical/Latin influences
+      - Stability and permanence
+      - Professional tone
+    phonetics:
+      preferred_sounds: [t, s, n, r, l, v, d]
+      preferred_vowels: [a, i, e]
+      preferred_suffixes: [a, is, us, ex, al]
+      preferred_endings: [s, n, l, a, t]
+      avoid_sounds: [z, x]
+    length:
+      ideal_min: 4
+      ideal_max: 8
+      syllables: [2, 3]
+    cultural_sources: [latin, greek]
+    archetypes: [trust, power, elegance]
+    examples:
+      - Visa
+      - Fidelity
+      - Prudential
+      - Capital
+      - Vanguard
+      - Stripe
+      - Revolut
+
+  # ---------------------------------------------------------------------------
+  # Energy / Utilities
+  # ---------------------------------------------------------------------------
+  energy:
+    description: "Power companies, renewable energy, utilities"
+    characteristics:
+      - Strong, powerful sounds
+      - Technical but accessible
+      - Often suggests elements or forces
+      - Environmental associations welcome
+    phonetics:
+      preferred_sounds: [v, t, k, r, n, s, l]
+      preferred_vowels: [o, a, e, i]
+      preferred_suffixes: [ix, "on", er, a, ex]
+      preferred_endings: [x, n, r, a]
+      avoid_sounds: [w]
+    length:
+      ideal_min: 4
+      ideal_max: 8
+      syllables: [2, 3]
+    cultural_sources: [greek, nordic, latin, turkic, celestial]
+    archetypes: [power, nature, innovation]
+    examples:
+      - Tesla
+      - Enron
+      - Vattenfall
+      - Vestas
+      - Siemens
+      - Voltex
+      - Solaris
+
+  # ---------------------------------------------------------------------------
+  # Outdoor / Adventure
+  # ---------------------------------------------------------------------------
+  outdoor:
+    description: "Camping, hiking, adventure sports, outdoor gear"
+    characteristics:
+      - Nature-inspired names
+      - Rugged, adventurous feel
+      - Often place names or natural features
+      - Strong but approachable
+    phonetics:
+      preferred_sounds: [r, n, t, k, l, s, m]
+      preferred_vowels: [a, o, e, i]
+      preferred_suffixes: [a, "on", er, ex]
+      preferred_endings: [r, n, a, k]
+      avoid_sounds: [z, x]
+    length:
+      ideal_min: 4
+      ideal_max: 9
+      syllables: [2, 3]
+    cultural_sources: [nordic, celtic, turkic]
+    archetypes: [nature, power, speed]
+    examples:
+      - Patagonia
+      - North Face
+      - Columbia
+      - Marmot
+      - Osprey
+      - Yeti
+      - "Arc'teryx"
+
+  # ---------------------------------------------------------------------------
+  # Wellness / Health
+  # ---------------------------------------------------------------------------
+  wellness:
+    description: "Fitness, yoga, meditation, health supplements"
+    characteristics:
+      - Soft, calming sounds
+      - Japanese minimalist/zen influences welcome
+      - Nature associations
+      - Spiritual undertones acceptable
+    phonetics:
+      preferred_sounds: [l, n, m, s, v, r, y]
+      preferred_vowels: [a, i, o, e]
+      preferred_suffixes: [a, i, ana, um, ya]
+      preferred_endings: [a, i, n, m]
+      avoid_sounds: [k, ck, g, x]
+    length:
+      ideal_min: 4
+      ideal_max: 9
+      syllables: [2, 3, 4]
+    cultural_sources: [japanese, latin, celtic]
+    archetypes: [nature, elegance, calm]
+    examples:
+      - Lululemon
+      - Calm
+      - Headspace
+      - Peloton
+      - Gaia
+      - Manduka
+      - Athleta
+
+  # ---------------------------------------------------------------------------
+  # Gaming / Entertainment
+  # ---------------------------------------------------------------------------
+  gaming:
+    description: "Video games, entertainment, esports"
+    characteristics:
+      - Exciting, dynamic sounds
+      - Can be edgy or playful
+      - Invented words common
+      - Short and punchy
+    phonetics:
+      preferred_sounds: [z, x, k, v, r, n]
+      preferred_vowels: [i, o, a]
+      preferred_suffixes: [ix, ex, "on", a, ia]
+      preferred_endings: [x, k, n, a]
+      avoid_sounds: [w, th]
+    length:
+      ideal_min: 4
+      ideal_max: 8
+      syllables: [2, 3]
+    cultural_sources: [greek, nordic, japanese]
+    archetypes: [speed, power, innovation]
+    examples:
+      - Xbox
+      - Atari
+      - Sega
+      - Nintendo
+      - Riot
+      - Epic
+      - Valve
+      - Blizzard
+
+  # ---------------------------------------------------------------------------
+  # E-commerce / Retail
+  # ---------------------------------------------------------------------------
+  ecommerce:
+    description: "Online retail, marketplaces, shopping"
+    characteristics:
+      - Memorable, easy to spell
+      - Often invented or playful
+      - Can suggest scale or variety
+      - Domain-friendly
+    phonetics:
+      preferred_sounds: [z, m, n, s, r, b]
+      preferred_vowels: [a, o, e, i]
+      preferred_suffixes: ["on", y, a, er]
+      preferred_endings: [n, y, a, o]
+      avoid_sounds: [x]
+    length:
+      ideal_min: 4
+      ideal_max: 8
+      syllables: [2, 3]
+    cultural_sources: [latin, greek]
+    archetypes: [trust, speed, innovation]
+    examples:
+      - Amazon
+      - Shopify
+      - Etsy
+      - eBay
+      - Zalando
+      - Wayfair
+      - Alibaba
+
+# =============================================================================
+# Industry Naming Patterns
+# =============================================================================
+patterns:
+  # Common patterns by industry type
+  tech_patterns:
+    - CVCly     # quickly
+    - CVCify    # spotify
+    - CVCer     # twitter
+    - CVCio     # studio
+    - CVCix     # matrix
+
+  pharma_patterns:
+    - CVCol     # tylenol
+    - CVCin     # aspirin
+    - CVCex     # nexium
+    - CVCax     # prozac
+    - CVCor     # lipitor
+
+  luxury_patterns:
+    - CVCV      # Prada
+    - CVCVi     # Armani
+    - CVCa      # Zara
+    - CVCelle   # Chanel
+
+  auto_patterns:
+    - CVCan     # Taycan
+    - CVCus     # Lexus
+    - CVCa      # Tesla
+    - CVCo      # Volvo
+
+# =============================================================================
+# Suffix Preferences by Industry
+# =============================================================================
+suffix_map:
+  tech:
+    primary: [ly, ify, io, er, ix]
+    secondary: [ex, "on", a]
+  pharma:
+    primary: [ol, in, ex, ax, il]
+    secondary: [or, um, an]
+  luxury:
+    primary: [a, i, o, elle, ier]
+    secondary: [ini, ia]
+  automotive:
+    primary: [an, "on", a, o, us]
+    secondary: [ar, or, er]
+  energy:
+    primary: [ix, ex, "on", a]
+    secondary: [er, or]
+  finance:
+    primary: [a, is, us, al]
+    secondary: [ex, ian]
