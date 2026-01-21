@@ -14,8 +14,10 @@ Base class for all cultural/linguistic name generators with advanced features:
 """
 
 import re
-import random
 from abc import ABC, abstractmethod
+
+# Use true random from entropy module instead of Python's random
+from .entropy import get_rng, EntropyEngine
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any, Set
 from functools import lru_cache
@@ -707,8 +709,9 @@ class CulturalGenerator(ABC):
     """
 
     def __init__(self, culture: str, seed: int = None):
-        if seed:
-            random.seed(seed)
+        # Use true random from entropy module (seed parameter deprecated)
+        self._rng = get_rng()
+        self._entropy = EntropyEngine()
 
         self.culture = culture
         self._config = load_culture_config(culture)
@@ -776,7 +779,7 @@ class CulturalGenerator(ABC):
                 min_length = length_prefs.get('ideal_min', min_length)
                 max_length = length_prefs.get('ideal_max', max_length)
                 if not archetype and profile.get('archetypes'):
-                    archetype = random.choice(profile['archetypes'])
+                    archetype = self._rng.choice(profile['archetypes'])
 
         names = []
         attempts = 0
@@ -867,7 +870,9 @@ class CulturalGenerator(ABC):
         suffixes = self._config.get('suffixes', {})
         pool = []
         for stype in suffix_types:
-            pool.extend(suffixes.get(stype, []))
+            items = suffixes.get(stype, [])
+            # Filter out non-string values (YAML may parse 'on' as boolean True)
+            pool.extend(s for s in items if isinstance(s, str))
         return pool if pool else ['a', 'o', 'er', 'en']
 
     def _get_prefixes(self) -> List[str]:
@@ -885,9 +890,9 @@ class CulturalGenerator(ABC):
         is_suffix_vowel = suffix_start in vowels
 
         if is_root_vowel and is_suffix_vowel:
-            return random.choice(['n', 'r', 'l', 's', 'x'])
+            return self._rng.choice(['n', 'r', 'l', 's', 'x', 't', 'm'])
         elif not is_root_vowel and not is_suffix_vowel:
-            return random.choice(['a', 'i', 'o', 'e'])
+            return self._rng.choice(['a', 'i', 'o', 'e', 'u'])
         return ''
 
 
@@ -905,6 +910,8 @@ class CultureBlender:
         self._configs = {c: load_culture_config(c) for c in cultures}
         self._hazard_checker = HazardChecker()
         self._memorability = MemorabilityScorer()
+        self._rng = get_rng()
+        self._entropy = EntropyEngine()
 
     def blend(self,
               count: int = 20,
@@ -922,8 +929,8 @@ class CultureBlender:
             attempts += 1
 
             # Pick random cultures for root and suffix
-            root_culture = random.choice(self.cultures)
-            suffix_culture = random.choice(self.cultures)
+            root_culture = self._rng.choice(self.cultures)
+            suffix_culture = self._rng.choice(self.cultures)
 
             root_config = self._configs[root_culture]
             suffix_config = self._configs[suffix_culture]
@@ -938,32 +945,42 @@ class CultureBlender:
             if not all_roots:
                 continue
 
-            root, meaning, cat = random.choice(all_roots)
+            root, meaning, cat = self._rng.choice(all_roots)
 
             # Get random suffix
             all_suffixes = []
             for stype, suffixes in suffix_config.get('suffixes', {}).items():
-                all_suffixes.extend(suffixes)
+                # Filter out non-string values (YAML may parse 'on' as boolean True)
+                all_suffixes.extend(s for s in suffixes if isinstance(s, str))
 
             if not all_suffixes:
                 continue
 
-            suffix = random.choice(all_suffixes)
+            suffix = self._rng.choice(all_suffixes)
 
-            # Truncate root if needed
+            # Truncate root at variable point for more variance
             if len(root) > 5:
-                root = root[:5]
+                cut_point = self._rng.randint(3, min(5, len(root)))
+                root = root[:cut_point]
 
-            # Build name
+            # Build name with optional morphological operations
             vowels = 'aeiou'
             if root[-1] in vowels and suffix[0] in vowels:
-                connector = random.choice(['n', 'r', 'l'])
+                connector = self._rng.choice(['n', 'r', 'l', 's', 'x', 't'])
             elif root[-1] not in vowels and suffix[0] not in vowels:
-                connector = random.choice(['a', 'i', 'o'])
+                connector = self._rng.choice(['a', 'i', 'o', 'e', 'u'])
             else:
                 connector = ''
 
             name_str = root + connector + suffix
+
+            # Apply random morphological operation (20% chance)
+            if self._rng.random() < 0.2:
+                op = self._rng.choice(['mutate', 'metathesis', 'none'])
+                if op == 'mutate':
+                    name_str = self._entropy.mutate(name_str, intensity=0.2)
+                elif op == 'metathesis':
+                    name_str = self._entropy.morphology.metathesis(name_str)
 
             # Checks
             if len(name_str) < 4 or len(name_str) > 9:

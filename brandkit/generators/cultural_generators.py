@@ -9,10 +9,10 @@ Concrete implementations of CulturalGenerator for various cultures:
 - Celestial (Space/Astronomy)
 """
 
-import random
 from typing import List, Optional, Tuple
 
 from .base_generator import CulturalGenerator
+from .entropy import get_rng
 
 
 # =============================================================================
@@ -45,7 +45,7 @@ class JapaneseGenerator(CulturalGenerator):
                       archetype: str,
                       industry: str) -> Optional[Tuple[str, List[str], List[str], str]]:
         """Generate a single Japanese-style name."""
-        method = random.choice([
+        method = self._rng.choice([
             self._root_suffix,
             self._root_only,
             self._pattern_based,
@@ -59,9 +59,9 @@ class JapaneseGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('japanese', 'tech', 'neutral')
-        suffix = random.choice(suffixes) if suffixes else random.choice(self._endings)
+        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(self._endings)
 
         # Japanese style: often drop trailing vowel before adding suffix
         base = root
@@ -77,11 +77,11 @@ class JapaneseGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
 
         # Japanese names typically end in vowels or 'n'
         if root[-1] not in self._vowels and root[-1] != 'n':
-            root = root + random.choice(['a', 'o', 'i'])
+            root = root + self._rng.choice(['a', 'o', 'i'])
 
         return (root, [root], [meaning], 'root_only')
 
@@ -93,14 +93,14 @@ class JapaneseGenerator(CulturalGenerator):
             'VCVCV',     # akira
             'CVCVCV',    # toyota
         ]
-        pattern = random.choice(patterns)
+        pattern = self._rng.choice(patterns)
 
         result = []
         for char in pattern:
             if char == 'C':
-                result.append(random.choice(self._consonants))
+                result.append(self._rng.choice(self._consonants))
             elif char == 'V':
-                result.append(random.choice(self._vowels))
+                result.append(self._rng.choice(self._vowels))
 
         name = ''.join(result)
         return (name, [], ['pattern-generated'], 'pattern')
@@ -111,8 +111,8 @@ class JapaneseGenerator(CulturalGenerator):
         if len(pool) < 2:
             return None
 
-        root1, meaning1, _ = random.choice(pool)
-        root2, meaning2, _ = random.choice(pool)
+        root1, meaning1, _ = self._rng.choice(pool)
+        root2, meaning2, _ = self._rng.choice(pool)
 
         # Take first part of root1 and second part of root2
         part1 = root1[:2] if len(root1) >= 2 else root1
@@ -154,7 +154,7 @@ class LatinGenerator(CulturalGenerator):
                       archetype: str,
                       industry: str) -> Optional[Tuple[str, List[str], List[str], str]]:
         """Generate a single Latin-style name."""
-        method = random.choice([
+        method = self._rng.choice([
             self._classical_latin,
             self._italian_style,
             self._french_touch,
@@ -168,9 +168,9 @@ class LatinGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('latin', 'modern')
-        suffix = random.choice(suffixes) if suffixes else random.choice(['us', 'a', 'um', 'is', 'or', 'ix'])
+        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(['us', 'a', 'um', 'is', 'or', 'ix'])
 
         # Handle root-suffix junction
         connector = self._get_connector(root[-1], suffix[0])
@@ -184,9 +184,9 @@ class LatinGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('italian')
-        suffix = random.choice(suffixes) if suffixes else random.choice(['o', 'a', 'i', 'ino', 'etto', 'ella'])
+        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(['o', 'a', 'i', 'ino', 'etto', 'ella'])
 
         # Italian style: soften consonant endings
         base = root
@@ -204,9 +204,9 @@ class LatinGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('french')
-        suffix = random.choice(suffixes) if suffixes else random.choice(['e', 'ique', 'elle', 'eur', 'oir'])
+        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(['e', 'ique', 'elle', 'eur', 'oir'])
 
         connector = self._get_connector(root[-1], suffix[0])
         name = root + connector + suffix
@@ -219,8 +219,8 @@ class LatinGenerator(CulturalGenerator):
         if len(pool) < 2:
             return None
 
-        root1, meaning1, _ = random.choice(pool)
-        root2, meaning2, _ = random.choice(pool)
+        root1, meaning1, _ = self._rng.choice(pool)
+        root2, meaning2, _ = self._rng.choice(pool)
 
         # Take beginning of first, ending of second
         part1 = root1[:3] if len(root1) >= 3 else root1
@@ -259,7 +259,7 @@ class CelticGenerator(CulturalGenerator):
                       archetype: str,
                       industry: str) -> Optional[Tuple[str, List[str], List[str], str]]:
         """Generate a single Celtic-style name."""
-        method = random.choice([
+        method = self._rng.choice([
             self._root_suffix,
             self._nature_compound,
             self._welsh_style,
@@ -273,9 +273,9 @@ class CelticGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('celtic', 'gaelic', 'neutral')
-        suffix = random.choice(suffixes) if suffixes else random.choice(['an', 'en', 'wen', 'wyn', 'och', 'in'])
+        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(['an', 'en', 'wen', 'wyn', 'och', 'in'])
 
         connector = self._get_connector(root[-1], suffix[0])
         name = root + connector + suffix
@@ -292,8 +292,8 @@ class CelticGenerator(CulturalGenerator):
         if len(pool) < 2:
             return None
 
-        root1, meaning1, _ = random.choice(pool)
-        root2, meaning2, _ = random.choice(pool)
+        root1, meaning1, _ = self._rng.choice(pool)
+        root2, meaning2, _ = self._rng.choice(pool)
 
         # Celtic compound: often first + partial second
         part1 = root1
@@ -310,11 +310,11 @@ class CelticGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
 
         # Welsh suffixes
         welsh_suffixes = ['wyn', 'wen', 'an', 'ion', 'ydd']
-        suffix = random.choice(welsh_suffixes)
+        suffix = self._rng.choice(welsh_suffixes)
 
         connector = self._get_connector(root[-1], suffix[0])
         name = root + connector + suffix
@@ -327,15 +327,15 @@ class CelticGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
 
         # Gaelic prefixes and suffixes
-        use_prefix = random.choice([True, False])
+        use_prefix = self._rng.choice([True, False])
         if use_prefix:
-            prefix = random.choice(['mac', 'ben', 'dun', 'glen'])
+            prefix = self._rng.choice(['mac', 'ben', 'dun', 'glen'])
             name = prefix + root
         else:
-            suffix = random.choice(['ach', 'och', 'more', 'beg', 'an'])
+            suffix = self._rng.choice(['ach', 'och', 'more', 'beg', 'an'])
             connector = self._get_connector(root[-1], suffix[0])
             name = root + connector + suffix
 
@@ -369,7 +369,7 @@ class CelestialGenerator(CulturalGenerator):
                       archetype: str,
                       industry: str) -> Optional[Tuple[str, List[str], List[str], str]]:
         """Generate a single celestial-style name."""
-        method = random.choice([
+        method = self._rng.choice([
             self._root_suffix,
             self._prefix_root,
             self._stellar_compound,
@@ -383,9 +383,9 @@ class CelestialGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('celestial', 'tech', 'science')
-        suffix = random.choice(suffixes) if suffixes else random.choice(self._cosmic_endings)
+        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(self._cosmic_endings)
 
         connector = self._get_connector(root[-1], suffix[0])
         name = root + connector + suffix
@@ -398,9 +398,9 @@ class CelestialGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
         prefixes = self._get_prefixes()
-        prefix = random.choice(prefixes) if prefixes else random.choice(['astro', 'cosmo', 'stellar', 'nova', 'neo', ''])
+        prefix = self._rng.choice(prefixes) if prefixes else self._rng.choice(['astro', 'cosmo', 'stellar', 'nova', 'neo', ''])
 
         if prefix:
             connector = self._get_connector(prefix[-1], root[0])
@@ -416,8 +416,8 @@ class CelestialGenerator(CulturalGenerator):
         if len(pool) < 2:
             return None
 
-        root1, meaning1, _ = random.choice(pool)
-        root2, meaning2, _ = random.choice(pool)
+        root1, meaning1, _ = self._rng.choice(pool)
+        root2, meaning2, _ = self._rng.choice(pool)
 
         # Stellar compounds: take prefix of first, suffix of second
         part1 = root1[:3] if len(root1) >= 3 else root1
@@ -438,15 +438,15 @@ class CelestialGenerator(CulturalGenerator):
         if not pool:
             return None
 
-        root, meaning, cat = random.choice(pool)
+        root, meaning, cat = self._rng.choice(pool)
 
         # Cosmic brand suffixes
         cosmic_suffixes = ['on', 'ar', 'ix', 'ex', 'um', 'is', 'a', 'or']
-        suffix = random.choice(cosmic_suffixes)
+        suffix = self._rng.choice(cosmic_suffixes)
 
         # Optional tech/space prefix
-        if random.choice([True, False]):
-            prefix = random.choice(['neo', 'hyper', 'ultra', 'nova', ''])
+        if self._rng.choice([True, False]):
+            prefix = self._rng.choice(['neo', 'hyper', 'ultra', 'nova', ''])
             if prefix:
                 connector = self._get_connector(prefix[-1], root[0])
                 root = prefix + connector + root

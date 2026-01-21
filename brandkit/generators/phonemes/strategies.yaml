@@ -891,10 +891,19 @@ phonaesthetic_quality:
     bad_penalty: -0.06
 
   # === THRESHOLDS ===
-  # Calibrated to actual score distribution (base ~0.5, max bonuses ~0.15)
-  # Top ~10% = excellent, next ~30% = good
+  # Empirically calibrated using 248 validated brand names:
+  #   - 134 excellent brands (Interbrand Top 100, award winners)
+  #   - 21 problematic brands (rebranded, failed, awkward)
+  #   - 57 neutral baseline words
+  #   - 36 research pseudowords
+  #
+  # Key finding: Cohen's d = 0.41 (moderate separation), 77% overlap
+  # The score measures PHONETIC PLEASANTNESS, not brand success potential.
+  # Cross-validation accuracy: 56.8% (limited predictive power)
+  #
+  # Thresholds represent phonetic pleasantness percentiles, not quality predictions.
   thresholds:
-    excellent: 0.605  # Top ~10% - very pleasant sounding
-    good: 0.57        # Pleasant, above average
-    acceptable: 0.52  # Neutral, workable
-    poor: 0.45        # Below this is problematic
+    excellent: 0.585  # Top 25% phonetic pleasantness (global p75)
+    good: 0.570       # Top 50% phonetic pleasantness (global p50)
+    acceptable: 0.550 # Top 75% phonetic pleasantness
+    poor: 0.520       # Bottom 25% - may have phonetic issues

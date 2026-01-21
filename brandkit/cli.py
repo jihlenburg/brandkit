@@ -532,6 +532,239 @@ def cmd_industries(args, out: Output):
     return 0
 
 
+def _discover_accumulate(args, out: Output, kit, sim_checker, domain_checker, profiler,
+                         min_score: float, min_quality: str, nice_profile: str,
+                         target_count: int, use_parallel: bool, max_concurrent: int):
+    """
+    Accumulate-then-validate discovery mode.
+
+    For strict quality thresholds (excellent/good), this mode:
+    1. Accumulates candidates until validation_batch_size is reached
+    2. Validates the batch (similarity, domain, trademark)
+    3. Repeats until target is met
+
+    This is more efficient than round-based mode for rare quality levels.
+    """
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    from brandkit.generators.phonemes import phonaesthetic_score, is_pronounceable
+    from brandkit.ui import get_ui, RICH_AVAILABLE
+
+    # Configuration
+    GENERATION_CHUNK = 100  # Names per generation call
+    VALIDATION_BATCH = 50   # Candidates to accumulate before validating
+    MAX_GENERATION = 20000  # Safety limit for accumulation phase
+
+    # Get UI with accumulate mode
+    ui = get_ui(
+        target=target_count,
+        batch_size=VALIDATION_BATCH,
+        method=args.method,
+        profile=nice_profile,
+        parallel=use_parallel,
+        max_workers=max_concurrent,
+        quiet=out.quiet or args.profiling,
+        accumulate_mode=True
+    )
+
+    total_generated = 0
+    total_saved = 0
+    all_viable = []
+    validation_round = 0
+    validation_yield_history = []  # Track yield at validation stage
+
+    with ui:
+        while total_saved < target_count:
+            validation_round += 1
+            candidates = []  # (name, score, quality) tuples
+
+            # === PHASE 1: ACCUMULATE CANDIDATES ===
+            ui.start_accumulation(validation_round, VALIDATION_BATCH, min_quality)
+            accumulation_generated = 0
+
+            while len(candidates) < VALIDATION_BATCH:
+                if accumulation_generated >= MAX_GENERATION:
+                    ui.log(f"Generated {MAX_GENERATION} names without enough candidates. Stopping.", style="red")
+                    break
+
+                # Generate a chunk
+                with profiler.stage("generation", items=GENERATION_CHUNK):
+                    try:
+                        names = kit.generate(count=GENERATION_CHUNK, method=args.method)
+                    except Exception as e:
+                        ui.log(f"Generation failed: {e}", style="red")
+                        break
+
+                accumulation_generated += len(names)
+                total_generated += len(names)
+
+                # Filter by pronounceability + quality
+                with profiler.stage("quality_filter", items=len(names)):
+                    for name in names:
+                        name_str = get_name_str(name)
+
+                        is_ok, reason = is_pronounceable(name_str)
+                        if not is_ok:
+                            continue
+
+                        result = phonaesthetic_score(name_str)
+                        if result['score'] >= min_score:
+                            candidates.append((name, result['score'], result['quality']))
+
+                # Update accumulation progress
+                pass_rate = len(candidates) / accumulation_generated * 100 if accumulation_generated > 0 else 0
+                ui.update_accumulation(
+                    accumulated=len(candidates),
+                    target=VALIDATION_BATCH,
+                    generated=accumulation_generated,
+                    pass_rate=pass_rate
+                )
+
+            if not candidates:
+                ui.log("No candidates found. Try a different method or lower quality threshold.", style="red")
+                break
+
+            # === PHASE 2: VALIDATE CANDIDATES ===
+            ui.start_validation(len(candidates))
+
+            # Stage: Similarity filter
+            sim_passed = []
+            with profiler.stage("similarity_check", items=len(candidates)):
+                for name, score, quality in candidates:
+                    name_str = get_name_str(name)
+                    result = sim_checker.check(name_str)
+                    if result.is_safe:
+                        sim_passed.append((name, score, quality))
+
+            ui.update_validation_stage("similarity", passed=len(sim_passed), total=len(candidates))
+
+            if not sim_passed:
+                ui.log("All candidates failed similarity check.", style="yellow")
+                continue
+
+            # Stage: Domain filter
+            domain_passed = []
+            if use_parallel:
+                with profiler.stage("domain_check", items=len(sim_passed)):
+                    name_to_info = {get_name_str(n): (n, s, q) for n, s, q in sim_passed}
+                    name_list = list(name_to_info.keys())
+
+                    def check_domain(name_str):
+                        result = domain_checker.check(name_str)
+                        available = [tld for tld, d in result.domains.items() if d.available]
+                        return (name_str, available)
+
+                    with ThreadPoolExecutor(max_workers=max_concurrent) as executor:
+                        results = list(executor.map(check_domain, name_list))
+
+                    for name_str, available in results:
+                        if available:
+                            name, score, quality = name_to_info[name_str]
+                            domain_passed.append((name, score, quality, available))
+            else:
+                with profiler.stage("domain_check", items=len(sim_passed)):
+                    for name, score, quality in sim_passed:
+                        name_str = get_name_str(name)
+                        result = domain_checker.check(name_str)
+                        available = [tld for tld, d in result.domains.items() if d.available]
+                        if available:
+                            domain_passed.append((name, score, quality, available))
+                        time.sleep(0.05)
+
+            ui.update_validation_stage("domain", passed=len(domain_passed), total=len(sim_passed))
+
+            if not domain_passed:
+                ui.log("All candidates failed domain check.", style="yellow")
+                continue
+
+            # Stage: Trademark check
+            domain_passed.sort(key=lambda x: x[1], reverse=True)
+            viable = []
+
+            if use_parallel:
+                with profiler.stage("trademark_check", items=len(domain_passed)):
+                    tm_candidates = []
+                    for name, score, quality, domains in domain_passed:
+                        name_str = get_name_str(name)
+                        existing = kit.db.get(name_str)
+                        if not existing:
+                            tm_candidates.append((name, score, quality, domains, name_str))
+
+                    tm_workers = min(5, max_concurrent // 2) or 1
+
+                    def check_trademark(item):
+                        name, score, quality, domains, name_str = item
+                        try:
+                            result = kit.check(name_str, check_all=True, nice_classes=nice_profile)
+                            return (name, score, quality, domains, name_str, result.get('available', False))
+                        except Exception:
+                            return (name, score, quality, domains, name_str, False)
+
+                    with ThreadPoolExecutor(max_workers=tm_workers) as executor:
+                        results = list(executor.map(check_trademark, tm_candidates))
+
+                    for name, score, quality, domains, name_str, is_available in results:
+                        if total_saved + len(viable) >= target_count:
+                            break
+                        if is_available:
+                            viable.append((name, score, quality, domains))
+                        ui.add_result(name_str, success=is_available,
+                                     detail=".com" if "com" in domains else "")
+            else:
+                with profiler.stage("trademark_check", items=len(domain_passed)):
+                    for name, score, quality, domains in domain_passed:
+                        if total_saved + len(viable) >= target_count:
+                            break
+
+                        name_str = get_name_str(name)
+                        existing = kit.db.get(name_str)
+                        if existing:
+                            continue
+
+                        result = kit.check(name_str, check_all=True, nice_classes=nice_profile)
+                        is_available = result.get('available', False)
+                        if is_available:
+                            viable.append((name, score, quality, domains))
+
+                        ui.add_result(name_str, success=is_available,
+                                     detail=".com" if "com" in domains else "")
+                        time.sleep(0.2)
+
+            ui.update_validation_stage("trademark", passed=len(viable), total=len(domain_passed))
+
+            # Save viable names
+            if viable:
+                with profiler.stage("database_save", items=len(viable)):
+                    for name, score, quality, domains in viable:
+                        name_str = get_name_str(name)
+                        try:
+                            kit.save(name, status='candidate', method=args.method)
+                            total_saved += 1
+                            all_viable.append((name_str, score, quality, domains))
+                        except Exception:
+                            pass
+
+            # Track validation yield for adaptive batch sizing
+            validation_yield_history.append((len(candidates), len(viable)))
+
+            ui.update_progress(found=total_saved, generated=total_generated)
+
+            # Adaptive validation batch size based on yield
+            if validation_yield_history:
+                total_validated = sum(c for c, v in validation_yield_history)
+                total_viable = sum(v for c, v in validation_yield_history)
+                if total_validated > 0 and total_viable > 0:
+                    validation_yield = total_viable / total_validated
+                    remaining = target_count - total_saved
+                    # Adjust batch to likely yield remaining names
+                    VALIDATION_BATCH = max(20, min(100, int(remaining / validation_yield * 1.5)))
+
+        # Print summary
+        ui.print_summary(all_viable)
+
+    return total_saved, total_generated, all_viable
+
+
 def cmd_discover(args, out: Output):
     """Automated pipeline: generate, check, and save viable names."""
     import time
@@ -541,6 +774,7 @@ def cmd_discover(args, out: Output):
     from brandkit.db import NameStatus, QualityTier
     from brandkit.generators.phonemes import phonaesthetic_score, is_pronounceable
     from brandkit.profiler import DiscoveryProfiler
+    from brandkit.ui import get_ui, RICH_AVAILABLE
 
     # Initialize profiler
     profiler = DiscoveryProfiler(enabled=getattr(args, 'profiling', False))
@@ -558,32 +792,68 @@ def cmd_discover(args, out: Output):
     profile_info = NICE_PROFILES.get(nice_profile, {})
     classes_str = ', '.join(str(c) for c in profile_info.get('classes', []))
 
-    # Quality threshold mapping
-    quality_thresholds = {
-        'excellent': 0.605,
-        'good': 0.57,
-        'acceptable': 0.52,
-        'poor': 0.0,
-    }
+    # Quality threshold mapping - load from strategies.yaml
+    from brandkit.generators.phonemes import load_strategies
+    strategies = load_strategies()
+    phonaesthetic_config = strategies.get_phonaesthetic_config()
+    quality_thresholds = phonaesthetic_config.get('thresholds', {
+        'excellent': 0.59,
+        'good': 0.58,
+        'acceptable': 0.55,
+        'poor': 0.52,
+    })
     min_quality = args.min_quality or 'acceptable'
-    min_score = quality_thresholds.get(min_quality, 0.52)
+    min_score = quality_thresholds.get(min_quality, 0.55)
 
     # Target mode vs batch mode
     target_mode = args.target is not None
     target_count = args.target or 0
 
-    out.print("Brandkit Discovery Pipeline")
-    out.print("=" * 60)
-    if target_mode:
-        out.print(f"Target:   {target_count} valid names (min quality: {min_quality})")
-    out.print(f"Batch:    {args.count} names per round using '{args.method}'")
-    out.print(f"Profile:  {nice_profile} (Classes: {classes_str})")
-    out.print(f"Quality:  >= {min_quality} (score >= {min_score:.3f})")
-    if use_parallel:
-        out.print(f"Parallel: ENABLED (max {max_concurrent} concurrent)")
-    if args.profiling:
-        out.print(f"Profiling: ENABLED")
-    out.print("=" * 60)
+    # Use accumulate mode for strict quality thresholds with target mode
+    use_accumulate_mode = target_mode and min_quality in ('excellent', 'good')
+
+    if use_accumulate_mode:
+        out.print(f"Using accumulate-then-validate mode for '{min_quality}' quality...")
+        total_saved, total_generated, all_viable = _discover_accumulate(
+            args, out, kit, sim_checker, domain_checker, profiler,
+            min_score, min_quality, nice_profile, target_count,
+            use_parallel, max_concurrent
+        )
+        profiler.stop()
+        if args.profiling:
+            report = profiler.report()
+            if report:
+                out.print(report)
+            profile_output = getattr(args, 'profile_output', None)
+            if profile_output:
+                profiler.save_json(profile_output)
+                out.print(f"\nProfiling data saved to: {profile_output}")
+        if total_saved < target_count:
+            out.print(f"\nNote: Only found {total_saved}/{target_count} names.")
+        return 0
+
+    # Target mode vs batch mode
+    target_mode = args.target is not None
+    target_count = args.target or 0
+
+    # Adaptive batch sizing
+    explicit_count = args.count is not None
+    if explicit_count:
+        batch_size = args.count
+    elif target_mode:
+        # Start with 5x target, minimum 20, maximum 100
+        batch_size = max(20, min(100, target_count * 5))
+    else:
+        # Default for single-batch mode
+        batch_size = 100
+
+    # Yield rate tracking for adaptive sizing
+    yield_history = []  # List of (generated, viable) tuples
+    MIN_BATCH = 10
+    MAX_BATCH = 200
+
+    # Check if we should use Rich UI (parallel mode + TTY + Rich available)
+    use_ui = use_parallel and RICH_AVAILABLE and not args.profiling
 
     total_generated = 0
     total_saved = 0
@@ -591,238 +861,273 @@ def cmd_discover(args, out: Output):
     round_num = 0
     max_rounds = args.max_rounds or 50  # Safety limit
 
-    while True:
-        round_num += 1
+    # Get UI
+    ui = get_ui(
+        target=target_count,
+        batch_size=batch_size,
+        method=args.method,
+        profile=nice_profile,
+        parallel=use_parallel,
+        max_workers=max_concurrent,
+        quiet=out.quiet or args.profiling  # Disable UI when profiling
+    )
 
-        if target_mode and total_saved >= target_count:
-            break
+    with ui:
+        while True:
+            round_num += 1
+            ui.start_round(round_num)
 
-        if round_num > max_rounds:
-            out.print(f"\nReached max rounds ({max_rounds}). Stopping.")
-            break
+            if target_mode and total_saved >= target_count:
+                break
 
-        out.print(f"\n{'─' * 60}")
-        out.print(f"ROUND {round_num}" + (f" (have {total_saved}/{target_count})" if target_mode else ""))
-        out.print(f"{'─' * 60}")
+            if round_num > max_rounds:
+                ui.log(f"Reached max rounds ({max_rounds}). Stopping.")
+                break
 
-        # Stage 1: Generate
-        out.print(f"\n[1/5] Generating {args.count} names...")
-        with profiler.stage("generation", items=args.count):
-            try:
-                names = kit.generate(count=args.count, method=args.method)
-            except Exception as e:
-                out.error(f"Generation failed: {e}")
-                if not target_mode:
-                    return 1
-                continue
+            # Adaptive batch sizing for subsequent rounds (when not explicitly set)
+            if round_num > 1 and not explicit_count and target_mode and yield_history:
+                remaining = target_count - total_saved
+                # Calculate yield rate from history (viable / generated)
+                total_gen = sum(g for g, v in yield_history)
+                total_viable = sum(v for g, v in yield_history)
+                if total_gen > 0 and total_viable > 0:
+                    yield_rate = total_viable / total_gen
+                    # Generate enough to likely get remaining, with 50% buffer
+                    needed = int(remaining / yield_rate * 1.5)
+                    batch_size = max(MIN_BATCH, min(MAX_BATCH, needed))
+                    ui.update_batch_size(batch_size)
+                elif total_gen > 0 and total_viable == 0:
+                    # Zero yield - increase batch size progressively
+                    batch_size = min(MAX_BATCH, batch_size * 2)
+                    ui.update_batch_size(batch_size)
+                    if round_num == 3:
+                        ui.log("Warning: 0% yield rate. Consider lowering --min-quality.", style="yellow")
+                    if round_num >= 5 and batch_size >= MAX_BATCH:
+                        ui.log("Stopping: 0% yield after 5 rounds at max batch size.", style="red")
+                        break
 
-        total_generated += len(names)
-        out.print(f"      Generated {len(names)}")
-
-        # Stage 2: Pronounceability + Quality filter
-        out.print(f"\n[2/5] Filtering by pronounceability & quality...")
-        quality_passed = []
-        with profiler.stage("quality_filter", items=len(names)):
-            for name in names:
-                name_str = get_name_str(name)
-
-                # Check pronounceability (sub-stage)
-                with profiler.stage("pronounceability"):
-                    is_ok, reason = is_pronounceable(name_str)
-                if not is_ok:
+            # Stage 1: Generate
+            ui.update_stage("generation", total=batch_size)
+            with profiler.stage("generation", items=batch_size):
+                try:
+                    names = kit.generate(count=batch_size, method=args.method)
+                except Exception as e:
+                    ui.log(f"Generation failed: {e}", style="red")
+                    if not target_mode:
+                        return 1
                     continue
 
-                # Check quality score (sub-stage)
-                with profiler.stage("phonaesthetic_score"):
-                    result = phonaesthetic_score(name_str)
-                if result['score'] >= min_score:
-                    quality_passed.append((name, result['score'], result['quality']))
+            total_generated += len(names)
+            ui.update_progress(generated=total_generated)
+            ui.complete_stage("generation", passed=len(names), total=len(names))
 
-        out.print(f"      Passed: {len(quality_passed)}, Filtered: {len(names) - len(quality_passed)}")
+            # Stage 2: Pronounceability + Quality filter
+            ui.update_stage("quality", total=len(names))
+            quality_passed = []
+            with profiler.stage("quality_filter", items=len(names)):
+                for name in names:
+                    name_str = get_name_str(name)
 
-        if not quality_passed:
-            if not target_mode:
-                out.print("\nNo names passed quality filter.")
-                break
-            continue
+                    with profiler.stage("pronounceability"):
+                        is_ok, reason = is_pronounceable(name_str)
+                    if not is_ok:
+                        continue
 
-        # Stage 3: Similarity filter
-        out.print(f"\n[3/5] Checking similarity to known brands...")
-        sim_passed = []
-        with profiler.stage("similarity_check", items=len(quality_passed)):
-            for name, score, quality in quality_passed:
-                name_str = get_name_str(name)
-                result = sim_checker.check(name_str)
-                if result.is_safe:
-                    sim_passed.append((name, score, quality))
+                    with profiler.stage("phonaesthetic_score"):
+                        result = phonaesthetic_score(name_str)
+                    if result['score'] >= min_score:
+                        quality_passed.append((name, result['score'], result['quality']))
 
-        out.print(f"      Passed: {len(sim_passed)}, Filtered: {len(quality_passed) - len(sim_passed)}")
+            ui.complete_stage("quality", passed=len(quality_passed), total=len(names))
 
-        if not sim_passed:
-            if not target_mode:
-                out.print("\nNo names passed similarity filter.")
-                break
-            continue
+            if not quality_passed:
+                # Track zero yield for adaptive sizing
+                yield_history.append((len(names), 0))
+                if not target_mode:
+                    break
+                continue
 
-        # Stage 4: Domain filter (parallel or sequential)
-        out.print(f"\n[4/5] Checking domain availability...")
-        domain_passed = []
+            # Stage 3: Similarity filter
+            ui.update_stage("similarity", total=len(quality_passed))
+            sim_passed = []
+            with profiler.stage("similarity_check", items=len(quality_passed)):
+                for name, score, quality in quality_passed:
+                    name_str = get_name_str(name)
+                    result = sim_checker.check(name_str)
+                    if result.is_safe:
+                        sim_passed.append((name, score, quality))
 
-        if use_parallel:
-            # Parallel domain checking
-            with profiler.stage("domain_check", items=len(sim_passed)):
-                name_to_info = {get_name_str(n): (n, s, q) for n, s, q in sim_passed}
-                name_list = list(name_to_info.keys())
+            ui.complete_stage("similarity", passed=len(sim_passed), total=len(quality_passed))
 
-                # Batch check with parallel names
-                results = domain_checker.check_batch(
-                    name_list,
-                    use_cache=True,
-                    parallel_names=True,
-                    max_concurrent_names=max_concurrent
-                )
+            if not sim_passed:
+                # Track zero yield for adaptive sizing
+                yield_history.append((len(names), 0))
+                if not target_mode:
+                    break
+                continue
 
-                for name_str, result in results.items():
-                    if result:
-                        available = [tld for tld, d in result.domains.items() if d.available]
+            # Stage 4: Domain filter (parallel or sequential)
+            ui.update_stage("domain", total=len(sim_passed))
+            domain_passed = []
+
+            if use_parallel:
+                # Parallel domain checking with UI updates
+                with profiler.stage("domain_check", items=len(sim_passed)):
+                    name_to_info = {get_name_str(n): (n, s, q) for n, s, q in sim_passed}
+                    name_list = list(name_to_info.keys())
+
+                    def check_domain_with_ui(args_tuple):
+                        idx, name_str = args_tuple
+                        ui.add_worker("domain", idx, name_str)
+                        try:
+                            result = domain_checker.check(name_str)
+                            available = []
+                            for tld in ['com', 'de', 'eu', 'io', 'co']:
+                                if tld in result.domains:
+                                    status = "ok" if result.domains[tld].available else "fail"
+                                    ui.update_worker("domain", idx, tld=tld, tld_status=status)
+                                    if result.domains[tld].available:
+                                        available.append(tld)
+                            success = len(available) > 0
+                            ui.complete_worker("domain", idx, success=success,
+                                             details=f"{len(available)} available")
+                            return (name_str, result, available)
+                        except Exception as e:
+                            ui.complete_worker("domain", idx, success=False, details=str(e))
+                            return (name_str, None, [])
+
+                    with ThreadPoolExecutor(max_workers=max_concurrent) as executor:
+                        futures = list(executor.map(
+                            check_domain_with_ui,
+                            enumerate(name_list)
+                        ))
+
+                    for name_str, result, available in futures:
                         if available:
                             name, score, quality = name_to_info[name_str]
                             domain_passed.append((name, score, quality, available))
-        else:
-            # Sequential domain checking (original)
-            with profiler.stage("domain_check", items=len(sim_passed)):
-                for i, (name, score, quality) in enumerate(sim_passed):
-                    name_str = get_name_str(name)
-                    with profiler.stage("dns_lookup"):
-                        result = domain_checker.check(name_str)
-                    available = [tld for tld, d in result.domains.items() if d.available]
-                    if available:
-                        domain_passed.append((name, score, quality, available))
-                    time.sleep(0.05)
+            else:
+                # Sequential domain checking
+                with profiler.stage("domain_check", items=len(sim_passed)):
+                    for i, (name, score, quality) in enumerate(sim_passed):
+                        name_str = get_name_str(name)
+                        with profiler.stage("dns_lookup"):
+                            result = domain_checker.check(name_str)
+                        available = [tld for tld, d in result.domains.items() if d.available]
+                        if available:
+                            domain_passed.append((name, score, quality, available))
+                        time.sleep(0.05)
 
-        out.print(f"      With domains: {len(domain_passed)}, None: {len(sim_passed) - len(domain_passed)}")
+            ui.complete_stage("domain", passed=len(domain_passed), total=len(sim_passed))
 
-        if not domain_passed:
-            if not target_mode:
-                out.print("\nNo names have available domains.")
-                break
-            continue
+            if not domain_passed:
+                # Track zero yield for adaptive sizing
+                yield_history.append((len(names), 0))
+                if not target_mode:
+                    break
+                continue
 
-        # Stage 5: Trademark check (parallel or sequential)
-        # Sort by score, check top candidates
-        domain_passed.sort(key=lambda x: x[1], reverse=True)
-        to_check = domain_passed[:args.top] if not target_mode else domain_passed
+            # Stage 5: Trademark check (parallel or sequential)
+            domain_passed.sort(key=lambda x: x[1], reverse=True)
+            to_check = domain_passed[:args.top] if not target_mode else domain_passed
 
-        out.print(f"\n[5/5] Checking trademarks for {len(to_check)} candidates...")
-        viable = []
+            ui.update_stage("trademark", total=len(to_check))
+            viable = []
 
-        if use_parallel:
-            # Parallel trademark checking with interleaved results
-            with profiler.stage("trademark_check", items=len(to_check)):
-                # Prepare candidates (skip those already in database)
-                candidates = []
-                for name, score, quality, domains in to_check:
-                    name_str = get_name_str(name)
-                    existing = kit.db.get(name_str)
-                    if not existing:
-                        candidates.append((name, score, quality, domains, name_str))
+            if use_parallel:
+                with profiler.stage("trademark_check", items=len(to_check)):
+                    # Prepare candidates
+                    candidates = []
+                    for name, score, quality, domains in to_check:
+                        name_str = get_name_str(name)
+                        existing = kit.db.get(name_str)
+                        if not existing:
+                            candidates.append((name, score, quality, domains, name_str))
 
-                # Parallel trademark check
-                tm_workers = min(5, max_concurrent // 2) or 1  # Fewer workers for API rate limits
+                    tm_workers = min(5, max_concurrent // 2) or 1
 
-                def check_trademark(item):
-                    name, score, quality, domains, name_str = item
-                    try:
-                        result = kit.check(name_str, check_all=True, nice_classes=nice_profile)
-                        return (name, score, quality, domains, name_str, result)
-                    except Exception as e:
-                        return (name, score, quality, domains, name_str, {'available': False, 'error': str(e)})
+                    def check_tm_with_ui(args_tuple):
+                        idx, (name, score, quality, domains, name_str) = args_tuple
+                        ui.add_worker("trademark", idx, name_str)
+                        ui.update_worker("trademark", idx, details="USPTO...")
+                        try:
+                            result = kit.check(name_str, check_all=True, nice_classes=nice_profile)
+                            is_available = result.get('available', False)
+                            detail = "CLEAR" if is_available else "conflict"
+                            ui.complete_worker("trademark", idx, success=is_available, details=detail)
+                            return (name, score, quality, domains, name_str, result)
+                        except Exception as e:
+                            ui.complete_worker("trademark", idx, success=False, details=str(e))
+                            return (name, score, quality, domains, name_str, {'available': False})
 
-                with ThreadPoolExecutor(max_workers=tm_workers) as executor:
-                    futures = {executor.submit(check_trademark, c): c for c in candidates}
+                    with ThreadPoolExecutor(max_workers=tm_workers) as executor:
+                        results = list(executor.map(
+                            check_tm_with_ui,
+                            enumerate(candidates)
+                        ))
 
-                    for future in as_completed(futures):
+                    for name, score, quality, domains, name_str, result in results:
                         if target_mode and (total_saved + len(viable)) >= target_count:
                             break
 
-                        name, score, quality, domains, name_str, result = future.result()
-
-                        if result.get('available', False):
+                        is_available = result.get('available', False)
+                        if is_available:
                             viable.append((name, score, quality, domains))
-                            status = "CLEAR"
-                        else:
-                            status = "CONFLICT"
 
-                        com_flag = "*" if "com" in domains else " "
-                        out.print(f"      {name_str:<15} [{score:.2f}] {quality:<10} {com_flag} {status}")
-        else:
-            # Sequential trademark checking (original)
-            with profiler.stage("trademark_check", items=len(to_check)):
-                for i, (name, score, quality, domains) in enumerate(to_check):
-                    # Stop early if we've reached target
-                    if target_mode and (total_saved + len(viable)) >= target_count:
-                        break
+                        com_str = ".com" if "com" in domains else ""
+                        ui.add_result(name_str, success=is_available, detail=com_str)
+            else:
+                with profiler.stage("trademark_check", items=len(to_check)):
+                    for i, (name, score, quality, domains) in enumerate(to_check):
+                        if target_mode and (total_saved + len(viable)) >= target_count:
+                            break
 
-                    name_str = get_name_str(name)
+                        name_str = get_name_str(name)
+                        existing = kit.db.get(name_str)
+                        if existing:
+                            continue
 
-                    # Skip if already in database
-                    existing = kit.db.get(name_str)
-                    if existing:
-                        continue
+                        with profiler.stage("api_call"):
+                            result = kit.check(name_str, check_all=True, nice_classes=nice_profile)
 
-                    with profiler.stage("api_call"):
-                        result = kit.check(name_str, check_all=True, nice_classes=nice_profile)
+                        is_available = result.get('available', False)
+                        if is_available:
+                            viable.append((name, score, quality, domains))
 
-                    if result['available']:
-                        viable.append((name, score, quality, domains))
-                        status = "CLEAR"
-                    else:
-                        status = "CONFLICT"
+                        com_str = ".com" if "com" in domains else ""
+                        ui.add_result(name_str, success=is_available, detail=com_str)
+                        time.sleep(0.2)
 
-                    com_flag = "*" if "com" in domains else " "
-                    out.print(f"      {name_str:<15} [{score:.2f}] {quality:<10} {com_flag} {status}")
-                    time.sleep(0.2)
+            ui.complete_stage("trademark", passed=len(viable), total=len(to_check))
 
-        # Save viable names
-        if viable:
-            with profiler.stage("database_save", items=len(viable)):
-                for name, score, quality, domains in viable:
-                    name_str = get_name_str(name)
-                    try:
-                        kit.save(name, status='candidate', method=args.method)
-                        total_saved += 1
-                        all_viable.append((name_str, score, quality, domains))
-                    except Exception:
-                        pass
+            # Save viable names
+            round_viable = 0
+            if viable:
+                with profiler.stage("database_save", items=len(viable)):
+                    for name, score, quality, domains in viable:
+                        name_str = get_name_str(name)
+                        try:
+                            kit.save(name, status='candidate', method=args.method)
+                            total_saved += 1
+                            round_viable += 1
+                            all_viable.append((name_str, score, quality, domains))
+                        except Exception:
+                            pass
 
-            out.print(f"\n      Saved {len(viable)} this round. Total: {total_saved}")
+                ui.update_progress(found=total_saved)
 
-        # Exit if not in target mode (single batch)
-        if not target_mode:
-            break
+            # Track yield rate for adaptive batch sizing
+            yield_history.append((len(names), round_viable))
+
+            # Exit if not in target mode (single batch)
+            if not target_mode:
+                break
+
+        # Print summary
+        ui.print_summary(all_viable)
 
     # Stop profiler
     profiler.stop()
-
-    # Final Results
-    out.print(f"\n{'=' * 60}")
-    out.print(f"DISCOVERY COMPLETE")
-    out.print(f"{'=' * 60}")
-    out.print(f"\nRounds:    {round_num}")
-    out.print(f"Generated: {total_generated}")
-    out.print(f"Saved:     {total_saved}")
-
-    if all_viable:
-        out.print(f"\nVIABLE NAMES ({len(all_viable)}):")
-        out.print(f"{'Name':<18} {'Score':>6} {'Quality':<10} Domains")
-        out.print("-" * 55)
-        for name_str, score, quality, domains in sorted(all_viable, key=lambda x: -x[1]):
-            com_flag = "*" if "com" in domains else " "
-            out.print(f"{name_str:<18} {score:>5.2f}  {quality:<10} {com_flag}{', '.join(domains[:3])}")
-        out.print("\n* = .com available")
-
-    if target_mode and total_saved < target_count:
-        out.print(f"\nNote: Only found {total_saved}/{target_count} names. Try different method or lower quality threshold.")
 
     # Print profiling report if enabled
     if args.profiling:
@@ -830,11 +1135,13 @@ def cmd_discover(args, out: Output):
         if report:
             out.print(report)
 
-        # Save to file if requested
         profile_output = getattr(args, 'profile_output', None)
         if profile_output:
             profiler.save_json(profile_output)
             out.print(f"\nProfiling data saved to: {profile_output}")
+
+    if target_mode and total_saved < target_count:
+        out.print(f"\nNote: Only found {total_saved}/{target_count} names. Try different method or lower quality threshold.")
 
     return 0
 
@@ -949,7 +1256,8 @@ Examples:
 
     # --- discover ---
     p = subparsers.add_parser('discover', aliases=['disc', 'd'], help='Automated discovery pipeline')
-    p.add_argument('-n', '--count', type=int, default=100, help='Names per batch (default: 100)')
+    p.add_argument('-n', '--count', type=int, default=None,
+                   help='Names per batch (default: auto based on target, or 100)')
     p.add_argument('--method', '-m', choices=GENERATION_METHODS, default='blend',
                    help='Generation method (default: blend)')
     p.add_argument('--profile', '-p', default='camping_rv', help='Nice class profile')

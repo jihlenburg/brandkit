@@ -30,6 +30,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI: `discover --profile-output FILE` saves profiling data to JSON for further analysis
 - CLI: `discover --parallel` enables parallel domain/trademark checking (~4x speedup)
 - CLI: `discover --max-concurrent N` controls max concurrent checks in parallel mode
+- CLI: `discover --target N` now uses adaptive batch sizing (starts with 5×N, adjusts based on yield rate)
+- CLI: `discover --target N --min-quality excellent/good` uses accumulate-then-validate mode:
+  - Accumulates quality candidates before running expensive validation
+  - More efficient for strict quality thresholds (excellent ~0.01%, good ~30-60% pass rate)
+  - Shows progress: accumulated candidates, pass rate, total generated
+- Rich-based live terminal UI for parallel discovery:
+  - Progress bar with target/found/round metrics
+  - Per-stage progress with checkmarks
+  - Per-worker status lines with animated spinners
+  - TLD availability visualization (✓/✗/⋯/○)
+  - Live results feed
+  - Automatic fallback to simple output for non-TTY
 - Profiler module (`brandkit/profiler.py`) with context manager-based stage timing
 - Parallel checking infrastructure (`brandkit/parallel.py`):
   - Parallel TLD lookups within DomainChecker (5x speedup per name)
@@ -37,8 +49,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Interleaved pipeline (trademark checks start as domain results arrive)
   - Rate limiting for API protection
   - Retry logic with exponential backoff
+- UI module (`brandkit/ui.py`) with Rich-based live display
+- Entropy module (`brandkit/generators/entropy.py`) for enhanced randomness:
+  - True random number generation using hardware entropy (os.urandom, secrets)
+  - Phoneme mutation engine (voicing shifts, vowel shifts, lenition)
+  - Expanded syllable structure templates (simple, complex, germanic, japanese)
+  - Morphological operations (blending, infixation, reduplication, metathesis)
+  - Cross-linguistic phoneme injection (Slavic, Germanic, Romance, Celtic)
+- Calibration module (`brandkit/calibration.py`) for threshold validation:
+  - Corpus of 248 validated brand names (excellent, problematic, neutral, pseudowords)
+  - Statistical analysis with Cohen's d separation metrics
+  - Cross-validation of threshold accuracy
 
 ### Changed
+- Quality thresholds scientifically recalibrated using empirical data:
+  - Corpus: 134 excellent brands (Interbrand Top 100), 21 problematic, 57 neutral
+  - Finding: Cohen's d = 0.41 (moderate separation), 77% overlap between categories
+  - New thresholds: excellent=0.585, good=0.570, acceptable=0.550, poor=0.520
+  - Note: Score measures phonetic pleasantness, not brand success potential
+- CLI now loads quality thresholds from strategies.yaml instead of hardcoding
+- Generators updated to use true random entropy instead of Python's random module
 - BlockReason now accepts dynamic strings (e.g., "pronounceability:awkward_start:sv")
 - CLI completely refactored for cleaner code and better UX
 - Database path fixed to use `data/brandnames.db`
@@ -47,6 +77,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `list` command crash when block_reason contains custom pronounceability strings
 - `reset` command now uses correct database path (`data/brandnames.db`)
+- YAML boolean parsing bug: unquoted `on` in suffix lists was parsed as `True`
+  - Fixed by quoting `"on"` in celestial.yaml and adding defensive filtering
+- Quality threshold miscalibration: old threshold (0.605) was unreachable
+  - 0% of generated names passed "excellent" threshold
+  - Recalibrated using empirical brand name corpus
 
 ## [0.1.0] - 2026-01-20
 

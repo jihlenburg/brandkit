@@ -43,6 +43,9 @@ llm = [
 excel = [
     "openpyxl>=3.1",
 ]
+ui = [
+    "rich>=13.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
@@ -50,7 +53,7 @@ dev = [
     "ruff>=0.1",
 ]
 all = [
-    "brandkit[llm,excel,dev]",
+    "brandkit[llm,excel,ui,dev]",
 ]
 
 [project.urls]

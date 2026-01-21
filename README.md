@@ -353,13 +353,20 @@ brandkit save "NewName" --status candidate
 brandkit block "BadName" --reason "negative_meaning"
 
 # Discovery pipeline (generate -> filter -> validate -> save)
-brandkit discover -n 100 --method blend            # Single batch
+brandkit discover -n 100 --method blend            # Single batch of 100
 brandkit discover --target 50 --min-quality good   # Loop until 50 good names found
 brandkit discover --target 100 -q excellent -m japanese  # 100 excellent Japanese names
-brandkit discover -n 50 --parallel                 # ~4x faster with parallel checking
-brandkit discover -n 50 --parallel --max-concurrent 20  # More concurrent checks
+brandkit discover --target 10 --parallel           # Adaptive batching (starts with 50, adjusts)
+brandkit discover -n 50 --parallel --max-concurrent 20  # Fixed batch with more concurrency
 brandkit discover -n 50 --profiling                # Profile to identify bottlenecks
 brandkit discover -n 50 --profiling --profile-output profile.json  # Save profiling data
+
+# Parallel mode shows a live terminal UI with:
+# - Progress bar and metrics (target/found/round/time)
+# - Per-stage progress with checkmarks
+# - Per-worker status with animated spinners
+# - TLD availability: .com ✓ .de ✓ .eu ⋯ .io ○
+# - Live results feed
 ```
 
 ## License

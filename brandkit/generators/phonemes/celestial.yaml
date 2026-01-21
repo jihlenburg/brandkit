@@ -202,7 +202,7 @@ suffixes:
     - is        # Latin noun
     - us        # Latin masculine
     - ar        # relating to
-    - on        # particle/unit
+    - "on"      # particle/unit (quoted to avoid YAML boolean)
     - ix        # tech feel
     - ex        # tech feel
     - um        # Latin neuter
@@ -216,7 +216,7 @@ suffixes:
     - or
 
   science:
-    - on        # particle
+    - "on"      # particle (quoted to avoid YAML boolean)
     - um        # element
     - ium       # element
     - ar        # relating to
