@@ -193,6 +193,89 @@ roots:
     - [core, "center"]
     - [mantle, "layer"]
 
+  # ---------------------------------------------------------------------------
+  # Distance & Scale
+  # ---------------------------------------------------------------------------
+  scale:
+    - [parsec, "distance unit"]
+    - [lightyear, "distance unit"]
+    - [astronomical, "vast scale"]
+    - [cosmic, "universe scale"]
+    - [galactic, "galaxy scale"]
+    - [infinite, "endless"]
+    - [vast, "immense"]
+    - [micro, "tiny"]
+    - [macro, "large"]
+    - [mega, "million"]
+    - [giga, "billion"]
+    - [tera, "trillion"]
+
+  # ---------------------------------------------------------------------------
+  # Black Holes & Dark Matter
+  # ---------------------------------------------------------------------------
+  dark:
+    - [singularity, "infinite density"]
+    - [event, "horizon boundary"]
+    - [accretion, "matter gathering"]
+    - [quark, "fundamental particle"]
+    - [darkmatter, "invisible mass"]
+    - [antimatter, "opposite matter"]
+    - [wormhole, "space tunnel"]
+    - [blackhole, "collapsed star"]
+    - [void, "empty space"]
+    - [abyss, "deep space"]
+
+  # ---------------------------------------------------------------------------
+  # Nebulae Names (Brand-friendly)
+  # ---------------------------------------------------------------------------
+  nebulae:
+    - [carina, "keel nebula"]
+    - [orion, "hunter nebula"]
+    - [eagle, "creation pillars"]
+    - [crab, "supernova remnant"]
+    - [horsehead, "dark nebula"]
+    - [lagoon, "emission nebula"]
+    - [tarantula, "star-forming"]
+    - [rosette, "flower nebula"]
+    - [helix, "eye of god"]
+    - [ring, "planetary nebula"]
+    - [veil, "supernova remnant"]
+    - [pelican, "emission nebula"]
+
+  # ---------------------------------------------------------------------------
+  # Space Technology
+  # ---------------------------------------------------------------------------
+  tech:
+    - [rocket, "propulsion"]
+    - [thrust, "force"]
+    - [launch, "liftoff"]
+    - [dock, "connect"]
+    - [module, "component"]
+    - [capsule, "crew container"]
+    - [rover, "surface explorer"]
+    - [lander, "touchdown craft"]
+    - [satellite, "orbiting object"]
+    - [station, "orbital base"]
+    - [telescope, "far-seeing"]
+    - [antenna, "signal receiver"]
+
+  # ---------------------------------------------------------------------------
+  # Motion & Dynamics
+  # ---------------------------------------------------------------------------
+  motion:
+    - [velocity, "speed"]
+    - [momentum, "mass in motion"]
+    - [acceleration, "speed change"]
+    - [rotation, "spinning"]
+    - [revolution, "orbiting"]
+    - [escape, "breaking free"]
+    - [descent, "falling"]
+    - [ascent, "rising"]
+    - [drift, "slow movement"]
+    - [spin, "rotation"]
+    - [pulse, "rhythmic beat"]
+    - [oscillation, "back and forth"]
+
 # =============================================================================
 # Suffixes
 # =============================================================================
@@ -207,6 +290,16 @@ suffixes:
     - ex        # tech feel
     - um        # Latin neuter
     - ia        # place/quality
+
+  cosmic:
+    - "on"      # photon, neutron style
+    - ar        # stellar, solar style
+    - ix        # tech suffix
+    - ex        # tech suffix
+    - um        # spectrum, quantum style
+    - is        # orbis, astris style
+    - a         # nova, vega style
+    - or        # vector, sector style
 
   tech:
     - ix
@@ -251,12 +344,22 @@ prefixes:
     - ultra     # beyond
     - hyper     # above
     - super     # above
+
+  cosmic:
+    - neo       # new (English/German friendly)
+    - hyper     # above, beyond
+    - ultra     # beyond
+    - nova      # new star
+    - ""        # no prefix (weighted)
+    - ""        # no prefix (weighted)
+
   scientific:
     - proto     # first
     - meta      # beyond
     - mega      # large
     - micro     # small
     - nano      # tiny
+
   international:
     - neo
     - pro

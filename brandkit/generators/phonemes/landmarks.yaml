@@ -1,0 +1,549 @@
+# Landmarks & Natural Wonders Phoneme Database
+# =============================================
+# Famous peaks, parks, reserves, and landmarks from around the world.
+# Curated for phonetic quality and brand recognition.
+#
+# Great for: Travel, adventure, outdoor, premium, aspirational brands
+#
+# DESIGN PRINCIPLES:
+# - Focus on phonetically strong place names
+# - No generic adjectives as roots (use qualities section for modifiers)
+# - Each landmark appears in ONE category only
+# - Prioritize internationally recognizable names
+
+roots:
+  # ---------------------------------------------------------------------------
+  # US National Parks & Landmarks
+  # Brand archetype: Adventure, Heritage, Natural
+  # ---------------------------------------------------------------------------
+  us_parks:
+    - [yosemite, "place of grizzly"]
+    - [yellowstone, "yellow rock river"]
+    - [zion, "sanctuary"]
+    - [glacier, "ice river"]
+    - [sequoia, "giant tree"]
+    - [bryce, "swift current"]
+    - [arches, "natural bridges"]
+    - [acadia, "land of plenty"]
+    - [denali, "the high one"]
+    - [rainier, "prominent peak"]
+    - [shasta, "white mountain"]
+    - [redwood, "ancient giants"]
+    - [everglades, "river of grass"]
+    - [badlands, "rugged terrain"]
+    - [shenandoah, "beautiful daughter"]
+    - [mammoth, "enormous size"]
+    - [teton, "great peaks"]
+    - [haleakala, "house of sun"]
+    - [pinnacles, "spire peaks"]
+    - [saguaro, "desert cactus"]
+    - [carlsbad, "cavern depths"]
+    - [voyageurs, "water trails"]
+    - [wrangell, "wild alaska"]
+    - [kenai, "fjord land"]
+    - [katmai, "bear country"]
+
+  # ---------------------------------------------------------------------------
+  # Mountains - Americas
+  # Brand archetype: Summit, Achievement, Aspiration
+  # Note: denali, rainier, shasta are in us_parks (no duplicates)
+  # ---------------------------------------------------------------------------
+  mountains_americas:
+    - [whitney, "high summit"]
+    - [elbert, "colorado high"]
+    - [pikes, "pikes peak"]
+    - [longs, "front range"]
+    - [maroon, "maroon bells"]
+    - [aspen, "ski mountain"]
+    - [telluride, "mountain town"]
+    - [vail, "ski resort"]
+    - [aconcagua, "stone sentinel"]
+    - [cotopaxi, "neck of moon"]
+    - [chimborazo, "ice mountain"]
+    - [huascaran, "peru peak"]
+    - [illimani, "golden eagle"]
+    - [fitzroy, "tower peak"]
+    - [paine, "torres del paine"]
+    - [orizaba, "star mountain"]
+    - [logan, "canada high"]
+
+  # ---------------------------------------------------------------------------
+  # Mountains - Europe
+  # Brand archetype: Classic, Prestige, Heritage
+  # ---------------------------------------------------------------------------
+  mountains_europe:
+    - [blanc, "white mountain"]
+    - [matterhorn, "peak of meadows"]
+    - [eiger, "ogre peak"]
+    - [jungfrau, "virgin peak"]
+    - [monch, "monk peak"]
+    - [weisshorn, "white horn"]
+    - [zermatt, "alpine village"]
+    - [chamonix, "field of oaks"]
+    - [dolomite, "pale mountain"]
+    - [ortler, "highest alps"]
+    - [zugspitze, "train peak"]
+    - [triglav, "three heads"]
+    - [olympus, "home of gods"]
+    - [elbrus, "twin peaks"]
+    - [kazbek, "ice peak"]
+    - [aneto, "highest pyrenees"]
+    - [etna, "burning one"]
+    - [vesuvius, "unquenched fire"]
+    - [stromboli, "round island"]
+    - [snowdon, "welsh peak"]
+    - [nevis, "ben nevis"]
+    - [cairngorm, "blue cairn"]
+    - [skye, "isle of mist"]
+
+  # ---------------------------------------------------------------------------
+  # Mountains - Asia & Himalaya
+  # Brand archetype: Epic, Pinnacle, Ultimate
+  # ---------------------------------------------------------------------------
+  mountains_asia:
+    - [everest, "goddess peak"]
+    - [kangchenjunga, "five treasures"]
+    - [lhotse, "south peak"]
+    - [makalu, "black giant"]
+    - [dhaulagiri, "white mountain"]
+    - [manaslu, "mountain of spirit"]
+    - [annapurna, "goddess of harvests"]
+    - [gasherbrum, "beautiful mountain"]
+    - [shishapangma, "range above grass"]
+    - [fuji, "immortal mountain"]
+    - [taishan, "supreme mountain"]
+    - [huangshan, "yellow mountain"]
+    - [himalaya, "abode of snow"]
+    - [karakorum, "black gravel"]
+    - [altai, "golden mountains"]
+    - [kunlun, "mountain range"]
+    - [pamir, "roof of world"]
+
+  # ---------------------------------------------------------------------------
+  # Mountains - Africa & Oceania
+  # Brand archetype: Wild, Majestic, Untamed
+  # ---------------------------------------------------------------------------
+  mountains_africa_oceania:
+    - [kilimanjaro, "shining mountain"]
+    - [kenya, "white mountain"]
+    - [rwenzori, "rain maker"]
+    - [drakensberg, "dragon mountains"]
+    - [atlas, "titan mountain"]
+    - [toubkal, "highest atlas"]
+    - [kosciuszko, "australia peak"]
+    - [aoraki, "cloud piercer"]
+    - [taranaki, "shining peak"]
+    - [tongariro, "south wind"]
+    - [ruapehu, "exploding pit"]
+    - [mauna, "mauna kea"]
+
+  # ---------------------------------------------------------------------------
+  # Reserves & Wildlife Areas
+  # Brand archetype: Safari, Wild, Conservation
+  # ---------------------------------------------------------------------------
+  reserves:
+    - [serengeti, "endless plains"]
+    - [masai, "warrior lands"]
+    - [kruger, "wilderness preserve"]
+    - [amazon, "great river"]
+    - [congo, "river of rivers"]
+    - [savanna, "grassland plains"]
+    - [outback, "remote interior"]
+    - [taiga, "northern forest"]
+    - [tundra, "frozen plains"]
+    - [galapagos, "tortoise islands"]
+    - [banff, "mountain retreat"]
+    - [jasper, "precious stone"]
+    - [ngorongoro, "big hole"]
+    - [okavango, "river delta"]
+    - [chobe, "river of beauty"]
+    - [etosha, "great white place"]
+    - [amboseli, "salty dust"]
+    - [virunga, "volcano range"]
+    - [bwindi, "impenetrable"]
+    - [pantanal, "great swamp"]
+    - [iguazu, "great water"]
+    - [patagonia, "land of big feet"]
+    - [torres, "tower peaks"]
+    - [monteverde, "green mountain"]
+    - [arenal, "sandy"]
+    - [kakadu, "billabong"]
+    - [uluru, "red rock"]
+    - [daintree, "rainforest"]
+    - [fiordland, "carved coast"]
+    - [milford, "sound fjord"]
+
+  # ---------------------------------------------------------------------------
+  # Canyons & Valleys
+  # Brand archetype: Depth, Adventure, Exploration
+  # ---------------------------------------------------------------------------
+  canyons:
+    - [canyon, "deep gorge"]
+    - [gorge, "narrow valley"]
+    - [ravine, "deep cut"]
+    - [chasm, "great split"]
+    - [glen, "mountain valley"]
+    - [rift, "earth split"]
+    - [fjord, "sea inlet"]
+    - [abyss, "great depth"]
+    - [basin, "bowl land"]
+    - [dale, "broad valley"]
+    - [vale, "river valley"]
+    - [antelope, "swift canyon"]
+    - [horseshoe, "curved bend"]
+    - [waimea, "reddish water"]
+    - [escalante, "grand staircase"]
+    - [blyde, "glad river"]
+    - [colca, "granary"]
+    - [verdon, "green water"]
+    - [vikos, "steep view"]
+    - [samaria, "crete gorge"]
+
+  # ---------------------------------------------------------------------------
+  # Waterfalls
+  # Brand archetype: Power, Flow, Energy
+  # ---------------------------------------------------------------------------
+  waterfalls:
+    - [niagara, "thunder water"]
+    - [victoria, "smoke water"]
+    - [angel, "highest fall"]
+    - [gullfoss, "golden falls"]
+    - [dettifoss, "tumbling falls"]
+    - [skogafoss, "forest falls"]
+    - [godafoss, "waterfall of gods"]
+    - [dynjandi, "thunderer"]
+    - [kaieteur, "old mans falls"]
+    - [tugela, "sudden"]
+    - [sutherland, "deep lake"]
+    - [plitvice, "terraced falls"]
+    - [krka, "croatia falls"]
+    - [rhine, "rhine falls"]
+    - [cascade, "falling water"]
+    - [ribbon, "ribbon fall"]
+    - [bridalveil, "bridal veil"]
+
+  # ---------------------------------------------------------------------------
+  # Lakes
+  # Brand archetype: Tranquil, Pure, Reflective
+  # ---------------------------------------------------------------------------
+  lakes:
+    - [tahoe, "lake in sky"]
+    - [superior, "great lake"]
+    - [baikal, "deep lake"]
+    - [titicaca, "stone puma"]
+    - [placid, "calm water"]
+    - [powell, "canyon lake"]
+    - [moraine, "glacial lake"]
+    - [louise, "lake louise"]
+    - [maligne, "evil spirit"]
+    - [peyto, "turquoise lake"]
+    - [emerald, "emerald lake"]
+    - [como, "italian gem"]
+    - [garda, "largest italian"]
+    - [geneva, "swiss lake"]
+    - [lucerne, "light lake"]
+    - [bled, "slovenian gem"]
+    - [ohrid, "ancient lake"]
+    - [tanganyika, "great lake"]
+    - [malawi, "flames of water"]
+    - [atitlan, "at the water"]
+    - [wakatipu, "hollow of giant"]
+    - [tekapo, "sleeping mat"]
+    - [matheson, "mirror lake"]
+
+  # ---------------------------------------------------------------------------
+  # Deserts & Arid Lands
+  # Brand archetype: Endurance, Stark, Minimalist
+  # ---------------------------------------------------------------------------
+  deserts:
+    - [sahara, "great desert"]
+    - [mojave, "beside water"]
+    - [sonoran, "land of plenty"]
+    - [gobi, "waterless place"]
+    - [kalahari, "great thirst"]
+    - [atacama, "driest place"]
+    - [namib, "vast place"]
+    - [nevada, "snow capped"]
+    - [monument, "standing stone"]
+    - [wadi, "dry riverbed"]
+    - [thar, "place of death"]
+    - [karakum, "black sand"]
+    - [taklamakan, "place of no return"]
+    - [simpson, "simpson desert"]
+    - [nullarbor, "no trees"]
+    - [negev, "south land"]
+    - [sinai, "place of moon"]
+
+  # ---------------------------------------------------------------------------
+  # Islands
+  # Brand archetype: Paradise, Escape, Exotic
+  # ---------------------------------------------------------------------------
+  islands:
+    - [maui, "demigod isle"]
+    - [oahu, "gathering place"]
+    - [kauai, "garden isle"]
+    - [bora, "firstborn isle"]
+    - [fiji, "island paradise"]
+    - [tahiti, "distant land"]
+    - [maldives, "garland isles"]
+    - [bali, "island of gods"]
+    - [santorini, "saint island"]
+    - [capri, "wild island"]
+    - [sardinia, "sandal island"]
+    - [corsica, "forest island"]
+    - [crete, "strong isle"]
+    - [hawaii, "new homeland"]
+    - [bermuda, "triangle isle"]
+    - [seychelles, "garden of eden"]
+    - [mauritius, "star and key"]
+    - [zanzibar, "black coast"]
+    - [madagascar, "island end"]
+    - [palawan, "land of promise"]
+    - [komodo, "dragon island"]
+    - [galapagos, "saddle island"]
+    - [azores, "hawks islands"]
+    - [madeira, "wood island"]
+    - [iceland, "ice land"]
+    - [svalbard, "cold edge"]
+    - [faroe, "sheep islands"]
+    - [skye, "wing island"]
+
+  # ---------------------------------------------------------------------------
+  # Famous Landmarks
+  # Brand archetype: Iconic, Monumental, Timeless
+  # ---------------------------------------------------------------------------
+  landmarks:
+    - [rushmore, "carved faces"]
+    - [liberty, "freedom statue"]
+    - [tower, "standing high"]
+    - [arch, "gateway form"]
+    - [monument, "memorial marker"]
+    - [dome, "rounded peak"]
+    - [spire, "pointed peak"]
+    - [pillar, "standing column"]
+    - [obelisk, "pointed stone"]
+    - [lighthouse, "guiding light"]
+    - [beacon, "signal fire"]
+    - [summit, "highest point"]
+    - [pinnacle, "topmost peak"]
+    - [apex, "very top"]
+    - [zenith, "highest point"]
+    - [colosseum, "great amphitheater"]
+    - [acropolis, "high city"]
+    - [parthenon, "virgin temple"]
+    - [stonehenge, "hanging stones"]
+    - [petra, "rose city"]
+    - [angkor, "city temple"]
+    - [machu, "old peak"]
+    - [picchu, "mountain peak"]
+    - [kremlin, "citadel"]
+    - [alhambra, "red palace"]
+
+  # ---------------------------------------------------------------------------
+  # Geographic Features
+  # Brand archetype: Natural, Terrain, Foundation
+  # ---------------------------------------------------------------------------
+  features:
+    - [mesa, "table mountain"]
+    - [butte, "isolated hill"]
+    - [dune, "sand hill"]
+    - [arroyo, "dry wash"]
+    - [playa, "dry lake"]
+    - [ridge, "mountain spine"]
+    - [crest, "wave top"]
+    - [peak, "mountain top"]
+    - [bluff, "steep cliff"]
+    - [crag, "rugged rock"]
+    - [tor, "rocky peak"]
+    - [spur, "projecting ridge"]
+    - [col, "mountain pass"]
+    - [saddle, "low point between peaks"]
+    - [scarp, "steep slope"]
+    - [moraine, "glacial debris"]
+
+  # ---------------------------------------------------------------------------
+  # Qualities (for compound names - NOT roots)
+  # ---------------------------------------------------------------------------
+  qualities:
+    - [grand, "magnificent"]
+    - [great, "impressive"]
+    - [wild, "untamed"]
+    - [pristine, "untouched"]
+    - [majestic, "royal bearing"]
+    - [ancient, "very old"]
+    - [sacred, "holy place"]
+    - [eternal, "everlasting"]
+    - [vast, "immense"]
+    - [remote, "far away"]
+    - [rugged, "rough terrain"]
+    - [serene, "peaceful"]
+    - [epic, "grand scale"]
+    - [timeless, "unchanging"]
+    - [boundless, "without limits"]
+    - [legendary, "famous"]
+    - [iconic, "symbolic"]
+    - [spectacular, "amazing"]
+    - [sublime, "of great beauty"]
+
+  # ---------------------------------------------------------------------------
+  # Directions (for compound names)
+  # ---------------------------------------------------------------------------
+  directions:
+    - [north, "northern"]
+    - [south, "southern"]
+    - [east, "eastern"]
+    - [west, "western"]
+    - [upper, "higher"]
+    - [lower, "deeper"]
+    - [high, "elevated"]
+    - [central, "middle"]
+    - [polar, "at poles"]
+    - [coastal, "by coast"]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  geographic:
+    - peak
+    - ridge
+    - falls
+    - springs
+    - point
+    - bay
+    - cove
+    - heights
+    - lands
+    - vista
+    - view
+
+  modern:
+    - a
+    - o
+    - ix
+    - ex
+    - ia
+
+  neutral:
+    - a
+    - o
+    - i
+    - er
+    - ar
+
+  tech:
+    - ix
+    - ex
+    - "on"
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", ""]  # Weight towards no prefix
+
+  # Tier 1 Colors - Premium/Power (scientifically proven brand effectiveness)
+  color_tier1:
+    - black      # luxury, premium, dramatic
+    - gold       # success, premium, sunlit
+    - silver     # tech, precision, moonlit
+    - blue       # trust, depth, water/sky
+    - red        # energy, passion, sunset
+
+  # Tier 2 Colors - Specialized (landscape-appropriate)
+  color_tier2:
+    - white      # snow, purity, alpine
+    - green      # eco, forest, verdant
+    - crystal    # clarity, ice, pristine
+    - azure      # sky, clarity, coastal
+    - granite    # strength, mountain, enduring
+    - emerald    # lush, tropical, precious
+    - copper     # warm, canyon, earth
+
+  # Geographic direction prefixes
+  geographic:
+    - north
+    - south
+    - east
+    - west
+    - high
+    - upper
+    - lower
+    - great
+    - new
+    - wild
+    - grand
+    - mount
+    - lake
+    - cape
+
+  international:
+    - neo
+    - e
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+patterns:
+  landmark_style:
+    - CVCVC    # tahoe, zion
+    - CVCCVC   # glacier
+    - CVCpeak  # compound
+    - CVCC     # alps, fjord
+
+  compound:
+    - CVCpeak  # highpeak
+    - CVCridge # sunridge
+    - CVCpoint # stonepoint
+
+# =============================================================================
+# Phonetics
+# =============================================================================
+# Optimized for English/German pronounceability in place-based brand names
+phonetics:
+  consonants:
+    # Landmark names favor natural, grounded sounds
+    all: [b, c, d, f, g, h, k, l, m, n, p, r, s, t, v, w, z]
+    common: [g, l, n, r, s, t]          # glen, lake, river, stone
+    soft: [l, m, n, r, s]               # Gentle landscapes
+    hard: [c, g, k, t, d]               # Mountain, rock, peak
+    onset: [b, c, d, f, g, h, k, l, m, n, p, r, s, t, v, w]
+
+  vowels:
+    all: [a, e, i, o, u]
+    common: [a, e, i, o]
+    # Place names often end in these:
+    endings: [a, o, i]                   # Sierra, Colorado, Denali
+
+  # Note: 'y' as semivowel common in place names (yosemite, yellowstone)
+  glides: [y, w]
+
+  # Landmark clusters that work for EN/DE
+  clusters:
+    easy: [gl, gr, br, cr, fr, st, sp, tr]  # glacier, grand, stone
+    geographic: [sk, sn, sw, bl, cl, fl]     # sky, snow, bluff
+
+# =============================================================================
+# Avoid
+# =============================================================================
+# Optimized for English/German pronounceability
+avoid:
+  clusters:
+    - tsch     # German-specific
+    - szcz     # Slavic
+    - zh       # Hard for English
+
+  trademark_concerns:
+    - Names of existing businesses or brands
+    - Protected park names used commercially
+
+  difficult_pronunciation:
+    - Complex indigenous names without anglicization
+    - Names requiring special characters
+
+  generic:
+    - Pure adjectives without geographic context
+    - Overly common words
+
+  # Note: Most landmark names are already anglicized
+  # Focus on clean, memorable sounds for EN/DE audiences

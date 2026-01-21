@@ -177,6 +177,93 @@ roots:
     - [derw, "oak"]
     - [aderyn, "bird"]
 
+  # ---------------------------------------------------------------------------
+  # Time & Seasons
+  # ---------------------------------------------------------------------------
+  time:
+    - [dawn, "new day"]
+    - [dusk, "evening twilight"]
+    - [eve, "evening"]
+    - [tide, "time, season"]
+    - [yule, "winter festival"]
+    - [beltane, "May festival"]
+    - [samhain, "harvest festival"]
+    - [imbolc, "spring festival"]
+    - [solstice, "sun standing"]
+    - [equinox, "equal night"]
+    - [moon, "lunar cycle"]
+    - [cycle, "recurring time"]
+
+  # ---------------------------------------------------------------------------
+  # Qualities & Virtues
+  # ---------------------------------------------------------------------------
+  qualities:
+    - [swift, "fast"]
+    - [bold, "brave"]
+    - [keen, "sharp, eager"]
+    - [wild, "untamed"]
+    - [true, "honest"]
+    - [bright, "luminous"]
+    - [dark, "shadowy"]
+    - [deep, "profound"]
+    - [high, "elevated"]
+    - [ancient, "old"]
+    - [fair, "beautiful"]
+    - [fierce, "intense"]
+    - [noble, "dignified"]
+    - [proud, "dignified"]
+
+  # ---------------------------------------------------------------------------
+  # Actions & Movement
+  # ---------------------------------------------------------------------------
+  action:
+    - [stride, "walk boldly"]
+    - [soar, "fly high"]
+    - [leap, "jump"]
+    - [hunt, "pursue"]
+    - [forge, "create in fire"]
+    - [weave, "intertwine"]
+    - [bind, "tie together"]
+    - [guard, "protect"]
+    - [seek, "search"]
+    - [call, "summon"]
+    - [sing, "vocalize"]
+    - [dance, "move rhythmically"]
+
+  # ---------------------------------------------------------------------------
+  # Sound & Music
+  # ---------------------------------------------------------------------------
+  sound:
+    - [song, "melody"]
+    - [chant, "rhythmic speech"]
+    - [voice, "vocal sound"]
+    - [horn, "wind instrument"]
+    - [drum, "percussion"]
+    - [pipe, "wind instrument"]
+    - [echo, "reflected sound"]
+    - [cry, "loud call"]
+    - [howl, "wolf cry"]
+    - [whisper, "soft speech"]
+
+  # ---------------------------------------------------------------------------
+  # Irish Gaelic Roots
+  # ---------------------------------------------------------------------------
+  irish:
+    - [ard, "high, tall"]
+    - [ban, "white, fair"]
+    - [dubh, "black, dark"]
+    - [gorm, "blue"]
+    - [glas, "green-grey"]
+    - [dearg, "red"]
+    - [beag, "small"]
+    - [mor, "great, big"]
+    - [sean, "old, ancient"]
+    - [og, "young"]
+    - [fionn, "fair, white"]
+    - [ruadh, "red-haired"]
+    - [breac, "speckled"]
+    - [liath, "grey"]
+
 # =============================================================================
 # Suffixes
 # =============================================================================
@@ -191,12 +278,21 @@ suffixes:
     - in       # diminutive
     - een      # diminutive (Irish)
 
+  welsh:
+    - wyn      # white, fair
+    - wen      # white, blessed (feminine)
+    - an       # diminutive
+    - ion      # plural/collective
+    - ydd      # agent noun
+
   gaelic:
     - agh      # place
     - more     # great, big
     - beg      # small
     - dubh     # black
     - ban      # white
+    - ach      # place/quality
+    - och      # place/quality
 
   neutral:
     - a
@@ -229,6 +325,13 @@ prefixes:
     - bal      # town
     - dun      # fort
     - ard      # high
+
+  gaelic:
+    - mac      # son of (Scottish/Irish)
+    - ben      # mountain peak
+    - dun      # fort, hill
+    - glen     # valley
+
   international:
     - neo
     - e
@@ -262,23 +365,45 @@ patterns:
 # =============================================================================
 # Phonetics
 # =============================================================================
+# Optimized for English/German pronounceability
 phonetics:
   consonants:
-    all: [b, c, d, f, g, h, l, m, n, p, r, s, t, w, y]
+    # Anglicized Celtic consonants
+    all: [b, c, d, f, g, h, l, m, n, p, r, s, t, w]
     celtic_common: [c, g, l, n, r, w, d, m]
-    soft: [l, n, m, w, y]
+    soft: [l, n, m, w]
     hard: [c, g, t, d, k]
 
+  # Note on 'y':
+  # - In Irish/Scottish: 'y' is rare (use 'i' or 'ai')
+  # - In Welsh: 'y' is a VOWEL (= /ə/ or /ɨ/) not a consonant
+  # For brand names, treat Welsh 'y' as vowel or use anglicized 'i'
+  glides: [y, w]
+
   vowels:
-    all: [a, e, i, o, u, y]
+    all: [a, e, i, o, u]
+    welsh: [a, e, i, o, u, y]  # Welsh 'y' is a vowel
     common: [a, e, i, o]
+
+  # Celtic clusters that work for EN/DE speakers
+  clusters:
+    easy: [br, cr, dr, fr, gr, tr, gl]  # Like English
+    welsh: [gw, ll, rh]                  # May need practice
 
 # =============================================================================
 # Avoid
 # =============================================================================
+# Optimized for English/German pronounceability
 avoid:
   clusters:
-    - difficult Gaelic spelling (use anglicized)
-    - bh, mh, dh (Gaelic mutations - simplify)
+    # Gaelic mutations - simplify for EN/DE speakers:
+    - bh      # → use 'v' or 'w'
+    - mh      # → use 'v' or 'w'
+    - dh      # → use 'd' or silent
+    - gh      # → use 'g' or silent
+    - fh      # → silent (just remove)
   sounds:
-    - guttural ch (use k or c)
+    # Guttural sounds difficult for EN/DE:
+    - "ch (guttural)"  # Use 'k' or 'c' instead
+  # Note: 'th' is ALLOWED - common in anglicized Celtic (Cath, Beth)
+  # and easy for EN speakers (German speakers may say 't' or 's')

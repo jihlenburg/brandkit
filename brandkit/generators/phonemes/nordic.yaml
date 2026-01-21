@@ -252,6 +252,106 @@ roots:
     - [lax, "salmon"]
     - [val, "whale"]
     - [sel, "seal"]
+    - [lo, "lynx"]
+    - [rav, "fox"]
+    - [hare, "hare"]
+    - [utter, "otter"]
+    - [baver, "beaver"]
+    - [grip, "vulture"]
+    - [uggla, "owl"]
+    - [gos, "goose"]
+
+  # ---------------------------------------------------------------------------
+  # Time & Seasons
+  # ---------------------------------------------------------------------------
+  time:
+    - [tid, "time"]
+    - [ar, "year"]
+    - [dag, "day"]
+    - [natt, "night"]
+    - [morgon, "morning"]
+    - [kvall, "evening"]
+    - [sommar, "summer"]
+    - [vinter, "winter"]
+    - [host, "autumn"]
+    - [var, "spring"]
+    - [evighet, "eternity"]
+    - [stund, "moment"]
+    - [forntid, "ancient time"]
+    - [framtid, "future"]
+
+  # ---------------------------------------------------------------------------
+  # Actions & Movement
+  # ---------------------------------------------------------------------------
+  action:
+    - [springa, "run"]
+    - [flyga, "fly"]
+    - [hoppa, "jump"]
+    - [klatra, "climb"]
+    - [simma, "swim"]
+    - [segla, "sail"]
+    - [rida, "ride"]
+    - [kasta, "throw"]
+    - [slå, "strike"]
+    - [bygga, "build"]
+    - [skapa, "create"]
+    - [vakna, "awaken"]
+    - [lysa, "shine"]
+    - [brinna, "burn"]
+
+  # ---------------------------------------------------------------------------
+  # Qualities & Attributes
+  # ---------------------------------------------------------------------------
+  qualities:
+    - [snabb, "fast"]
+    - [stark, "strong"]
+    - [vis, "wise"]
+    - [modig, "brave"]
+    - [tyst, "silent"]
+    - [vild, "wild"]
+    - [fri, "free"]
+    - [ren, "pure, clean"]
+    - [sann, "true"]
+    - [evig, "eternal"]
+    - [djup, "deep"]
+    - [hog, "high"]
+    - [kall, "cold"]
+    - [varm, "warm"]
+    - [ljus, "bright"]
+    - [mork, "dark"]
+    - [skarp, "sharp"]
+    - [mjuk, "soft"]
+
+  # ---------------------------------------------------------------------------
+  # Sound & Music
+  # ---------------------------------------------------------------------------
+  sound:
+    - [klang, "sound, ring"]
+    - [ljud, "sound"]
+    - [sang, "song"]
+    - [rop, "call, shout"]
+    - [viskning, "whisper"]
+    - [eko, "echo"]
+    - [dunder, "thunder"]
+    - [brus, "roar, rush"]
+    - [sus, "swoosh"]
+    - [knak, "crack"]
+
+  # ---------------------------------------------------------------------------
+  # Crafts & Tools
+  # ---------------------------------------------------------------------------
+  craft:
+    - [smide, "smithing"]
+    - [smed, "smith"]
+    - [vav, "weave"]
+    - [snida, "carve"]
+    - [yxa, "axe"]
+    - [skepp, "ship"]
+    - [drakkar, "dragon ship"]
+    - [roder, "rudder"]
+    - [ankare, "anchor"]
+    - [hjalm, "helmet"]
+    - [brynja, "chainmail"]
 
 # =============================================================================
 # Suffixes
@@ -388,14 +488,18 @@ patterns:
 # =============================================================================
 # Consonant/Vowel Sets
 # =============================================================================
+# Optimized for English/German pronounceability
 phonetics:
   consonants:
     # Strong Nordic consonants
     strong: [k, t, r, d, g, b, p]
     # Soft consonants
     soft: [s, l, m, n, f, v, h]
-    # All common
-    all: [k, t, r, d, g, b, p, s, l, m, n, f, v, h]
+    # All common (including 'j' which = /j/ like English 'y')
+    all: [k, t, r, d, g, b, p, s, l, m, n, f, v, h, j]
+
+  # Note: Nordic 'j' = /j/ (like 'y' in "yes"), not English /dʒ/
+  # This is easy for both EN and DE speakers
 
   vowels:
     all: [a, e, i, o, u]
@@ -405,6 +509,11 @@ phonetics:
     back: [a, o, u]
     # Front (lighter)
     front: [e, i]
+
+  # Common Nordic clusters - all pronounceable for EN/DE
+  clusters:
+    easy: [sk, st, br, fr, gr, kr, tr]  # Like "sky", "strong"
+    nordic: [gn, kn, hj, lj]            # May need practice
 
 # =============================================================================
 # Bad Patterns to Avoid
@@ -417,13 +526,15 @@ avoid:
     - oo
     - uu
     - tsch     # German-specific
-    - sch      # ambiguous
-    - th       # English-specific pronunciation
-  # Characters to never use (transliterate instead)
+    - sch      # ambiguous for brand names
+    # Note: 'th' is ALLOWED - it's the transliteration of þ (Thor, Thule)
+    # and is easy for EN/DE speakers
+
+  # Characters to never use (transliterate instead for EN/DE readability)
   special_chars:
-    - ö        # use o
-    - ä        # use a or e
+    - ö        # use o or oe
+    - ä        # use a or ae
     - å        # use a or o
-    - þ        # use th
+    - þ        # use th (e.g., Thor)
     - ð        # use d
     - æ        # use ae or e

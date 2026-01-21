@@ -263,6 +263,154 @@ roots:
     - [orta, "center, middle", proto]
     - [ust, "top, upper", proto]
     - [tub, "bottom, deep", proto]
+    - [aldy, "front", kipchak]
+    - [artky, "rear, behind", kipchak]
+    - [uzak, "far, distant", oghuz]
+    - [yakyn, "near, close", oghuz]
+
+  # ---------------------------------------------------------------------------
+  # Time & Seasons
+  # ---------------------------------------------------------------------------
+  time:
+    - [zaman, "time, era", oghuz]
+    - [vakit, "moment", oghuz]
+    - [asyr, "century, age", kipchak]
+    - [kun, "day", proto]
+    - [tun, "night", proto]
+    - [zhaz, "summer", kipchak]
+    - [kys, "winter", kipchak]
+    - [kuz, "autumn", oghuz]
+    - [bahar, "spring", oghuz]
+    - [sabah, "morning", oghuz]
+    - [aksham, "evening", oghuz]
+    - [gece, "night", oghuz]
+    - [erteng, "tomorrow", kipchak]
+
+  # ---------------------------------------------------------------------------
+  # Qualities & Attributes
+  # ---------------------------------------------------------------------------
+  quality:
+    - [buyuk, "big, great", oghuz]
+    - [kicik, "small", oghuz]
+    - [uzun, "long, tall", proto]
+    - [kisa, "short", oghuz]
+    - [hizli, "fast", oghuz]
+    - [yavas, "slow", oghuz]
+    - [guzal, "beautiful", oghuz]
+    - [yeni, "new", oghuz]
+    - [eski, "old", oghuz]
+    - [sert, "hard, strong", oghuz]
+    - [yumsak, "soft", oghuz]
+    - [temiz, "clean, pure", oghuz]
+    - [parlak, "bright, shiny", oghuz]
+    - [karanlik, "dark", oghuz]
+    - [soguk, "cold", oghuz]
+    - [sicak, "hot, warm", oghuz]
+    - [taze, "fresh", oghuz]
+    - [sonsuz, "infinite, endless", oghuz]
+    - [turaly, "about, concerning", kipchak]
+    - [zhaksy, "good", kipchak]
+    - [ulken, "great, large", kipchak]
+    - [kyska, "short", kipchak]
+
+  # ---------------------------------------------------------------------------
+  # Sound & Voice
+  # ---------------------------------------------------------------------------
+  sound:
+    - [ses, "voice, sound", oghuz]
+    - [muzik, "music", oghuz]
+    - [sarki, "song", oghuz]
+    - [davul, "drum", oghuz]
+    - [dombra, "string instrument", kipchak]
+    - [kobuz, "fiddle", kipchak]
+    - [an, "melody, song", kipchak]
+    - [dauys, "voice", kipchak]
+    - [yankı, "echo", oghuz]
+    - [ton, "tone, sound", proto]
+
+  # ---------------------------------------------------------------------------
+  # Weather & Elements
+  # ---------------------------------------------------------------------------
+  weather:
+    - [yagmur, "rain", oghuz]
+    - [kar, "snow", oghuz]
+    - [ruzgar, "wind", oghuz]
+    - [bulut, "cloud", oghuz]
+    - [firtina, "storm", oghuz]
+    - [zhanbyr, "rain", kipchak]
+    - [boran, "blizzard", kipchak]
+    - [shamgal, "sandstorm", kipchak]
+    - [khar, "snow", siberian]
+    - [salkin, "cool breeze", oghuz]
+    - [serim, "coolness", kipchak]
+
+  # ---------------------------------------------------------------------------
+  # Technology & Modern Concepts
+  # ---------------------------------------------------------------------------
+  modern:
+    - [makine, "machine", oghuz]
+    - [motor, "motor", oghuz]
+    - [sistem, "system", oghuz]
+    - [dijital, "digital", oghuz]
+    - [tekno, "techno", proto]
+    - [data, "data", proto]
+    - [akilli, "smart", oghuz]
+    - [hiz, "speed", oghuz]
+    - [ivme, "acceleration", oghuz]
+    - [enerji, "energy", oghuz]
+    - [robot, "robot", proto]
+    - [siber, "cyber", proto]
+
+  # ---------------------------------------------------------------------------
+  # Plants & Agriculture
+  # ---------------------------------------------------------------------------
+  plants:
+    - [agac, "tree", oghuz]
+    - [cicek, "flower", oghuz]
+    - [yaprak, "leaf", oghuz]
+    - [tohum, "seed", oghuz]
+    - [bugday, "wheat", oghuz]
+    - [altin, "gold (color)", proto]
+    - [gul, "rose", oghuz]
+    - [lale, "tulip", oghuz]
+    - [agash, "tree, wood", kipchak]
+    - [zhidek, "berry", kipchak]
+    - [guldeu, "bloom", kipchak]
+
+  # ---------------------------------------------------------------------------
+  # Metals & Materials
+  # ---------------------------------------------------------------------------
+  materials:
+    - [altin, "gold", proto]
+    - [gumus, "silver", oghuz]
+    - [demir, "iron", oghuz]
+    - [bakir, "copper", oghuz]
+    - [celik, "steel", oghuz]
+    - [temir, "iron", kipchak]
+    - [altyn, "gold", kipchak]
+    - [kumis, "silver", kipchak]
+    - [zhes, "copper", kipchak]
+    - [bolat, "steel", kipchak]
+    - [tash, "stone", proto]
+    - [mermer, "marble", oghuz]
+
+  # ---------------------------------------------------------------------------
+  # Action & Motion
+  # ---------------------------------------------------------------------------
+  action:
+    - [ucmak, "to fly", oghuz]
+    - [kosmak, "to run", oghuz]
+    - [atlamak, "to jump", oghuz]
+    - [donmek, "to turn", oghuz]
+    - [yuksel, "rise, ascend", oghuz]
+    - [dusmek, "to fall", oghuz]
+    - [akmak, "to flow", oghuz]
+    - [parla, "shine", oghuz]
+    - [zhugu, "run", kipchak]
+    - [ushu, "fly", kipchak]
+    - [sekir, "jump", kipchak]
+    - [aila, "rotate", kipchak]
+    - [kuter, "rise", kipchak]
 
 # =============================================================================
 # Suffixes
@@ -447,43 +595,66 @@ patterns:
 # =============================================================================
 # Consonant/Vowel Sets (Turkic-specific)
 # =============================================================================
+# Optimized for English/German pronounceability
 phonetics:
   consonants:
     strong: [k, t, b, d, g, r]    # Forceful, Turkic-typical
     medium: [s, l, m, n, v, y, z, p]
     soft: [l, m, n, s, y]
+    all: [k, t, b, d, g, r, s, l, m, n, v, y, z, p]
 
   vowels:
+    all: [a, e, i, o, u]
     # Back vowels (go together in vowel harmony)
     back: [a, o, u]
     # Front vowels (go together in vowel harmony)
     front: [e, i]
 
-  # Vowel harmony - back and front vowels don't mix
+  # =============================================================================
+  # VOWEL HARMONY RULES (Turkic languages)
+  # =============================================================================
+  # Rule: If root has BACK vowels (a, o, u), suffixes must also use BACK vowels
+  #       If root has FRONT vowels (e, i), suffixes must also use FRONT vowels
+  #
+  # Examples:
+  #   turan + an = turan (back harmony: u-a-a)
+  #   bilim + ik = bilimik (front harmony: i-i-i)
+  #
+  # For brand names, this creates natural-sounding Turkic names
   harmony:
     back_word_vowels: [a, o, u]
     front_word_vowels: [e, i]
+    # Suffix vowel mapping for harmony
+    back_suffix_vowels: [a, u]    # Use these when root has back vowels
+    front_suffix_vowels: [e, i]   # Use these when root has front vowels
 
 # =============================================================================
 # Bad Patterns to Avoid
 # =============================================================================
+# Optimized for English/German pronounceability
 avoid:
   clusters:
-    - zh      # Hard for English
+    # Sounds difficult for EN/DE speakers:
+    - zh      # Hard for English (Kazakh ж) - use 'j' or 'dj' instead
     - cz      # Slavic, not Turkic
     - szcz    # Polish
-    - ck      # After short vowel
+    - ck      # Harsh after short vowel
     - tsch    # German-specific
     - dsch    # German-specific
     - shch    # Russian
+
   double_vowels:
     - aa
     - ee
     - ii
     - oo
     - uu
+
   double_consonants:
     - kk
     - tt
     - pp
-    - ss      # Exception: some words
+    - ss      # Exception: some words are okay
+
+  # Note: Turkish ğ (soft g) has no direct EN/DE equivalent
+  # Use plain 'g' or omit in brand names

@@ -399,17 +399,18 @@ phonetics:
 # Bad patterns to avoid
 # =============================================================================
 avoid:
+  # Note: 'th', 'ph', 'ch' are VALID Greek aspirates - don't avoid them
+  # They are pronounceable for English/German speakers (throne, phone, chrome)
   clusters:
-    - thr
-    - phr
-    - chr
-    - sch
-    - cks
-    - ght
-    - tch
+    - sch      # German-specific, not Greek
+    - cks      # Harsh for brand names
+    - ght      # English-specific
+    - tch      # English-specific
+    - tsch     # German-specific
   double_vowels:
     - aa
     - ee
     - ii
     - oo
     - uu
+  # Greek aspirates (ph, th, ch) are ALLOWED - they're core Greek sounds

@@ -34,11 +34,7 @@ class JapaneseGenerator(CulturalGenerator):
 
     def __init__(self, seed: int = None):
         super().__init__('japanese', seed)
-        # Japanese-specific consonants (no L, V, TH)
-        self._consonants = list('kstmnhryw')
-        self._vowels = list('aiueo')
-        # Common Japanese-style endings
-        self._endings = ['ra', 'no', 'ta', 'ko', 'ro', 'ka', 'mi', 'ri', 'to', 'ya']
+        # All phonetics loaded from japanese.yaml
 
     def _generate_one(self,
                       categories: List[str],
@@ -61,11 +57,12 @@ class JapaneseGenerator(CulturalGenerator):
 
         root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('japanese', 'tech', 'neutral')
-        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(self._endings)
+        suffix = self._rng.choice(suffixes)
 
         # Japanese style: often drop trailing vowel before adding suffix
+        vowels = self._get_vowels()
         base = root
-        if base[-1] in self._vowels and suffix[0] in self._vowels:
+        if base[-1] in vowels and suffix[0] in vowels:
             base = base[:-1]
 
         name = base + suffix
@@ -78,10 +75,11 @@ class JapaneseGenerator(CulturalGenerator):
             return None
 
         root, meaning, cat = self._rng.choice(pool)
+        vowels = self._get_vowels()
 
         # Japanese names typically end in vowels or 'n'
-        if root[-1] not in self._vowels and root[-1] != 'n':
-            root = root + self._rng.choice(['a', 'o', 'i'])
+        if root[-1] not in vowels and root[-1] != 'n':
+            root = root + self._rng.choice(vowels[:3])  # a, i, o
 
         return (root, [root], [meaning], 'root_only')
 
@@ -94,13 +92,15 @@ class JapaneseGenerator(CulturalGenerator):
             'CVCVCV',    # toyota
         ]
         pattern = self._rng.choice(patterns)
+        consonants = self._get_consonants()
+        vowels = self._get_vowels()
 
         result = []
         for char in pattern:
             if char == 'C':
-                result.append(self._rng.choice(self._consonants))
+                result.append(self._rng.choice(consonants))
             elif char == 'V':
-                result.append(self._rng.choice(self._vowels))
+                result.append(self._rng.choice(vowels))
 
         name = ''.join(result)
         return (name, [], ['pattern-generated'], 'pattern')
@@ -119,9 +119,10 @@ class JapaneseGenerator(CulturalGenerator):
         part2 = root2[-2:] if len(root2) >= 2 else root2
 
         name = part1 + part2
+        vowels = self._get_vowels()
 
         # Ensure ends in vowel or 'n'
-        if name[-1] not in self._vowels and name[-1] != 'n':
+        if name[-1] not in vowels and name[-1] != 'n':
             name = name + 'a'
 
         return (name, [root1, root2], [meaning1, meaning2], 'compound')
@@ -146,8 +147,7 @@ class LatinGenerator(CulturalGenerator):
 
     def __init__(self, seed: int = None):
         super().__init__('latin', seed)
-        self._elegant_consonants = list('lrsvnf')
-        self._strong_consonants = list('ctpdg')
+        # All phonetics loaded from latin.yaml
 
     def _generate_one(self,
                       categories: List[str],
@@ -170,7 +170,7 @@ class LatinGenerator(CulturalGenerator):
 
         root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('latin', 'modern')
-        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(['us', 'a', 'um', 'is', 'or', 'ix'])
+        suffix = self._rng.choice(suffixes)
 
         # Handle root-suffix junction
         connector = self._get_connector(root[-1], suffix[0])
@@ -186,7 +186,7 @@ class LatinGenerator(CulturalGenerator):
 
         root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('italian')
-        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(['o', 'a', 'i', 'ino', 'etto', 'ella'])
+        suffix = self._rng.choice(suffixes)
 
         # Italian style: soften consonant endings
         base = root
@@ -206,7 +206,7 @@ class LatinGenerator(CulturalGenerator):
 
         root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('french')
-        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(['e', 'ique', 'elle', 'eur', 'oir'])
+        suffix = self._rng.choice(suffixes)
 
         connector = self._get_connector(root[-1], suffix[0])
         name = root + connector + suffix
@@ -252,7 +252,7 @@ class CelticGenerator(CulturalGenerator):
 
     def __init__(self, seed: int = None):
         super().__init__('celtic', seed)
-        self._celtic_consonants = list('cglnrwdm')
+        # All phonetics loaded from celtic.yaml
 
     def _generate_one(self,
                       categories: List[str],
@@ -275,7 +275,7 @@ class CelticGenerator(CulturalGenerator):
 
         root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('celtic', 'gaelic', 'neutral')
-        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(['an', 'en', 'wen', 'wyn', 'och', 'in'])
+        suffix = self._rng.choice(suffixes)
 
         connector = self._get_connector(root[-1], suffix[0])
         name = root + connector + suffix
@@ -312,9 +312,9 @@ class CelticGenerator(CulturalGenerator):
 
         root, meaning, cat = self._rng.choice(pool)
 
-        # Welsh suffixes
-        welsh_suffixes = ['wyn', 'wen', 'an', 'ion', 'ydd']
-        suffix = self._rng.choice(welsh_suffixes)
+        # Welsh suffixes from YAML
+        suffixes = self._get_suffixes('welsh', 'celtic')
+        suffix = self._rng.choice(suffixes)
 
         connector = self._get_connector(root[-1], suffix[0])
         name = root + connector + suffix
@@ -329,13 +329,15 @@ class CelticGenerator(CulturalGenerator):
 
         root, meaning, cat = self._rng.choice(pool)
 
-        # Gaelic prefixes and suffixes
+        # Gaelic prefixes and suffixes from YAML
         use_prefix = self._rng.choice([True, False])
         if use_prefix:
-            prefix = self._rng.choice(['mac', 'ben', 'dun', 'glen'])
-            name = prefix + root
+            prefixes = self._config.get('prefixes', {}).get('gaelic', [])
+            prefix = self._rng.choice(prefixes) if prefixes else ''
+            name = prefix + root if prefix else root
         else:
-            suffix = self._rng.choice(['ach', 'och', 'more', 'beg', 'an'])
+            suffixes = self._get_suffixes('gaelic', 'celtic')
+            suffix = self._rng.choice(suffixes)
             connector = self._get_connector(root[-1], suffix[0])
             name = root + connector + suffix
 
@@ -361,8 +363,7 @@ class CelestialGenerator(CulturalGenerator):
 
     def __init__(self, seed: int = None):
         super().__init__('celestial', seed)
-        self._tech_consonants = list('vxzkltr')
-        self._cosmic_endings = ['ar', 'on', 'ix', 'ex', 'us', 'is', 'a']
+        # All phonetics loaded from celestial.yaml
 
     def _generate_one(self,
                       categories: List[str],
@@ -385,7 +386,7 @@ class CelestialGenerator(CulturalGenerator):
 
         root, meaning, cat = self._rng.choice(pool)
         suffixes = self._get_suffixes('celestial', 'tech', 'science')
-        suffix = self._rng.choice(suffixes) if suffixes else self._rng.choice(self._cosmic_endings)
+        suffix = self._rng.choice(suffixes) if suffixes else 'a'
 
         connector = self._get_connector(root[-1], suffix[0])
         name = root + connector + suffix
@@ -440,13 +441,14 @@ class CelestialGenerator(CulturalGenerator):
 
         root, meaning, cat = self._rng.choice(pool)
 
-        # Cosmic brand suffixes
-        cosmic_suffixes = ['on', 'ar', 'ix', 'ex', 'um', 'is', 'a', 'or']
-        suffix = self._rng.choice(cosmic_suffixes)
+        # Cosmic brand suffixes from YAML
+        suffixes = self._get_suffixes('cosmic', 'celestial', 'tech')
+        suffix = self._rng.choice(suffixes)
 
-        # Optional tech/space prefix
+        # Optional tech/space prefix from YAML
         if self._rng.choice([True, False]):
-            prefix = self._rng.choice(['neo', 'hyper', 'ultra', 'nova', ''])
+            cosmic_prefixes = self._config.get('prefixes', {}).get('cosmic', [])
+            prefix = self._rng.choice(cosmic_prefixes) if cosmic_prefixes else ''
             if prefix:
                 connector = self._get_connector(prefix[-1], root[0])
                 root = prefix + connector + root
@@ -458,6 +460,345 @@ class CelestialGenerator(CulturalGenerator):
 
 
 # =============================================================================
+# English Animals Generator
+# =============================================================================
+
+class AnimalsGenerator(CulturalGenerator):
+    """
+    Generate brand names from global animal kingdom.
+
+    Features:
+    - Big cats, raptors, marine predators, canines
+    - Speed, power, intelligence archetypes
+    - Automotive/sports brand patterns (Jaguar, Mustang, Cobra)
+    - Strong phonetic properties
+
+    Great for: Automotive, sports, tech, outdoor, energy brands
+    """
+
+    def __init__(self, seed: int = None):
+        super().__init__('animals', seed)
+        # All phonetics loaded from animals.yaml
+
+    def _generate_one(self,
+                      categories: List[str],
+                      archetype: str,
+                      industry: str) -> Optional[Tuple[str, List[str], List[str], str]]:
+        """Generate a single English animals-style name."""
+        method = self._rng.choice([
+            self._root_suffix,
+            self._prefix_root,
+            self._animal_compound,
+            self._archetype_blend,
+        ])
+        return method(categories)
+
+    def _root_suffix(self, categories: List[str]) -> Optional[Tuple]:
+        """Animal root + power suffix."""
+        pool = self._get_pool(categories)
+        if not pool:
+            return None
+
+        root, meaning, cat = self._rng.choice(pool)
+        suffixes = self._get_suffixes('animal', 'power', 'neutral')
+        suffix = self._rng.choice(suffixes)
+
+        connector = self._get_connector(root[-1], suffix[0])
+        name = root + connector + suffix
+
+        return (name, [root], [meaning], 'root_suffix')
+
+    def _prefix_root(self, categories: List[str]) -> Optional[Tuple]:
+        """Power/color prefix + animal root."""
+        pool = self._get_pool(categories)
+        if not pool:
+            return None
+
+        root, meaning, cat = self._rng.choice(pool)
+        # Use prefixes from YAML config (includes color tiers)
+        prefixes = self._get_prefixes()
+        prefix = self._rng.choice(prefixes) if prefixes else ''
+
+        if prefix:
+            name = prefix + root
+        else:
+            name = root
+
+        return (name, [root], [meaning], 'prefix_root')
+
+    def _animal_compound(self, categories: List[str]) -> Optional[Tuple]:
+        """Compound two animal roots."""
+        pool = self._get_pool(categories)
+        if len(pool) < 2:
+            return None
+
+        root1, meaning1, _ = self._rng.choice(pool)
+        root2, meaning2, _ = self._rng.choice(pool)
+
+        # Take abbreviated forms
+        part1 = root1[:3] if len(root1) >= 3 else root1
+        part2 = root2[-3:] if len(root2) >= 3 else root2
+
+        connector = self._get_connector(part1[-1], part2[0])
+        name = part1 + connector + part2
+
+        return (name, [root1, root2], [meaning1, meaning2], 'animal_compound')
+
+    def _archetype_blend(self, categories: List[str]) -> Optional[Tuple]:
+        """Animal + quality archetype blend."""
+        # Power animal categories
+        animal_cats = ['big_cats', 'raptors', 'canines', 'marine', 'power_mammals']
+        quality_cats = ['qualities']
+
+        animal_pool = self._get_pool(animal_cats)
+        quality_pool = self._get_pool(quality_cats)
+
+        if not animal_pool:
+            return self._root_suffix(categories)
+
+        animal, animal_meaning, _ = self._rng.choice(animal_pool)
+
+        if quality_pool and self._rng.choice([True, False]):
+            quality, quality_meaning, _ = self._rng.choice(quality_pool)
+            # Quality + animal blend
+            name = quality[:4] + animal[:4] if len(quality) >= 4 else quality + animal[:4]
+            return (name, [quality, animal], [quality_meaning, animal_meaning], 'archetype_blend')
+        else:
+            # Just animal with suffix
+            suffixes = self._get_suffixes('animal', 'power', 'neutral')
+            suffix = self._rng.choice(suffixes)
+            connector = self._get_connector(animal[-1], suffix[0])
+            name = animal + connector + suffix
+            return (name, [animal], [animal_meaning], 'archetype_blend')
+
+
+# =============================================================================
+# Mythology Generator
+# =============================================================================
+
+class MythologyGenerator(CulturalGenerator):
+    """
+    Generate brand names from modern and popular mythology.
+
+    Features:
+    - Creatures from global folklore (banshee, phoenix, kitsune)
+    - Fantasy and urban legend references
+    - Mystical and magical feel
+    - Gaming and entertainment appeal
+
+    Great for: Gaming, entertainment, fantasy brands, creative products
+    """
+
+    def __init__(self, seed: int = None):
+        super().__init__('mythology', seed)
+        # All phonetics loaded from mythology.yaml
+
+    def _generate_one(self,
+                      categories: List[str],
+                      archetype: str,
+                      industry: str) -> Optional[Tuple[str, List[str], List[str], str]]:
+        """Generate a single mythology-style name."""
+        method = self._rng.choice([
+            self._root_suffix,
+            self._prefix_root,
+            self._creature_compound,
+            self._mythic_blend,
+        ])
+        return method(categories)
+
+    def _root_suffix(self, categories: List[str]) -> Optional[Tuple]:
+        """Mythic root + suffix."""
+        pool = self._get_pool(categories)
+        if not pool:
+            return None
+
+        root, meaning, cat = self._rng.choice(pool)
+        suffixes = self._get_suffixes('mythic', 'neutral')
+        suffix = self._rng.choice(suffixes)
+
+        connector = self._get_connector(root[-1], suffix[0])
+        name = root + connector + suffix
+
+        return (name, [root], [meaning], 'root_suffix')
+
+    def _prefix_root(self, categories: List[str]) -> Optional[Tuple]:
+        """Mythic prefix + creature root."""
+        pool = self._get_pool(categories)
+        if not pool:
+            return None
+
+        root, meaning, cat = self._rng.choice(pool)
+        # Use prefixes from YAML config
+        prefixes = self._get_prefixes()
+        prefix = self._rng.choice(prefixes) if prefixes else ''
+
+        if prefix:
+            name = prefix + root
+        else:
+            name = root
+
+        return (name, [root], [meaning], 'prefix_root')
+
+    def _creature_compound(self, categories: List[str]) -> Optional[Tuple]:
+        """Compound two mythic roots."""
+        pool = self._get_pool(categories)
+        if len(pool) < 2:
+            return None
+
+        root1, meaning1, _ = self._rng.choice(pool)
+        root2, meaning2, _ = self._rng.choice(pool)
+
+        # Take abbreviated forms
+        part1 = root1[:3] if len(root1) >= 3 else root1
+        part2 = root2[-3:] if len(root2) >= 3 else root2
+
+        connector = self._get_connector(part1[-1], part2[0])
+        name = part1 + connector + part2
+
+        return (name, [root1, root2], [meaning1, meaning2], 'creature_compound')
+
+    def _mythic_blend(self, categories: List[str]) -> Optional[Tuple]:
+        """Mythic creature + quality blend."""
+        # Creature categories
+        creature_cats = ['celtic', 'nordic', 'greek', 'japanese', 'slavic', 'fae', 'dragons', 'undead']
+        quality_cats = ['qualities']
+
+        creature_pool = self._get_pool(creature_cats)
+        quality_pool = self._get_pool(quality_cats)
+
+        if not creature_pool:
+            return self._root_suffix(categories)
+
+        creature, creature_meaning, _ = self._rng.choice(creature_pool)
+
+        if quality_pool and self._rng.choice([True, False]):
+            quality, quality_meaning, _ = self._rng.choice(quality_pool)
+            # Quality prefix
+            name = quality[:4] + creature[:4] if len(quality) >= 4 else quality + creature[:4]
+            return (name, [quality, creature], [quality_meaning, creature_meaning], 'mythic_blend')
+        else:
+            # Just creature with suffix
+            suffixes = self._get_suffixes('mythic', 'neutral')
+            suffix = self._rng.choice(suffixes)
+            connector = self._get_connector(creature[-1], suffix[0])
+            name = creature + connector + suffix
+            return (name, [creature], [creature_meaning], 'mythic_blend')
+
+
+# =============================================================================
+# Landmarks Generator
+# =============================================================================
+
+class LandmarksGenerator(CulturalGenerator):
+    """
+    Generate brand names from famous landmarks and natural wonders.
+
+    Features:
+    - US National Parks and mountains
+    - International landmarks and reserves
+    - Natural features (canyons, waterfalls, etc.)
+    - Aspirational and adventurous feel
+
+    Great for: Travel, adventure, outdoor, premium brands
+    """
+
+    def __init__(self, seed: int = None):
+        super().__init__('landmarks', seed)
+        # All phonetics loaded from landmarks.yaml
+
+    def _generate_one(self,
+                      categories: List[str],
+                      archetype: str,
+                      industry: str) -> Optional[Tuple[str, List[str], List[str], str]]:
+        """Generate a single landmarks-style name."""
+        method = self._rng.choice([
+            self._root_suffix,
+            self._prefix_root,
+            self._landmark_compound,
+            self._geographic_blend,
+        ])
+        return method(categories)
+
+    def _root_suffix(self, categories: List[str]) -> Optional[Tuple]:
+        """Landmark root + suffix."""
+        pool = self._get_pool(categories)
+        if not pool:
+            return None
+
+        root, meaning, cat = self._rng.choice(pool)
+        suffixes = self._get_suffixes('geographic', 'modern', 'neutral')
+        suffix = self._rng.choice(suffixes)
+
+        connector = self._get_connector(root[-1], suffix[0])
+        name = root + connector + suffix
+
+        return (name, [root], [meaning], 'root_suffix')
+
+    def _prefix_root(self, categories: List[str]) -> Optional[Tuple]:
+        """Direction/color prefix + landmark root."""
+        pool = self._get_pool(categories)
+        if not pool:
+            return None
+
+        root, meaning, cat = self._rng.choice(pool)
+        # Use prefixes from YAML config (includes color tiers and geographic)
+        prefixes = self._get_prefixes()
+        prefix = self._rng.choice(prefixes) if prefixes else ''
+
+        if prefix:
+            name = prefix + root
+        else:
+            name = root
+
+        return (name, [root], [meaning], 'prefix_root')
+
+    def _landmark_compound(self, categories: List[str]) -> Optional[Tuple]:
+        """Compound two landmark roots."""
+        pool = self._get_pool(categories)
+        if len(pool) < 2:
+            return None
+
+        root1, meaning1, _ = self._rng.choice(pool)
+        root2, meaning2, _ = self._rng.choice(pool)
+
+        # Take abbreviated forms
+        part1 = root1[:3] if len(root1) >= 3 else root1
+        part2 = root2[-3:] if len(root2) >= 3 else root2
+
+        connector = self._get_connector(part1[-1], part2[0])
+        name = part1 + connector + part2
+
+        return (name, [root1, root2], [meaning1, meaning2], 'landmark_compound')
+
+    def _geographic_blend(self, categories: List[str]) -> Optional[Tuple]:
+        """Geographic feature + quality blend."""
+        # Feature categories
+        feature_cats = ['us_parks', 'mountains', 'canyons', 'water', 'islands']
+        quality_cats = ['qualities']
+
+        feature_pool = self._get_pool(feature_cats)
+        quality_pool = self._get_pool(quality_cats)
+
+        if not feature_pool:
+            return self._root_suffix(categories)
+
+        feature, feature_meaning, _ = self._rng.choice(feature_pool)
+
+        if quality_pool and self._rng.choice([True, False]):
+            quality, quality_meaning, _ = self._rng.choice(quality_pool)
+            # Quality prefix + shortened feature
+            name = quality[:4] + feature[:4] if len(quality) >= 4 else quality + feature[:4]
+            return (name, [quality, feature], [quality_meaning, feature_meaning], 'geographic_blend')
+        else:
+            # Just feature with suffix
+            suffixes = self._get_suffixes('geographic', 'modern', 'neutral')
+            suffix = self._rng.choice(suffixes)
+            connector = self._get_connector(feature[-1], suffix[0])
+            name = feature + connector + suffix
+            return (name, [feature], [feature_meaning], 'geographic_blend')
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -466,4 +807,7 @@ __all__ = [
     'LatinGenerator',
     'CelticGenerator',
     'CelestialGenerator',
+    'AnimalsGenerator',
+    'MythologyGenerator',
+    'LandmarksGenerator',
 ]

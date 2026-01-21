@@ -191,6 +191,101 @@ roots:
     - [aeterna, "eternal"]
     - [infinita, "infinite"]
 
+  # ---------------------------------------------------------------------------
+  # Time & Duration
+  # ---------------------------------------------------------------------------
+  time:
+    - [hora, "hour"]
+    - [dies, "day"]
+    - [nox, "night"]
+    - [mane, "morning"]
+    - [vesper, "evening"]
+    - [aetas, "age, era"]
+    - [saeculum, "century"]
+    - [momentum, "moment"]
+    - [aevum, "lifetime"]
+    - [perpetua, "perpetual"]
+    - [semper, "always"]
+    - [nunc, "now"]
+
+  # ---------------------------------------------------------------------------
+  # Sound & Music
+  # ---------------------------------------------------------------------------
+  sound:
+    - [vox, "voice"]
+    - [sonus, "sound"]
+    - [carmen, "song"]
+    - [cantus, "singing"]
+    - [melodia, "melody"]
+    - [harmonia, "harmony"]
+    - [resonans, "resonating"]
+    - [clarus, "clear"]
+    - [sonorus, "sonorous"]
+    - [tonus, "tone"]
+
+  # ---------------------------------------------------------------------------
+  # Animals
+  # ---------------------------------------------------------------------------
+  animals:
+    - [aquila, "eagle"]
+    - [leo, "lion"]
+    - [lupus, "wolf"]
+    - [ursus, "bear"]
+    - [cervus, "deer"]
+    - [taurus, "bull"]
+    - [equus, "horse"]
+    - [phoenix, "phoenix"]
+    - [draco, "dragon"]
+    - [serpens, "serpent"]
+    - [falco, "falcon"]
+    - [corvus, "raven"]
+
+  # ---------------------------------------------------------------------------
+  # Materials & Crafts
+  # ---------------------------------------------------------------------------
+  materials:
+    - [aurum, "gold"]
+    - [argentum, "silver"]
+    - [ferrum, "iron"]
+    - [cuprum, "copper"]
+    - [marmor, "marble"]
+    - [crystallum, "crystal"]
+    - [vitrum, "glass"]
+    - [gemma, "jewel"]
+    - [seta, "silk"]
+    - [velum, "veil, fabric"]
+
+  # ---------------------------------------------------------------------------
+  # Actions & Verbs
+  # ---------------------------------------------------------------------------
+  action:
+    - [creo, "create"]
+    - [facio, "make, do"]
+    - [ago, "drive, act"]
+    - [duco, "lead"]
+    - [vinco, "conquer"]
+    - [surgo, "rise"]
+    - [cado, "fall"]
+    - [nascor, "be born"]
+    - [fulgeo, "shine"]
+    - [ardeo, "burn"]
+    - [fluito, "flow"]
+    - [volito, "fly"]
+
+  # ---------------------------------------------------------------------------
+  # Body & Senses
+  # ---------------------------------------------------------------------------
+  body:
+    - [cor, "heart"]
+    - [mens, "mind"]
+    - [oculus, "eye"]
+    - [manus, "hand"]
+    - [caput, "head"]
+    - [sensus, "sense"]
+    - [tactus, "touch"]
+    - [visus, "sight"]
+    - [auditus, "hearing"]
+
 # =============================================================================
 # Suffixes
 # =============================================================================
@@ -282,11 +377,15 @@ patterns:
 # =============================================================================
 # Phonetics
 # =============================================================================
+# Optimized for English/German pronounceability
 phonetics:
   consonants:
-    all: [b, c, d, f, g, l, m, n, p, r, s, t, v]
+    # Classical Latin consonants (including h, x, q)
+    all: [b, c, d, f, g, h, l, m, n, p, q, r, s, t, v, x]
     elegant: [l, r, s, v, n, f]
-    strong: [c, t, p, d, g]
+    strong: [c, t, p, d, g, x]
+    # Note: 'q' always followed by 'u' in Latin (qu = /kw/)
+    # Note: 'x' = /ks/ (lux, rex) - easy for EN/DE
 
   vowels:
     all: [a, e, i, o, u]
@@ -295,14 +394,18 @@ phonetics:
 # =============================================================================
 # Avoid
 # =============================================================================
+# Optimized for English/German pronounceability
 avoid:
   clusters:
-    - harsh Germanic clusters
-    - th (not Latin)
-    - w (not classical Latin)
+    - tsch     # German-specific, not Latin
+    - sch      # German-specific
+    - th       # Greek, not Latin (use 't' instead)
+    - w        # Not classical Latin (use 'v')
   double_vowels:
     - aa
     - ee
     - ii
     - oo
     - uu
+  # Note: Latin double consonants (ll, rr, ss) are ALLOWED
+  # They're common and easy for EN/DE speakers

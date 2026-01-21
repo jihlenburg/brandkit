@@ -131,6 +131,76 @@ roots:
     - [uma, "horse"]
     - [neko, "cat"]
     - [inu, "dog"]
+    - [same, "shark"]
+    - [kujira, "whale"]
+    - [hebi, "snake"]
+    - [karasu, "crow"]
+    - [taka, "hawk"]
+    - [shika, "deer"]
+    - [kaeru, "frog"]
+    - [chou, "butterfly"]
+
+  # ---------------------------------------------------------------------------
+  # Strength & Power
+  # ---------------------------------------------------------------------------
+  power:
+    - [tsuyoi, "strong"]
+    - [takumi, "artisan, skill"]
+    - [isamu, "courage"]
+    - [mamoru, "protect"]
+    - [katsu, "victory"]
+    - [masa, "correct, elegant"]
+    - [tetsu, "iron"]
+    - [ken, "sword, fist"]
+    - [budo, "martial way"]
+    - [senshi, "warrior"]
+    - [yuuki, "courage"]
+    - [hagane, "steel"]
+
+  # ---------------------------------------------------------------------------
+  # Beauty & Art
+  # ---------------------------------------------------------------------------
+  beauty:
+    - [bi, "beauty"]
+    - [utsukushi, "beautiful"]
+    - [miyabi, "elegance"]
+    - [uruwashi, "lovely"]
+    - [kiyoi, "pure"]
+    - [yasashi, "gentle"]
+    - [shizuka, "quiet, calm"]
+    - [nori, "law, ceremony"]
+    - [fude, "brush"]
+    - [sumi, "ink"]
+
+  # ---------------------------------------------------------------------------
+  # Time & Seasons
+  # ---------------------------------------------------------------------------
+  time:
+    - [toki, "time"]
+    - [ima, "now"]
+    - [eien, "eternity"]
+    - [haru, "spring"]
+    - [natsu, "summer"]
+    - [aki, "autumn"]
+    - [fuyu, "winter"]
+    - [asa, "morning"]
+    - [yoru, "night"]
+    - [yoake, "dawn"]
+
+  # ---------------------------------------------------------------------------
+  # Space & Direction
+  # ---------------------------------------------------------------------------
+  space:
+    - [ten, "heaven, sky"]
+    - [chi, "earth, ground"]
+    - [naka, "middle, inside"]
+    - [ue, "above"]
+    - [shita, "below"]
+    - [mae, "front, before"]
+    - [michi, "road, path"]
+    - [kawa, "side"]
+    - [hiroi, "wide"]
+    - [fukai, "deep"]
 
 # =============================================================================
 # Suffixes
@@ -147,13 +217,34 @@ suffixes:
     - mi       # beauty/taste
     - ri       # logic/reason
     - to       # door/place
+    - shi      # master/expert
+    - do       # way/path
+    - sa       # noun suffix
+    - gi       # technique
+    - ji       # time/thing
+    - ba       # place
+    - wa       # ring/harmony
+    - ru       # verb ending
 
   tech:
     - ix
     - ex
     - "on"
+    - ax
+    - ox
     - a
     - o
+    - io
+    - ia
+
+  modern:
+    - ika
+    - ura
+    - ara
+    - iro
+    - iko
+    - umi
+    - aki
 
   neutral:
     - a
@@ -161,12 +252,16 @@ suffixes:
     - i
     - en
     - er
+    - an
+    - in
 
   european:
     - en
     - er
     - "on"
     - or
+    - us
+    - is
 
 # =============================================================================
 # Prefixes
@@ -202,16 +297,30 @@ patterns:
 # =============================================================================
 # Phonetics
 # =============================================================================
+# Optimized for English/German pronounceability
 phonetics:
   consonants:
-    all: [k, s, t, n, h, m, y, r, w]
-    # Note: No L in native Japanese
-    soft: [n, m, y, w]
-    hard: [k, t, s]
+    # Core Japanese consonants (no 'c' standalone, no 'l' native)
+    all: [k, g, s, t, n, h, m, r, w]
+    soft: [n, m, w]
+    hard: [k, t, g, s]
+    # Common onsets for brand names (English/German friendly)
+    onsets: [k, s, t, n, h, m, r]
+
+  # Glides/semivowels (separate from consonants)
+  glides: [y, w]
 
   vowels:
     all: [a, i, u, e, o]
     common: [a, i, o]
+    # For brand endings
+    endings: [a, o, i]
+
+  # Consonant clusters that work for EN/DE speakers
+  # Note: 'ts' at word start can be tricky for English speakers
+  clusters:
+    easy: [sh, ch]           # Easy for EN/DE (like "ship", "chip")
+    moderate: [ry, ny, ky]   # Palatalized - manageable
 
 # =============================================================================
 # Avoid

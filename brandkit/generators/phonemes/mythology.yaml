@@ -1,0 +1,399 @@
+# Modern & Popular Mythology Phoneme Database
+# ============================================
+# Roots from folklore, urban legends, fantasy, and modern mythology.
+# Includes creatures from various cultures that have become globally known.
+#
+# Great for: Gaming, entertainment, fantasy brands, creative products
+#
+# DESIGN PRINCIPLES:
+# - Focus on phonetically strong creature names
+# - Prioritize globally recognizable mythology
+# - Include brand archetype annotations
+# - Note: Some overlap with cultural dicts is intentional (phoenix, dragon)
+
+roots:
+  # ---------------------------------------------------------------------------
+  # Celtic/Irish Mythology
+  # Brand archetype: Mystical, Ethereal, Nature
+  # ---------------------------------------------------------------------------
+  celtic:
+    - [banshee, "wailing spirit"]
+    - [sidhe, "fairy folk"]
+    - [selkie, "seal people"]
+    - [pooka, "shapeshifter"]
+    - [kelpie, "water horse"]
+    - [leprechaun, "small trickster"]
+    - [dullahan, "headless rider"]
+    - [changeling, "fairy child"]
+    - [merrow, "sea maiden"]
+    - [fetch, "spirit double"]
+    - [bean, "woman spirit"]
+    - [clurichaun, "cellar spirit"]
+    - [gancanagh, "love talker"]
+    - [far, "dark fairy"]
+
+  # ---------------------------------------------------------------------------
+  # Nordic/Germanic Mythology
+  # Brand archetype: Warrior, Heritage, Power
+  # ---------------------------------------------------------------------------
+  nordic:
+    - [valkyrie, "chooser of slain"]
+    - [troll, "mountain dweller"]
+    - [draugr, "undead warrior"]
+    - [norn, "fate weaver"]
+    - [huldra, "forest spirit"]
+    - [nisse, "household spirit"]
+    - [tomte, "farm guardian"]
+    - [mare, "nightmare spirit"]
+    - [kraken, "sea monster"]
+    - [jotunn, "giant"]
+    - [einherjar, "fallen warrior"]
+    - [fylgja, "spirit follower"]
+    - [hamr, "shape spirit"]
+    - [lindworm, "wingless dragon"]
+
+  # ---------------------------------------------------------------------------
+  # Greek Mythology
+  # Brand archetype: Classical, Epic, Heroic
+  # ---------------------------------------------------------------------------
+  greek:
+    - [phoenix, "reborn fire bird"]
+    - [siren, "alluring singer"]
+    - [harpy, "storm spirit"]
+    - [chimera, "hybrid beast"]
+    - [hydra, "many-headed serpent"]
+    - [griffin, "lion eagle"]
+    - [cyclops, "one-eyed giant"]
+    - [minotaur, "bull man"]
+    - [centaur, "horse man"]
+    - [satyr, "goat man"]
+    - [nymph, "nature spirit"]
+    - [naiad, "water nymph"]
+    - [dryad, "tree spirit"]
+    - [titan, "primordial giant"]
+    - [muse, "inspiration spirit"]
+    - [oracle, "divine seer"]
+    - [sphinx, "riddle guardian"]
+    - [gorgon, "snake-haired"]
+    - [cerberus, "hell hound"]
+    - [pegasus, "winged horse"]
+
+  # ---------------------------------------------------------------------------
+  # Japanese Mythology
+  # Brand archetype: Mystical, Anime, Tech-Fantasy
+  # ---------------------------------------------------------------------------
+  japanese:
+    - [kitsune, "fox spirit"]
+    - [tanuki, "raccoon dog"]
+    - [tengu, "mountain goblin"]
+    - [oni, "demon ogre"]
+    - [kappa, "water imp"]
+    - [yokai, "supernatural being"]
+    - [yurei, "ghost spirit"]
+    - [shinigami, "death god"]
+    - [bakeneko, "cat demon"]
+    - [nekomata, "forked cat"]
+    - [inugami, "dog spirit"]
+    - [tsukumogami, "object spirit"]
+    - [kodama, "tree spirit"]
+    - [kami, "divine spirit"]
+    - [jorogumo, "spider woman"]
+    - [nue, "chimera beast"]
+    - [ryu, "dragon"]
+    - [kaiju, "strange beast"]
+
+  # ---------------------------------------------------------------------------
+  # Slavic Mythology
+  # Brand archetype: Dark, Folk, Nature-Spirit
+  # ---------------------------------------------------------------------------
+  slavic:
+    - [baba, "witch grandmother"]
+    - [leshy, "forest spirit"]
+    - [rusalka, "water spirit"]
+    - [domovoi, "house spirit"]
+    - [vila, "nature fairy"]
+    - [striga, "vampire witch"]
+    - [kikimora, "household spirit"]
+    - [vodyanoy, "water master"]
+    - [zmey, "dragon serpent"]
+    - [firebird, "magical bird"]
+    - [koschei, "immortal sorcerer"]
+    - [mavka, "forest nymph"]
+
+  # ---------------------------------------------------------------------------
+  # Arabian/Middle Eastern
+  # Brand archetype: Exotic, Mystical, Ancient
+  # ---------------------------------------------------------------------------
+  arabian:
+    - [djinn, "spirit being"]
+    - [ifrit, "fire djinn"]
+    - [marid, "water djinn"]
+    - [ghoul, "grave creature"]
+    - [roc, "giant bird"]
+    - [simurgh, "wise bird"]
+    - [peri, "beautiful spirit"]
+    - [qareen, "spirit companion"]
+    - [nasnas, "half demon"]
+
+  # ---------------------------------------------------------------------------
+  # Chinese/Asian
+  # Brand archetype: Imperial, Celestial, Wisdom
+  # ---------------------------------------------------------------------------
+  asian:
+    - [dragon, "celestial serpent"]
+    - [fenghuang, "phoenix king"]
+    - [qilin, "celestial beast"]
+    - [jiangshi, "hopping vampire"]
+    - [naga, "serpent being"]
+    - [garuda, "bird king"]
+    - [balinese, "mask spirit"]
+    - [yaoguai, "demon monster"]
+    - [mogwai, "demon spirit"]
+    - [xian, "immortal being"]
+
+  # ---------------------------------------------------------------------------
+  # Vampires & Undead
+  # Brand archetype: Gothic, Dark, Premium
+  # ---------------------------------------------------------------------------
+  undead:
+    - [vampire, "blood drinker"]
+    - [nosferatu, "ancient vampire"]
+    - [strigoi, "troubled spirit"]
+    - [revenant, "returned dead"]
+    - [wraith, "vengeful spirit"]
+    - [specter, "ghostly form"]
+    - [phantom, "apparition"]
+    - [shade, "shadow spirit"]
+    - [poltergeist, "noisy ghost"]
+    - [lich, "undead sorcerer"]
+    - [wight, "barrow dweller"]
+    - [zombie, "walking dead"]
+
+  # ---------------------------------------------------------------------------
+  # Werewolves & Shapeshifters
+  # Brand archetype: Wild, Primal, Transformation
+  # ---------------------------------------------------------------------------
+  shifters:
+    - [werewolf, "man wolf"]
+    - [lycan, "wolf person"]
+    - [skinwalker, "shape changer"]
+    - [berserker, "bear warrior"]
+    - [loup, "wolf man"]
+    - [therian, "beast person"]
+    - [wendigo, "hungry spirit"]
+    - [nagual, "spirit animal"]
+
+  # ---------------------------------------------------------------------------
+  # Fae & Fairies
+  # Brand archetype: Whimsical, Magical, Playful
+  # ---------------------------------------------------------------------------
+  fae:
+    - [fairy, "magical being"]
+    - [pixie, "mischievous sprite"]
+    - [sprite, "elemental spirit"]
+    - [sylph, "air spirit"]
+    - [gnome, "earth dweller"]
+    - [brownie, "helpful spirit"]
+    - [boggart, "troublemaker"]
+    - [goblin, "cave dweller"]
+    - [hobgoblin, "household goblin"]
+    - [imp, "small demon"]
+    - [gremlin, "machine breaker"]
+    - [kobold, "mine spirit"]
+    - [redcap, "murderous fairy"]
+    - [wisp, "wandering light"]
+    - [will, "swamp light"]
+    - [puck, "trickster sprite"]
+
+  # ---------------------------------------------------------------------------
+  # Dragons & Serpents
+  # Brand archetype: Power, Ancient, Epic
+  # ---------------------------------------------------------------------------
+  dragons:
+    - [dragon, "fire breather"]
+    - [wyvern, "two-legged dragon"]
+    - [drake, "young dragon"]
+    - [wyrm, "ancient serpent"]
+    - [amphithere, "winged serpent"]
+    - [basilisk, "king serpent"]
+    - [cockatrice, "rooster serpent"]
+    - [ouroboros, "eternal serpent"]
+    - [leviathan, "sea dragon"]
+    - [jormungandr, "world serpent"]
+
+  # ---------------------------------------------------------------------------
+  # Giants & Titans
+  # Brand archetype: Massive, Primal, Unstoppable
+  # ---------------------------------------------------------------------------
+  giants:
+    - [giant, "huge being"]
+    - [ogre, "man eater"]
+    - [colossus, "statue giant"]
+    - [behemoth, "great beast"]
+    - [golem, "animated clay"]
+    - [elemental, "primal force"]
+    - [nephilim, "fallen ones"]
+
+  # ---------------------------------------------------------------------------
+  # Modern Fantasy
+  # Brand archetype: Magic, Gaming, Creative
+  # ---------------------------------------------------------------------------
+  modern:
+    - [mage, "magic user"]
+    - [warlock, "dark sorcerer"]
+    - [wizard, "wise one"]
+    - [sorcerer, "spell caster"]
+    - [necromancer, "death mage"]
+    - [shaman, "spirit walker"]
+    - [druid, "nature priest"]
+    - [enchanter, "charm maker"]
+    - [alchemist, "transmuter"]
+    - [oracle, "future seer"]
+    - [mystic, "mystery keeper"]
+    - [sage, "wise teacher"]
+
+  # ---------------------------------------------------------------------------
+  # Cryptids & Urban Legends
+  # Brand archetype: Mystery, Discovery, Adventure
+  # ---------------------------------------------------------------------------
+  cryptids:
+    - [bigfoot, "forest giant"]
+    - [yeti, "snow creature"]
+    - [chupacabra, "goat sucker"]
+    - [mothman, "winged omen"]
+    - [thunderbird, "storm bird"]
+    - [jackalope, "horned rabbit"]
+    - [jersey, "devil creature"]
+    - [nessie, "lake monster"]
+    - [mokele, "river beast"]
+
+  # ---------------------------------------------------------------------------
+  # Qualities & Powers (for compound names)
+  # ---------------------------------------------------------------------------
+  qualities:
+    - [mystic, "mysterious"]
+    - [shadow, "darkness"]
+    - [arcane, "secret magic"]
+    - [eldritch, "strange horror"]
+    - [ethereal, "otherworldly"]
+    - [spectral, "ghostly"]
+    - [infernal, "hellish"]
+    - [celestial, "heavenly"]
+    - [primal, "ancient force"]
+    - [feral, "wild nature"]
+    - [ancient, "very old"]
+    - [immortal, "never dying"]
+    - [cursed, "magically bound"]
+    - [blessed, "divinely touched"]
+    - [enchanted, "under spell"]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  mythic:
+    - a       # feminine
+    - on      # entity
+    - us      # Latin masculine
+    - is      # Latin noun
+    - ar      # relating to
+    - ix      # tech feel
+    - ia      # place/quality
+
+  creature:
+    - kin     # related to
+    - born    # origin
+    - spawn   # offspring
+    - bane    # destroyer of
+    - blood   # lineage
+    - heart   # essence
+    - soul    # spirit
+
+  neutral:
+    - a
+    - o
+    - i
+    - er
+    - en
+
+  tech:
+    - ix
+    - ex
+    - "on"
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", ""]
+  mythic:
+    - elder   # ancient
+    - shadow  # darkness
+    - night   # nocturnal
+    - blood   # vampiric
+    - moon    # lunar
+    - storm   # weather
+    - frost   # cold
+    - fire    # flame
+    - dark    # shadow
+    - wild    # untamed
+  international:
+    - neo
+    - e
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+patterns:
+  mythic_style:
+    - CVCVC    # banshee, phoenix
+    - CVCCVC   # vampire, specter
+    - CVCC     # wraith, sprite
+    - CVCa     # hydra, chimera
+
+  compound:
+    - CVCborn  # dragonborn
+    - CVCbane  # wolfbane
+    - CVCkin   # spiritkin
+
+# =============================================================================
+# Phonetics
+# =============================================================================
+# Optimized for English/German pronounceability in mythological brand names
+phonetics:
+  consonants:
+    # Mythological names favor dramatic, memorable sounds
+    all: [b, c, d, f, g, h, k, l, m, n, p, r, s, t, v, w, z]
+    common: [k, l, n, r, s, v]
+    soft: [l, n, m, r, s]             # Ethereal: nymph, sylph
+    hard: [c, g, k, t, d]             # Power: kraken, titan
+    onset: [b, c, d, f, g, h, k, l, m, n, p, r, s, t, v, w]
+
+  vowels:
+    all: [a, e, i, o, u]
+    common: [a, e, i, o]
+    # Mythological names often use these endings:
+    endings: [a, is, us, on]          # hydra, phoenix, phoenix, dracon
+
+  # Note: 'y' as vowel is common in mythology (nymph, sylph, hydra)
+  # For brand names, 'y' works well for EN/DE speakers
+
+  # Mythological clusters that work for EN/DE
+  clusters:
+    easy: [dr, gr, kr, ph, th, ch]    # dragon, griffin, kraken, phoenix
+    greek: [ph, th, ch]               # Greek aspirates - easy for EN/DE
+
+# =============================================================================
+# Avoid
+# =============================================================================
+# Optimized for English/German pronounceability
+avoid:
+  clusters:
+    - tsch     # German-specific
+    - szcz     # Slavic
+    - shch     # Russian
+  sounds:
+    - zh       # Hard for English speakers
+    - ğ        # Turkish soft g
+  # Note: 'x' is okay in mythology (phoenix, sphinx)
+  # 'ph', 'th', 'ch' are ALLOWED - they're core Greek sounds

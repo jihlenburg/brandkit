@@ -1,0 +1,506 @@
+# Global Animals Phoneme Database
+# ================================
+# Brand-optimized animal names from around the world.
+# Curated for phonetic quality and brand recognition.
+#
+# Great for: Automotive, sports, tech, outdoor, luxury, energy brands
+#
+# DESIGN PRINCIPLES:
+# - Each animal appears in ONE category only (no duplicates)
+# - Only recognizable animals (no obscure species)
+# - No color words or adjectives as roots
+# - Focus on phonetically strong names
+
+roots:
+  # ---------------------------------------------------------------------------
+  # Big Cats - Power, Elegance, Stealth
+  # Brand archetype: Luxury, Power, Performance
+  # ---------------------------------------------------------------------------
+  big_cats:
+    - [lion, "king, courage"]
+    - [tiger, "power, ferocity"]
+    - [panther, "stealth, elegance"]
+    - [jaguar, "speed, luxury"]
+    - [leopard, "agility, grace"]
+    - [cheetah, "fastest, acceleration"]
+    - [cougar, "mountain power"]
+    - [puma, "athletic, sleek"]
+    - [lynx, "sharp vision"]
+    - [ocelot, "exotic beauty"]
+    - [caracal, "desert hunter"]
+    - [serval, "agile leaper"]
+
+  # ---------------------------------------------------------------------------
+  # Canines - Pack, Loyalty, Cunning
+  # Brand archetype: Team, Strategy, Endurance
+  # ---------------------------------------------------------------------------
+  canines:
+    - [wolf, "pack leader"]
+    - [fox, "cunning, clever"]
+    - [coyote, "adaptable survivor"]
+    - [dingo, "wild spirit"]
+    - [jackal, "swift hunter"]
+    - [husky, "endurance, cold"]
+    - [malamute, "arctic strength"]
+    - [fennec, "desert survivor"]
+    - [dhole, "asian wild dog"]
+    - [lycaon, "painted wolf"]
+    - [tanuki, "raccoon dog"]
+
+  # ---------------------------------------------------------------------------
+  # Bears - Strength, Protection, Power
+  # Brand archetype: Raw Power, Protection
+  # ---------------------------------------------------------------------------
+  bears:
+    - [bear, "raw power"]
+    - [grizzly, "fierce strength"]
+    - [kodiak, "massive power"]
+    - [polar, "arctic might"]
+    - [panda, "rare, beloved"]
+    - [ursus, "bear strength"]
+
+  # ---------------------------------------------------------------------------
+  # Raptors - Vision, Precision, Freedom
+  # Brand archetype: Vision, Freedom, Precision
+  # ---------------------------------------------------------------------------
+  raptors:
+    - [eagle, "soaring freedom"]
+    - [falcon, "diving speed"]
+    - [hawk, "keen vision"]
+    - [osprey, "fish hunter"]
+    - [condor, "majestic span"]
+    - [kite, "graceful glider"]
+    - [harrier, "low hunter"]
+    - [kestrel, "hovering precision"]
+    - [merlin, "swift falcon"]
+    - [goshawk, "forest striker"]
+    - [peregrine, "fastest dive"]
+    - [gyrfalcon, "arctic hunter"]
+    - [aquila, "true eagle"]
+    - [harpy, "harpy eagle"]
+    - [buteo, "soaring hawk"]
+
+  # ---------------------------------------------------------------------------
+  # Speed Icons - Velocity, Performance, Agility
+  # Brand archetype: Speed, Performance, Athletics
+  # ---------------------------------------------------------------------------
+  speed:
+    - [gazelle, "graceful sprint"]
+    - [antelope, "leaping runner"]
+    - [impala, "explosive leap"]
+    - [springbok, "bouncing run"]
+    - [hare, "quick escape"]
+    - [swift, "aerial speed"]
+    - [marlin, "ocean speed"]
+    - [sailfish, "fastest fish"]
+    - [barracuda, "strike speed"]
+    - [greyhound, "racing form"]
+    - [whippet, "sleek racer"]
+    - [pronghorn, "endurance speed"]
+    - [roadrunner, "desert dash"]
+
+  # ---------------------------------------------------------------------------
+  # Marine Predators - Depth, Power, Mystery
+  # Brand archetype: Depth, Mystery, Apex
+  # ---------------------------------------------------------------------------
+  marine:
+    - [shark, "apex predator"]
+    - [orca, "killer precision"]
+    - [mako, "fastest shark"]
+    - [hammerhead, "unique vision"]
+    - [whale, "ocean giant"]
+    - [dolphin, "smart swimmer"]
+    - [seal, "agile diver"]
+    - [walrus, "arctic power"]
+    - [narwhal, "unicorn sea"]
+    - [mantaray, "graceful glide"]
+    - [stingray, "silent power"]
+    - [swordfish, "piercing speed"]
+    - [tuna, "endless stamina"]
+    - [tarpon, "silver king"]
+    - [dorado, "golden fish"]
+    - [megalodon, "ancient giant"]
+
+  # ---------------------------------------------------------------------------
+  # Reptiles - Ancient, Dangerous, Precision
+  # Brand archetype: Ancient, Precision, Danger
+  # ---------------------------------------------------------------------------
+  reptiles:
+    - [cobra, "striking power"]
+    - [viper, "deadly precision"]
+    - [python, "crushing strength"]
+    - [mamba, "fastest snake"]
+    - [anaconda, "massive force"]
+    - [taipan, "lethal speed"]
+    - [crocodile, "ancient power"]
+    - [alligator, "swamp king"]
+    - [komodo, "dragon strength"]
+    - [monitor, "hunting lizard"]
+    - [iguana, "sun basker"]
+    - [gecko, "climbing grip"]
+    - [chameleon, "adaptive change"]
+    - [asp, "egyptian venom"]
+    - [boa, "constricting power"]
+    - [basilisk, "running lizard"]
+
+  # ---------------------------------------------------------------------------
+  # Horses - Freedom, Speed, Spirit
+  # Brand archetype: Freedom, Spirit, Heritage
+  # ---------------------------------------------------------------------------
+  horses:
+    - [mustang, "wild freedom"]
+    - [stallion, "power, spirit"]
+    - [bronco, "untamed energy"]
+    - [colt, "young power"]
+    - [palomino, "golden beauty"]
+    - [appaloosa, "spotted spirit"]
+    - [arabian, "desert elegance"]
+    - [thoroughbred, "racing blood"]
+    - [charger, "battle spirit"]
+    - [destrier, "war horse"]
+    - [pegasus, "winged flight"]
+    - [friesian, "black beauty"]
+    - [clydesdale, "gentle giant"]
+    - [morgan, "versatile spirit"]
+
+  # ---------------------------------------------------------------------------
+  # Power Mammals - Dominance, Endurance, Force
+  # Brand archetype: Unstoppable, Endurance
+  # ---------------------------------------------------------------------------
+  power_mammals:
+    - [rhino, "unstoppable force"]
+    - [elephant, "memory, might"]
+    - [buffalo, "herd strength"]
+    - [bison, "prairie power"]
+    - [gorilla, "primal strength"]
+    - [hippo, "river king"]
+    - [moose, "northern giant"]
+    - [elk, "forest monarch"]
+    - [ox, "steady power"]
+    - [bull, "charging force"]
+    - [ram, "mountain climber"]
+    - [boar, "fierce tusks"]
+    - [mammoth, "ancient giant"]
+    - [yak, "highland beast"]
+    - [ibex, "alpine climber"]
+
+  # ---------------------------------------------------------------------------
+  # Intelligent Species - Wisdom, Strategy, Cunning
+  # Brand archetype: Intelligence, Innovation
+  # ---------------------------------------------------------------------------
+  intelligent:
+    - [raven, "clever messenger"]
+    - [crow, "problem solver"]
+    - [owl, "night wisdom"]
+    - [octopus, "eight-armed genius"]
+    - [chimp, "tool maker"]
+    - [parrot, "mimicking mind"]
+    - [magpie, "shiny collector"]
+    - [jay, "forest planner"]
+    - [squid, "deep thinker"]
+    - [orangutan, "forest person"]
+    - [capuchin, "tool user"]
+    - [lemur, "ancient primate"]
+
+  # ---------------------------------------------------------------------------
+  # Nocturnal - Mystery, Stealth, Night
+  # Brand archetype: Mystery, Stealth, Premium
+  # ---------------------------------------------------------------------------
+  nocturnal:
+    - [bat, "echo navigator"]
+    - [badger, "tunnel fighter"]
+    - [wolverine, "fearless night"]
+    - [raccoon, "masked bandit"]
+    - [hedgehog, "spiny roller"]
+    - [porcupine, "quill defender"]
+    - [civet, "coffee maker"]
+    - [genet, "spotted hunter"]
+    - [kinkajou, "honey bear"]
+    - [tarsier, "huge eyes"]
+    - [loris, "slow climber"]
+
+  # ---------------------------------------------------------------------------
+  # Fierce Small - Tenacity, Fearlessness
+  # Brand archetype: Underdog, Tenacity
+  # ---------------------------------------------------------------------------
+  fierce_small:
+    - [mongoose, "snake killer"]
+    - [weasel, "relentless hunter"]
+    - [stoat, "fierce predator"]
+    - [mink, "sleek hunter"]
+    - [ferret, "tunnel warrior"]
+    - [otter, "playful power"]
+    - [marten, "forest acrobat"]
+    - [fisher, "fierce climber"]
+    - [ratel, "honey badger"]
+    - [sable, "prized fur"]
+    - [ermine, "winter coat"]
+
+  # ---------------------------------------------------------------------------
+  # Avian Icons - Grace, Song, Flight
+  # Brand archetype: Grace, Freedom, Beauty
+  # ---------------------------------------------------------------------------
+  avian:
+    - [phoenix, "rebirth fire"]
+    - [crane, "elegant dancer"]
+    - [heron, "patient fisher"]
+    - [swan, "graceful beauty"]
+    - [albatross, "endless flight"]
+    - [pelican, "diving fisher"]
+    - [flamingo, "pink elegance"]
+    - [peacock, "proud display"]
+    - [kingfisher, "jeweled diver"]
+    - [cardinal, "red song"]
+    - [nightingale, "night song"]
+    - [lark, "dawn singer"]
+    - [starling, "murmurations"]
+    - [oriole, "golden song"]
+    - [toucan, "colorful beak"]
+    - [quetzal, "sacred bird"]
+    - [hummingbird, "hovering jewel"]
+
+  # ---------------------------------------------------------------------------
+  # Exotic & Unique - Distinctiveness, Rarity
+  # Brand archetype: Unique, Premium, Exclusive
+  # ---------------------------------------------------------------------------
+  exotic:
+    - [okapi, "forest giraffe"]
+    - [pangolin, "scaled defender"]
+    - [tapir, "jungle browser"]
+    - [anteater, "tongue hunter"]
+    - [armadillo, "armored roller"]
+    - [sloth, "slow master"]
+    - [koala, "tree hugger"]
+    - [platypus, "unique blend"]
+    - [kiwi, "flightless icon"]
+    - [quokka, "happy face"]
+    - [capybara, "gentle giant"]
+    - [fossa, "cat mongoose"]
+    - [manatee, "sea cow"]
+    - [wombat, "burrowing bear"]
+    - [echidna, "spiny anteater"]
+    - [axolotl, "walking fish"]
+    - [nautilus, "living shell"]
+
+  # ---------------------------------------------------------------------------
+  # Insects & Arachnids - Precision, Industry, Sting
+  # Brand archetype: Precision, Industry, Tech
+  # ---------------------------------------------------------------------------
+  insects:
+    - [hornet, "aggressive swarm"]
+    - [wasp, "precision sting"]
+    - [bee, "hive industry"]
+    - [scorpion, "desert strike"]
+    - [spider, "web master"]
+    - [tarantula, "hairy hunter"]
+    - [mantis, "praying killer"]
+    - [dragonfly, "aerial ace"]
+    - [beetle, "armored tank"]
+    - [firefly, "living light"]
+    - [monarch, "migration king"]
+    - [cicada, "summer song"]
+    - [scarab, "sacred beetle"]
+    - [atlas, "atlas moth"]
+    - [titan, "titan beetle"]
+    - [goliath, "goliath beetle"]
+    - [luna, "luna moth"]
+
+  # ---------------------------------------------------------------------------
+  # Arctic & Cold - Endurance, Purity, Resilience
+  # Brand archetype: Endurance, Purity
+  # ---------------------------------------------------------------------------
+  arctic:
+    - [penguin, "tuxedo diver"]
+    - [puffin, "clown bird"]
+    - [lemming, "arctic survivor"]
+    - [caribou, "endless migrant"]
+    - [beluga, "white whale"]
+    - [reindeer, "santa helper"]
+    - [ptarmigan, "snow grouse"]
+    - [skua, "polar pirate"]
+
+  # ---------------------------------------------------------------------------
+  # African Safari - Majesty, Wild, Adventure
+  # Brand archetype: Adventure, Safari, Wild
+  # ---------------------------------------------------------------------------
+  african:
+    - [giraffe, "tall grace"]
+    - [zebra, "stripe runner"]
+    - [hyena, "laughing hunter"]
+    - [wildebeest, "great migration"]
+    - [kudu, "spiral horns"]
+    - [oryx, "desert sword"]
+    - [nyala, "spiral beauty"]
+    - [aardvark, "earth pig"]
+    - [meerkat, "sentinel"]
+    - [warthog, "tough survivor"]
+    - [mandrill, "colorful ape"]
+    - [colobus, "mantled monkey"]
+
+  # ---------------------------------------------------------------------------
+  # Qualities & Attributes (for compound names)
+  # ---------------------------------------------------------------------------
+  qualities:
+    - [alpha, "dominant leader"]
+    - [apex, "top predator"]
+    - [primal, "raw instinct"]
+    - [feral, "wild nature"]
+    - [fierce, "intense power"]
+    - [noble, "dignified bearing"]
+    - [bold, "fearless action"]
+    - [keen, "sharp sense"]
+    - [sleek, "smooth form"]
+    - [mighty, "great power"]
+    - [prime, "first, best"]
+    - [elite, "top tier"]
+    - [regal, "royal bearing"]
+    - [titan, "giant power"]
+    - [phantom, "ghost presence"]
+    - [storm, "weather force"]
+    - [thunder, "sound power"]
+
+# =============================================================================
+# Suffixes
+# =============================================================================
+suffixes:
+  animal:
+    - a         # puma, cobra, orca
+    - o         # falco, bronco
+    - ix        # tech feel
+    - ex        # apex feel
+    - on        # falcon, python
+    - ar        # jaguar feel
+    - er        # hunter, striker
+    - us        # Latin power
+
+  power:
+    - force
+    - strike
+    - rush
+    - charge
+    - storm
+    - claw
+    - fang
+
+  neutral:
+    - a
+    - o
+    - i
+    - er
+    - en
+
+  tech:
+    - ix
+    - ex
+    - "on"
+    - ar
+
+# =============================================================================
+# Prefixes
+# =============================================================================
+prefixes:
+  empty: ["", "", "", ""]  # Weight towards no prefix
+
+  # Tier 1 Colors - Premium/Power (scientifically proven brand effectiveness)
+  color_tier1:
+    - black      # luxury, premium, power
+    - gold       # success, premium, quality
+    - silver     # tech, precision, modern
+    - blue       # trust, depth, corporate
+    - red        # energy, passion, action
+
+  # Tier 2 Colors - Specialized (industry-specific effectiveness)
+  color_tier2:
+    - white      # purity, clean, health
+    - green      # eco, growth, finance
+    - crimson    # passion, premium, sports
+    - azure      # sky, clarity, tech
+    - onyx       # premium black variant
+    - cobalt     # deep blue, tech
+    - amber      # warm, energy, caution
+
+  # Power/Status prefixes
+  power:
+    - alpha
+    - apex
+    - prime
+    - ultra
+    - mega
+    - max
+
+  # Nature/Element prefixes
+  nature:
+    - wild
+    - storm
+    - iron
+    - steel
+    - fire
+    - frost
+    - thunder
+    - shadow
+
+  international:
+    - neo
+    - e
+
+# =============================================================================
+# Phonetic Patterns
+# =============================================================================
+patterns:
+  animal_style:
+    - CVC       # fox, owl, cat
+    - CVCVC     # tiger, puma
+    - CVCCVC    # falcon, panther
+    - CVCC      # wolf, hawk, lynx
+
+  compound:
+    - CVCstrike # hawkstrike
+    - CVCforce  # wolfforce
+    - alphaCVC  # alphawolf
+
+# =============================================================================
+# Phonetics
+# =============================================================================
+# Optimized for English/German pronounceability in animal-based brand names
+phonetics:
+  consonants:
+    # Animal names favor strong, memorable sounds
+    all: [b, c, d, f, g, h, k, l, m, n, p, r, s, t, v, w, z]
+    strong: [k, g, t, d, p, b]           # Power animals: tiger, kodiak
+    soft: [l, m, n, r, s, w]             # Grace animals: swan, otter
+    onset: [b, c, f, g, h, k, l, m, p, r, s, t, w]  # Good starting sounds
+
+  vowels:
+    all: [a, e, i, o, u]
+    common: [a, e, i, o]
+    # Animal names often end in these:
+    endings: [a, o, i]                   # puma, falco, lynxi
+
+  # Note: 'x' removed from common set - rare in animal names
+  # Use 'ks' spelling instead for clarity (e.g., "lynks" not "lynx")
+
+  # Animal name clusters that work for EN/DE
+  clusters:
+    easy: [gr, br, tr, cr, fr, pr, st, sp]  # grizzly, bronco, stag
+    avoid: [x, zh, tsch]                     # Hard for international
+
+# =============================================================================
+# Avoid
+# =============================================================================
+avoid:
+  negative_connotations:
+    - rat
+    - pest
+    - vermin
+    - parasite
+    - slug
+    - leech
+    - tick
+    - flea
+    - maggot
+    - cockroach
+  difficult_pronunciation:
+    - names with difficult international pronunciation
+    - obscure species unknown to general public
+  trademark_concerns:
+    - existing brand names (Jaguar, Puma, etc. - use with caution)
