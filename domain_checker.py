@@ -11,6 +11,7 @@ import socket
 import time
 import hashlib
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional
@@ -55,19 +56,28 @@ class DomainChecker:
         checker = DomainChecker()
         result = checker.check("voltix")
         print(f"voltix.com available: {result.domains['com'].available}")
+
+        # Parallel checking (5x faster)
+        checker = DomainChecker(parallel=True)
+        result = checker.check("voltix")
     """
 
     DEFAULT_TLDS = ['com', 'de', 'eu', 'io', 'co']
 
-    def __init__(self, tlds: list = None, cache_dir: str = None):
+    def __init__(self, tlds: list = None, cache_dir: str = None,
+                 parallel: bool = False, max_workers: int = 5):
         """
         Initialize domain checker.
 
         Args:
             tlds: List of TLDs to check (default: com, de, eu, io, co)
             cache_dir: Directory to cache results
+            parallel: Enable parallel TLD checking (default: False)
+            max_workers: Max concurrent TLD checks when parallel=True
         """
         self.tlds = tlds or self.DEFAULT_TLDS
+        self.parallel = parallel
+        self.max_workers = max_workers
 
         # Setup cache
         if cache_dir:
@@ -208,6 +218,41 @@ class DomainChecker:
                 error=str(e)
             )
 
+    def _check_tlds_sequential(self, name: str) -> dict:
+        """Check TLDs sequentially (original behavior)."""
+        domains = {}
+        for tld in self.tlds:
+            result = self._check_single_domain(name, tld)
+            domains[tld] = result
+            # Small delay to avoid rate limiting
+            time.sleep(0.1)
+        return domains
+
+    def _check_tlds_parallel(self, name: str) -> dict:
+        """Check all TLDs in parallel using ThreadPoolExecutor."""
+        domains = {}
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit all TLD checks
+            future_to_tld = {
+                executor.submit(self._check_single_domain, name, tld): tld
+                for tld in self.tlds
+            }
+            # Collect results as they complete
+            for future in as_completed(future_to_tld):
+                tld = future_to_tld[future]
+                try:
+                    domains[tld] = future.result()
+                except Exception as e:
+                    # Handle any unexpected errors
+                    domains[tld] = DomainResult(
+                        name=name,
+                        domain=f"{name.lower()}.{tld}",
+                        tld=tld,
+                        available=None,
+                        error=str(e)
+                    )
+        return domains
+
     def check(self, name: str, use_cache: bool = True) -> DomainCheckResult:
         """
         Check domain availability for all configured TLDs.
@@ -225,12 +270,11 @@ class DomainChecker:
             if cached:
                 return cached
 
-        domains = {}
-        for tld in self.tlds:
-            result = self._check_single_domain(name, tld)
-            domains[tld] = result
-            # Small delay to avoid rate limiting
-            time.sleep(0.1)
+        # Check TLDs (parallel or sequential)
+        if self.parallel:
+            domains = self._check_tlds_parallel(name)
+        else:
+            domains = self._check_tlds_sequential(name)
 
         any_available = any(d.available for d in domains.values() if d.available is not None)
         all_available = all(d.available for d in domains.values() if d.available is not None)
@@ -250,24 +294,50 @@ class DomainChecker:
 
     def check_batch(self, names: list[str],
                     use_cache: bool = True,
-                    delay: float = 0.2) -> dict[str, DomainCheckResult]:
+                    delay: float = 0.2,
+                    parallel_names: bool = False,
+                    max_concurrent_names: int = 10) -> dict[str, DomainCheckResult]:
         """
         Check multiple names.
 
         Args:
             names: List of brand names to check
             use_cache: Use cached results
-            delay: Delay between checks (seconds)
+            delay: Delay between checks (seconds) - only for sequential mode
+            parallel_names: Check multiple names in parallel
+            max_concurrent_names: Max concurrent name checks when parallel_names=True
 
         Returns:
             Dictionary mapping names to results
         """
-        results = {}
-        for i, name in enumerate(names):
-            results[name] = self.check(name, use_cache=use_cache)
-            if i < len(names) - 1:
-                time.sleep(delay)
-        return results
+        if parallel_names:
+            # Parallel name checking
+            results = {}
+            with ThreadPoolExecutor(max_workers=max_concurrent_names) as executor:
+                future_to_name = {
+                    executor.submit(self.check, name, use_cache): name
+                    for name in names
+                }
+                for future in as_completed(future_to_name):
+                    name = future_to_name[future]
+                    try:
+                        results[name] = future.result()
+                    except Exception as e:
+                        results[name] = DomainCheckResult(
+                            name=name,
+                            domains={},
+                            any_available=False,
+                            all_available=False
+                        )
+            return results
+        else:
+            # Sequential checking (original behavior)
+            results = {}
+            for i, name in enumerate(names):
+                results[name] = self.check(name, use_cache=use_cache)
+                if i < len(names) - 1:
+                    time.sleep(delay)
+            return results
 
     def filter_available(self, names: list[str],
                          required_tlds: list = None) -> tuple[list[str], list[str]]:

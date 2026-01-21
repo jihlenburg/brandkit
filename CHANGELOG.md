@@ -10,6 +10,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Versioning workflow documentation in CLAUDE.md
 - CLAUDE.md now tracked in git for consistent development guidelines
+- CLI: All generation methods now available (nordic, japanese, latin, celtic, celestial, blend)
+- CLI: New commands: `hazards`, `score`, `stats`, `export`, `save`, `block`, `industries`
+- CLI: Command aliases for convenience (`g`, `gen`, `c`, `s`, `ls`, `l`, `d`, `disc`, `haz`, `h`)
+- CLI: `--version` / `-V` flag
+- CLI: `--quiet` / `-q` flag for scripting
+- CLI: `--industry` flag for industry-specific generation
+- CLI: `--archetype` flag for brand archetype targeting
+- CLI: `--save` flag to save generated names directly
+- CLI: Input validation (empty names, special characters, length limits)
+- CLI: JSON output option for `list` command (`--json`)
+- CLI: Quality tier filtering (`--quality excellent/good/acceptable/poor`)
+- CLI: Available/conflict filtering (`--available`, `--conflicts`)
+- CLI: `discover --target N` loops until N valid names found
+- CLI: `discover --min-quality` filters by quality threshold (excellent/good/acceptable)
+- CLI: `discover --max-rounds` safety limit for target mode
+- CLI: `discover` now includes pronounceability + quality filtering as step 2/5
+- CLI: `discover --profiling` enables performance profiling with detailed bottleneck analysis
+- CLI: `discover --profile-output FILE` saves profiling data to JSON for further analysis
+- CLI: `discover --parallel` enables parallel domain/trademark checking (~4x speedup)
+- CLI: `discover --max-concurrent N` controls max concurrent checks in parallel mode
+- Profiler module (`brandkit/profiler.py`) with context manager-based stage timing
+- Parallel checking infrastructure (`brandkit/parallel.py`):
+  - Parallel TLD lookups within DomainChecker (5x speedup per name)
+  - Batch processing for multiple names concurrently
+  - Interleaved pipeline (trademark checks start as domain results arrive)
+  - Rate limiting for API protection
+  - Retry logic with exponential backoff
+
+### Changed
+- BlockReason now accepts dynamic strings (e.g., "pronounceability:awkward_start:sv")
+- CLI completely refactored for cleaner code and better UX
+- Database path fixed to use `data/brandnames.db`
+- Output formatting improved with table display
+
+### Fixed
+- `list` command crash when block_reason contains custom pronounceability strings
+- `reset` command now uses correct database path (`data/brandnames.db`)
 
 ## [0.1.0] - 2026-01-20
 

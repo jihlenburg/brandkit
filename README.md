@@ -304,40 +304,64 @@ brands/
 
 ## CLI Reference
 
-```
-usage: python -m brandkit [-h] {generate,check,profiles,list,reset} ...
-
-Commands:
-  generate    Generate brand names
-  check       Check a brand name
-  profiles    List available Nice class profiles
-  list        List database entries
-  reset       Reset database (delete all data)
+```bash
+brandkit --version                    # Show version
+brandkit --help                       # Show all commands
 ```
 
-### generate
+### Commands
+
+| Command | Aliases | Description |
+|---------|---------|-------------|
+| `generate` | `gen`, `g` | Generate brand names |
+| `check` | `c` | Check name availability |
+| `hazards` | `haz`, `h` | Check cross-linguistic hazards |
+| `score` | `s` | Get phonaesthetic score |
+| `stats` | | Show database statistics |
+| `list` | `ls`, `l` | List names from database |
+| `export` | | Export database to JSON |
+| `save` | | Save a name to database |
+| `block` | | Block a name |
+| `profiles` | | List Nice class profiles |
+| `industries` | | List available industries |
+| `discover` | `disc`, `d` | Automated discovery pipeline |
+| `reset` | | Reset database |
+
+### Examples
 
 ```bash
-python -m brandkit generate -n COUNT [--method METHOD] [-v]
+# Generate names
+brandkit generate -n 10 --method japanese
+brandkit gen -n 20 -m blend --save
+brandkit generate --industry tech
 
-Options:
-  -n, --count     Number of names to generate (default: 10)
-  --method        Generation method: rule_based, markov, llm, hybrid,
-                  greek, turkic, nordic, japanese, latin, celtic, celestial, blend
-  -v, --verbose   Show detailed scores
-```
+# Check availability
+brandkit check "Voltix" --full --profile camping_rv
+brandkit c "Voltix" --classes 9,12
 
-### check
+# Phonaesthetic scoring
+brandkit score "Lumina" --category luxury -v
 
-```bash
-python -m brandkit check NAME [--full] [--profile PROFILE] [--classes CLASSES]
+# Hazard checking
+brandkit hazards "Gift" --markets german,french
 
-Options:
-  --full           Full check (trademark + domain)
-  -p, --profile    Nice class profile name
-  -c, --classes    Comma-separated Nice class numbers
+# Database operations
+brandkit list --status candidate --limit 20
+brandkit list --quality excellent --json
+brandkit stats
+brandkit save "NewName" --status candidate
+brandkit block "BadName" --reason "negative_meaning"
+
+# Discovery pipeline (generate -> filter -> validate -> save)
+brandkit discover -n 100 --method blend            # Single batch
+brandkit discover --target 50 --min-quality good   # Loop until 50 good names found
+brandkit discover --target 100 -q excellent -m japanese  # 100 excellent Japanese names
+brandkit discover -n 50 --parallel                 # ~4x faster with parallel checking
+brandkit discover -n 50 --parallel --max-concurrent 20  # More concurrent checks
+brandkit discover -n 50 --profiling                # Profile to identify bottlenecks
+brandkit discover -n 50 --profiling --profile-output profile.json  # Save profiling data
 ```
 
 ## License
 
-MIT
+GPL-3.0

@@ -163,17 +163,51 @@ if result['available']:
 ### CLI
 
 ```bash
-# Generate names with various methods
-python -m brandkit generate -n 10
-python -m brandkit generate -n 10 --method japanese
-python -m brandkit generate -n 10 --method nordic
-python -m brandkit generate -n 10 --method blend
+# Version
+brandkit --version                              # Show version
 
-# Check a name (with Nice class profile)
-python -m brandkit check "Voltix" --full --profile camping_rv
+# Generate names
+brandkit generate -n 10                         # 10 names, rule_based
+brandkit gen -n 10 -m japanese                  # Japanese method (alias)
+brandkit g -n 20 -m blend --save                # Generate and save to DB
+brandkit generate --industry tech               # Industry-optimized
+brandkit generate -m celtic --archetype nature  # With archetype
 
-# List available profiles and industries
-python -m brandkit profiles
+# Check availability
+brandkit check "Voltix"                         # Basic similarity check
+brandkit check "Voltix" --full                  # Full (trademark + domain)
+brandkit check "Voltix" -f -p camping_rv        # With Nice class profile
+brandkit c "Voltix" --classes 9,12              # Specific classes
+
+# Phonaesthetic scoring
+brandkit score "Lumina"                         # Get score breakdown
+brandkit score "Voltix" --category power -v     # With category + verbose
+
+# Cross-linguistic hazards
+brandkit hazards "Gift"                         # Check all markets
+brandkit haz "Voltix" --markets german,french   # Specific markets
+
+# Database operations
+brandkit list                                   # List candidates
+brandkit ls --status blocked --limit 20         # Filter by status
+brandkit list --quality excellent               # Filter by quality
+brandkit list --available                       # Only available names
+brandkit list --json                            # JSON output
+brandkit stats                                  # Database statistics
+brandkit save "NewName"                         # Save manually
+brandkit block "BadName" -r "negative_meaning"  # Block a name
+brandkit export -o names.json                   # Export to JSON
+
+# Discovery pipeline
+brandkit discover -n 100 -m blend               # Single batch
+brandkit discover --target 50 -q good           # Loop until 50 good names
+brandkit d --target 100 -q excellent -m japanese  # 100 excellent Japanese names
+brandkit discover --target 30 --max-rounds 20   # With safety limit
+
+# Reference
+brandkit profiles                               # List Nice class profiles
+brandkit industries                             # List industries
+brandkit reset --force                          # Reset database
 ```
 
 ## Generation Methods
@@ -628,6 +662,24 @@ class BlockReason(Enum):
 - `refactor:` Code refactoring
 - `test:` Adding tests
 - `chore:` Maintenance tasks
+
+### Documentation Updates (IMPORTANT)
+**Always keep documentation in sync with code changes:**
+
+1. **CHANGELOG.md** - Update for EVERY code change under `[Unreleased]`
+2. **README.md** - Update when adding/changing user-facing features
+3. **CLAUDE.md** - Update when:
+   - Adding new modules, classes, or functions
+   - Changing API signatures
+   - Adding new CLI commands
+   - Changing configuration options
+   - Adding new YAML config files
+
+**Documentation checklist before committing:**
+- [ ] CHANGELOG.md updated with change description
+- [ ] README.md reflects new features/usage
+- [ ] CLAUDE.md API reference is current
+- [ ] CLI --help text matches implementation
 
 ## Development Notes
 

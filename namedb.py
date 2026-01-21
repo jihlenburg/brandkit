@@ -17,7 +17,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Union
 from enum import Enum
 
 
@@ -109,8 +109,8 @@ class BrandName:
     euipo_matches: Optional[int] = None
     euipo_url: Optional[str] = None
 
-    # Blocking
-    block_reason: Optional[BlockReason] = None
+    # Blocking (reason is a string - can be BlockReason.value or custom like "pronounceability:...")
+    block_reason: Optional[str] = None
     block_notes: Optional[str] = None
 
     # Timestamps
@@ -155,7 +155,7 @@ class BrandName:
                 'url': self.euipo_url,
             },
             'block': {
-                'reason': self.block_reason.value if self.block_reason else None,
+                'reason': self.block_reason,
                 'notes': self.block_notes,
             } if self.block_reason else None,
             'created_at': self.created_at,
@@ -454,8 +454,8 @@ class BrandNameDB:
             euipo_checked=bool(row['euipo_checked']),
             euipo_matches=row['euipo_matches'],
             euipo_url=row['euipo_url'],
-            # Blocking
-            block_reason=BlockReason(row['block_reason']) if row['block_reason'] else None,
+            # Blocking (stored as string, not enum)
+            block_reason=row['block_reason'],
             block_notes=row['block_notes'],
             # Timestamps
             created_at=row['created_at'],
@@ -495,9 +495,13 @@ class BrandNameDB:
         for key, value in kwargs.items():
             if key in allowed_fields:
                 updates.append(f"{key} = ?")
-                # Handle enum types
-                if key == 'block_reason' and isinstance(value, BlockReason):
-                    values.append(value.value)
+                # Handle enum types (convert to string values)
+                if key == 'block_reason':
+                    # Accept both BlockReason enum and plain strings
+                    if isinstance(value, BlockReason):
+                        values.append(value.value)
+                    else:
+                        values.append(str(value) if value else None)
                 elif key == 'quality_tier' and isinstance(value, QualityTier):
                     values.append(value.value)
                 elif key == 'quality_tier' and isinstance(value, str):
@@ -558,8 +562,17 @@ class BrandNameDB:
             conn.commit()
             return True
 
-    def block(self, name: str, reason: BlockReason, notes: str = None) -> bool:
-        """Block a name from future generation"""
+    def block(self, name: str, reason: Union[BlockReason, str], notes: str = None) -> bool:
+        """Block a name from future generation.
+
+        Args:
+            name: The name to block
+            reason: BlockReason enum or custom string (e.g., "pronounceability:awkward_start:sv")
+            notes: Optional additional notes
+        """
+        # Convert enum to string value if needed
+        reason_str = reason.value if isinstance(reason, BlockReason) else str(reason)
+
         brand = self.get(name)
 
         if brand:
@@ -569,13 +582,13 @@ class BrandNameDB:
                     UPDATE names
                     SET status = ?, block_reason = ?, block_notes = ?, updated_at = ?
                     WHERE name_lower = ?
-                """, (NameStatus.BLOCKED.value, reason.value, notes, self._now(), name.lower()))
+                """, (NameStatus.BLOCKED.value, reason_str, notes, self._now(), name.lower()))
                 conn.commit()
             return True
         else:
             # Add new as blocked
             self.add(name, status=NameStatus.BLOCKED)
-            return self.update(name, block_reason=reason, block_notes=notes)
+            return self.update(name, block_reason=reason_str, block_notes=notes)
 
     def unblock(self, name: str) -> bool:
         """Remove block from a name"""
