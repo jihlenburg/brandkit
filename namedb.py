@@ -77,13 +77,6 @@ class BrandName:
     name: str
     status: NameStatus = NameStatus.NEW
 
-    # Scores (legacy)
-    score: Optional[float] = None
-    score_de: Optional[float] = None
-    score_en: Optional[float] = None
-    score_memorability: Optional[float] = None
-    score_euphony: Optional[float] = None
-
     # Phonaesthetic scores (research-backed)
     score_phonaesthetic: Optional[float] = None  # Overall phonaesthetic score
     score_consonant: Optional[float] = None      # Consonant quality
@@ -91,23 +84,22 @@ class BrandName:
     score_fluency: Optional[float] = None        # Processing fluency
     score_rhythm: Optional[float] = None         # Rhythm score
     score_naturalness: Optional[float] = None    # Phonotactic naturalness
+    score_cluster_quality: Optional[float] = None  # Cluster quality
+    score_ending_quality: Optional[float] = None   # Ending quality
+    score_memorability: Optional[float] = None     # Memorability
     quality_tier: Optional[QualityTier] = None   # excellent/good/acceptable/poor
 
     # Generation info
-    method: Optional[str] = None          # 'rules', 'markov', 'hybrid', cultural methods
+    method: Optional[str] = None          # 'rules', cultural methods
     semantic_associations: Optional[str] = None
     generation_details: Optional[str] = None
+    semantic_meaning: Optional[str] = None  # Brand story/meaning explanation
 
     # Validation results
     validated_at: Optional[str] = None    # When validation was last done
     eu_conflict: Optional[bool] = None    # True if EU trademark conflict
     us_conflict: Optional[bool] = None    # True if US trademark conflict
     domains_available: Optional[str] = None  # JSON dict of domain availability
-
-    # EUIPO (legacy - use trademark_checks table for new data)
-    euipo_checked: bool = False
-    euipo_matches: Optional[int] = None
-    euipo_url: Optional[str] = None
 
     # Blocking (reason is a string - can be BlockReason.value or custom like "pronounceability:...")
     block_reason: Optional[str] = None
@@ -120,18 +112,18 @@ class BrandName:
     # Comments (loaded separately)
     comments: List[Comment] = field(default_factory=list)
 
+    # Backward compatibility property
+    @property
+    def score(self) -> Optional[float]:
+        """Alias for score_phonaesthetic for backward compatibility."""
+        return self.score_phonaesthetic
+
     def to_dict(self) -> dict:
         return {
             'id': self.id,
             'name': self.name,
             'status': self.status.value,
-            'score': self.score,
-            'scores': {
-                'de': self.score_de,
-                'en': self.score_en,
-                'memorability': self.score_memorability,
-                'euphony': self.score_euphony,
-            },
+            'score': self.score_phonaesthetic,
             'phonaesthetic': {
                 'overall': self.score_phonaesthetic,
                 'consonant': self.score_consonant,
@@ -139,6 +131,9 @@ class BrandName:
                 'fluency': self.score_fluency,
                 'rhythm': self.score_rhythm,
                 'naturalness': self.score_naturalness,
+                'cluster_quality': self.score_cluster_quality,
+                'ending_quality': self.score_ending_quality,
+                'memorability': self.score_memorability,
                 'quality_tier': self.quality_tier.value if self.quality_tier else None,
             },
             'validation': {
@@ -149,11 +144,7 @@ class BrandName:
             },
             'method': self.method,
             'semantic_associations': self.semantic_associations,
-            'euipo': {
-                'checked': self.euipo_checked,
-                'matches': self.euipo_matches,
-                'url': self.euipo_url,
-            },
+            'semantic_meaning': self.semantic_meaning,
             'block': {
                 'reason': self.block_reason,
                 'notes': self.block_notes,
@@ -208,37 +199,29 @@ class BrandNameDB:
                     name_lower TEXT NOT NULL UNIQUE,
                     status TEXT NOT NULL DEFAULT 'new',
 
-                    -- Scores (legacy)
-                    score REAL,
-                    score_de REAL,
-                    score_en REAL,
-                    score_memorability REAL,
-                    score_euphony REAL,
-
-                    -- Phonaesthetic scores (v0.4.0)
+                    -- Phonaesthetic scores
                     score_phonaesthetic REAL,
                     score_consonant REAL,
                     score_vowel REAL,
                     score_fluency REAL,
                     score_rhythm REAL,
                     score_naturalness REAL,
+                    score_cluster_quality REAL,
+                    score_ending_quality REAL,
+                    score_memorability REAL,
                     quality_tier TEXT,
 
                     -- Generation
                     method TEXT,
                     semantic_associations TEXT,
                     generation_details TEXT,
+                    semantic_meaning TEXT,
 
-                    -- Validation results (v0.4.0)
+                    -- Validation results
                     validated_at TEXT,
                     eu_conflict INTEGER,
                     us_conflict INTEGER,
                     domains_available TEXT,
-
-                    -- EUIPO (legacy)
-                    euipo_checked INTEGER DEFAULT 0,
-                    euipo_matches INTEGER,
-                    euipo_url TEXT,
 
                     -- Blocking
                     block_reason TEXT,
@@ -305,11 +288,29 @@ class BrandNameDB:
                 )
             """)
 
+            # Trademark matches table (individual conflicting marks)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS trademark_matches (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name_id INTEGER NOT NULL,
+                    region TEXT NOT NULL,
+                    match_name TEXT NOT NULL,
+                    match_serial TEXT,
+                    match_classes TEXT,
+                    match_status TEXT,
+                    similarity_score REAL,
+                    found_at TEXT NOT NULL,
+                    FOREIGN KEY (name_id) REFERENCES names(id) ON DELETE CASCADE
+                )
+            """)
+
             # Indexes
             conn.execute("CREATE INDEX IF NOT EXISTS idx_name_lower ON names(name_lower)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_status ON names(status)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_score ON names(score DESC)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_score ON names(score_phonaesthetic DESC)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_tm_name_class ON trademark_checks(name_id, nice_class)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_tm_matches_name ON trademark_matches(name_id)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_tm_matches_region ON trademark_matches(region)")
 
             conn.commit()
 
@@ -322,7 +323,7 @@ class BrandNameDB:
         cursor = conn.execute("PRAGMA table_info(names)")
         existing_cols = {row[1] for row in cursor.fetchall()}
 
-        # New columns to add (v0.4.0)
+        # New columns to add (v0.4.0+)
         new_columns = [
             ("score_phonaesthetic", "REAL"),
             ("score_consonant", "REAL"),
@@ -335,6 +336,8 @@ class BrandNameDB:
             ("eu_conflict", "INTEGER"),
             ("us_conflict", "INTEGER"),
             ("domains_available", "TEXT"),
+            # v0.5.0 - semantic meaning
+            ("semantic_meaning", "TEXT"),
         ]
 
         for col_name, col_type in new_columns:
@@ -352,14 +355,10 @@ class BrandNameDB:
 
     def add(self,
             name: str,
-            score: float = None,
-            score_de: float = None,
-            score_en: float = None,
-            score_memorability: float = None,
-            score_euphony: float = None,
             method: str = None,
             semantic_associations: str = None,
             generation_details: str = None,
+            semantic_meaning: str = None,
             status: NameStatus = NameStatus.NEW) -> Optional[int]:
         """
         Add a new name to the database.
@@ -373,14 +372,14 @@ class BrandNameDB:
                 cursor = conn.execute("""
                     INSERT INTO names (
                         name, name_lower, status,
-                        score, score_de, score_en, score_memorability, score_euphony,
                         method, semantic_associations, generation_details,
+                        semantic_meaning,
                         created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     name, name.lower(), status.value,
-                    score, score_de, score_en, score_memorability, score_euphony,
                     method, semantic_associations, generation_details,
+                    semantic_meaning,
                     now, now
                 ))
                 conn.commit()
@@ -417,7 +416,7 @@ class BrandNameDB:
 
     def _row_to_brand(self, row) -> BrandName:
         """Convert database row to BrandName object"""
-        # Handle new columns that may not exist in older databases
+        # Handle columns that may not exist in older databases
         def safe_get(key, default=None):
             try:
                 return row[key]
@@ -428,35 +427,30 @@ class BrandNameDB:
             id=row['id'],
             name=row['name'],
             status=NameStatus(row['status']),
-            score=row['score'],
-            score_de=row['score_de'],
-            score_en=row['score_en'],
-            score_memorability=row['score_memorability'],
-            score_euphony=row['score_euphony'],
-            # Phonaesthetic scores (v0.4.0)
+            # Phonaesthetic scores
             score_phonaesthetic=safe_get('score_phonaesthetic'),
             score_consonant=safe_get('score_consonant'),
             score_vowel=safe_get('score_vowel'),
             score_fluency=safe_get('score_fluency'),
             score_rhythm=safe_get('score_rhythm'),
             score_naturalness=safe_get('score_naturalness'),
+            score_cluster_quality=safe_get('score_cluster_quality'),
+            score_ending_quality=safe_get('score_ending_quality'),
+            score_memorability=safe_get('score_memorability'),
             quality_tier=QualityTier(safe_get('quality_tier')) if safe_get('quality_tier') else None,
             # Generation
-            method=row['method'],
-            semantic_associations=row['semantic_associations'],
+            method=safe_get('method'),
+            semantic_associations=safe_get('semantic_associations'),
             generation_details=safe_get('generation_details'),
-            # Validation results (v0.4.0)
+            semantic_meaning=safe_get('semantic_meaning'),
+            # Validation results
             validated_at=safe_get('validated_at'),
             eu_conflict=bool(safe_get('eu_conflict')) if safe_get('eu_conflict') is not None else None,
             us_conflict=bool(safe_get('us_conflict')) if safe_get('us_conflict') is not None else None,
             domains_available=safe_get('domains_available'),
-            # Legacy EUIPO
-            euipo_checked=bool(row['euipo_checked']),
-            euipo_matches=row['euipo_matches'],
-            euipo_url=row['euipo_url'],
             # Blocking (stored as string, not enum)
-            block_reason=row['block_reason'],
-            block_notes=row['block_notes'],
+            block_reason=safe_get('block_reason'),
+            block_notes=safe_get('block_notes'),
             # Timestamps
             created_at=row['created_at'],
             updated_at=row['updated_at'],
@@ -475,17 +469,15 @@ class BrandNameDB:
 
         # Build SET clause
         allowed_fields = {
-            # Legacy scores
-            'score', 'score_de', 'score_en', 'score_memorability', 'score_euphony',
-            # Phonaesthetic scores (v0.4.0)
+            # Phonaesthetic scores
             'score_phonaesthetic', 'score_consonant', 'score_vowel',
-            'score_fluency', 'score_rhythm', 'score_naturalness', 'quality_tier',
+            'score_fluency', 'score_rhythm', 'score_naturalness',
+            'score_cluster_quality', 'score_ending_quality', 'score_memorability',
+            'quality_tier',
             # Generation
-            'method', 'semantic_associations', 'generation_details',
-            # Validation (v0.4.0)
+            'method', 'semantic_associations', 'generation_details', 'semantic_meaning',
+            # Validation
             'validated_at', 'eu_conflict', 'us_conflict', 'domains_available',
-            # Legacy EUIPO
-            'euipo_checked', 'euipo_matches', 'euipo_url',
             # Blocking
             'block_reason', 'block_notes'
         }
@@ -804,6 +796,336 @@ class BrandNameDB:
                 }
             return results
 
+    def save_trademark_match(self,
+                            name: str,
+                            region: str,
+                            match_name: str,
+                            match_serial: str = None,
+                            match_classes: List[int] = None,
+                            match_status: str = None,
+                            similarity_score: float = None,
+                            is_exact: bool = False,
+                            risk_level: str = None,
+                            phonetic_similarity: float = None) -> bool:
+        """
+        Save a conflicting trademark match.
+
+        Args:
+            name: The brand name being checked
+            region: 'US' or 'EU'
+            match_name: Name of the conflicting trademark
+            match_serial: USPTO serial number or EUIPO number
+            match_classes: List of Nice classes for this match
+            match_status: Status (LIVE, DEAD, etc.)
+            similarity_score: Optional similarity score
+            is_exact: True if exact match, False if similar/phonetic match
+            risk_level: Risk assessment (CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN)
+            phonetic_similarity: Phonetic similarity score (0.0-1.0)
+
+        Returns:
+            True if saved successfully
+        """
+        brand = self.get(name)
+        if not brand:
+            return False
+
+        classes_json = json.dumps(match_classes) if match_classes else None
+        now = self._now()
+
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("""
+                INSERT INTO trademark_matches (
+                    name_id, region, match_name, match_serial,
+                    match_classes, match_status, similarity_score, is_exact, found_at,
+                    risk_level, phonetic_similarity
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (brand.id, region, match_name, match_serial,
+                  classes_json, match_status, similarity_score, 1 if is_exact else 0, now,
+                  risk_level, phonetic_similarity))
+            conn.commit()
+            return True
+
+    def save_trademark_matches_batch(self,
+                                     name: str,
+                                     region: str,
+                                     matches: List[dict]) -> int:
+        """
+        Save multiple trademark matches for a name.
+
+        Args:
+            name: The brand name being checked
+            region: 'US' or 'EU'
+            matches: List of dicts with keys: match_name, match_serial, match_classes,
+                     match_status, similarity_score, is_exact, risk_level, phonetic_similarity
+
+        Returns:
+            Number of matches saved
+        """
+        brand = self.get(name)
+        if not brand:
+            return 0
+
+        now = self._now()
+        saved = 0
+
+        with sqlite3.connect(self.db_path) as conn:
+            for m in matches:
+                classes_json = json.dumps(m.get('match_classes')) if m.get('match_classes') else None
+                is_exact = 1 if m.get('is_exact') else 0
+                conn.execute("""
+                    INSERT INTO trademark_matches (
+                        name_id, region, match_name, match_serial,
+                        match_classes, match_status, similarity_score, is_exact, found_at,
+                        risk_level, phonetic_similarity
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (brand.id, region, m.get('match_name'), m.get('match_serial'),
+                      classes_json, m.get('match_status'), m.get('similarity_score'), is_exact, now,
+                      m.get('risk_level'), m.get('phonetic_similarity')))
+                saved += 1
+            conn.commit()
+            return saved
+
+    def get_trademark_matches(self, name: str, region: str = None) -> List[dict]:
+        """
+        Get all trademark matches for a name.
+
+        Args:
+            name: Brand name
+            region: Filter by region ('US', 'EU') or None for all
+
+        Returns:
+            List of match dicts with keys: region, match_name, match_serial, match_classes,
+            match_status, similarity_score, is_exact, found_at, risk_level, phonetic_similarity
+        """
+        brand = self.get(name)
+        if not brand:
+            return []
+
+        with sqlite3.connect(self.db_path) as conn:
+            if region:
+                cursor = conn.execute("""
+                    SELECT region, match_name, match_serial, match_classes, match_status,
+                           similarity_score, is_exact, found_at, risk_level, phonetic_similarity
+                    FROM trademark_matches
+                    WHERE name_id = ? AND region = ?
+                    ORDER BY
+                        CASE risk_level
+                            WHEN 'CRITICAL' THEN 0
+                            WHEN 'HIGH' THEN 1
+                            WHEN 'MEDIUM' THEN 2
+                            WHEN 'LOW' THEN 3
+                            ELSE 4
+                        END,
+                        is_exact DESC, phonetic_similarity DESC
+                """, (brand.id, region))
+            else:
+                cursor = conn.execute("""
+                    SELECT region, match_name, match_serial, match_classes, match_status,
+                           similarity_score, is_exact, found_at, risk_level, phonetic_similarity
+                    FROM trademark_matches
+                    WHERE name_id = ?
+                    ORDER BY
+                        region,
+                        CASE risk_level
+                            WHEN 'CRITICAL' THEN 0
+                            WHEN 'HIGH' THEN 1
+                            WHEN 'MEDIUM' THEN 2
+                            WHEN 'LOW' THEN 3
+                            ELSE 4
+                        END,
+                        is_exact DESC, phonetic_similarity DESC
+                """, (brand.id,))
+
+            matches = []
+            for row in cursor.fetchall():
+                matches.append({
+                    'region': row[0],
+                    'match_name': row[1],
+                    'match_serial': row[2],
+                    'match_classes': json.loads(row[3]) if row[3] else None,
+                    'match_status': row[4],
+                    'similarity_score': row[5],
+                    'is_exact': bool(row[6]),
+                    'found_at': row[7],
+                    'risk_level': row[8],
+                    'phonetic_similarity': row[9],
+                })
+            return matches
+
+    def clear_trademark_matches(self, name: str, region: str = None) -> bool:
+        """
+        Clear trademark matches for a name (before re-checking).
+
+        Args:
+            name: Brand name
+            region: Clear only for specific region, or None for all
+
+        Returns:
+            True if cleared successfully
+        """
+        brand = self.get(name)
+        if not brand:
+            return False
+
+        with sqlite3.connect(self.db_path) as conn:
+            if region:
+                conn.execute("DELETE FROM trademark_matches WHERE name_id = ? AND region = ?", (brand.id, region))
+            else:
+                conn.execute("DELETE FROM trademark_matches WHERE name_id = ?", (brand.id,))
+            conn.commit()
+            return True
+
+    def update_trademark_match_risk(self,
+                                    match_id: int,
+                                    risk_level: str = None,
+                                    phonetic_similarity: float = None) -> bool:
+        """
+        Update risk assessment fields for a trademark match.
+
+        Args:
+            match_id: ID of the trademark match
+            risk_level: Risk level (CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN)
+            phonetic_similarity: Phonetic similarity score (0.0-1.0)
+
+        Returns:
+            True if updated successfully
+        """
+        updates = []
+        values = []
+
+        if risk_level is not None:
+            updates.append("risk_level = ?")
+            values.append(risk_level)
+        if phonetic_similarity is not None:
+            updates.append("phonetic_similarity = ?")
+            values.append(phonetic_similarity)
+
+        if not updates:
+            return False
+
+        values.append(match_id)
+
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute(f"""
+                UPDATE trademark_matches
+                SET {', '.join(updates)}
+                WHERE id = ?
+            """, values)
+            conn.commit()
+            return cursor.rowcount > 0
+
+    def recalculate_trademark_risks(self, name: str = None) -> int:
+        """
+        Recalculate risk_level and phonetic_similarity for all trademark matches.
+
+        Uses the phonetic_similarity module to compute similarity scores
+        and calculate risk levels based on trademark status.
+
+        Args:
+            name: Optional - only recalculate for this name. If None, recalculates all.
+
+        Returns:
+            Number of matches updated
+        """
+        from brandkit.phonetic_similarity import (
+            compute_phonetic_similarity,
+            calculate_risk_level
+        )
+
+        updated = 0
+
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+
+            # Get all matches that need updating
+            if name:
+                brand = self.get(name)
+                if not brand:
+                    return 0
+                cursor = conn.execute("""
+                    SELECT tm.id, tm.match_name, tm.match_status, tm.is_exact, n.name
+                    FROM trademark_matches tm
+                    JOIN names n ON tm.name_id = n.id
+                    WHERE n.name_lower = ?
+                """, (name.lower(),))
+            else:
+                cursor = conn.execute("""
+                    SELECT tm.id, tm.match_name, tm.match_status, tm.is_exact, n.name
+                    FROM trademark_matches tm
+                    JOIN names n ON tm.name_id = n.id
+                """)
+
+            matches = cursor.fetchall()
+
+            for row in matches:
+                match_id = row['id']
+                match_name = row['match_name']
+                match_status = row['match_status']
+                is_exact = bool(row['is_exact'])
+                brand_name = row['name']
+
+                # Calculate phonetic similarity
+                phon_sim = compute_phonetic_similarity(brand_name, match_name)
+
+                # Calculate risk level
+                risk = calculate_risk_level(
+                    match_status=match_status,
+                    is_exact=is_exact,
+                    phonetic_similarity=phon_sim
+                )
+
+                # Update the record
+                conn.execute("""
+                    UPDATE trademark_matches
+                    SET risk_level = ?, phonetic_similarity = ?
+                    WHERE id = ?
+                """, (risk, phon_sim, match_id))
+                updated += 1
+
+            conn.commit()
+
+        return updated
+
+    def get_high_risk_matches(self, limit: int = None) -> List[dict]:
+        """
+        Get trademark matches with CRITICAL or HIGH risk level.
+
+        Returns:
+            List of dicts with name, match details, and risk info
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            query = """
+                SELECT n.name, tm.region, tm.match_name, tm.match_serial,
+                       tm.match_classes, tm.match_status, tm.is_exact,
+                       tm.risk_level, tm.phonetic_similarity
+                FROM trademark_matches tm
+                JOIN names n ON tm.name_id = n.id
+                WHERE tm.risk_level IN ('CRITICAL', 'HIGH')
+                ORDER BY
+                    CASE tm.risk_level WHEN 'CRITICAL' THEN 0 ELSE 1 END,
+                    tm.phonetic_similarity DESC
+            """
+            if limit:
+                query += f" LIMIT {limit}"
+
+            cursor = conn.execute(query)
+
+            results = []
+            for row in cursor.fetchall():
+                results.append({
+                    'name': row['name'],
+                    'region': row['region'],
+                    'match_name': row['match_name'],
+                    'match_serial': row['match_serial'],
+                    'match_classes': json.loads(row['match_classes']) if row['match_classes'] else None,
+                    'match_status': row['match_status'],
+                    'is_exact': bool(row['is_exact']),
+                    'risk_level': row['risk_level'],
+                    'phonetic_similarity': row['phonetic_similarity'],
+                })
+            return results
+
     def get_available_classes(self, name: str, region: str = None) -> List[int]:
         """
         Get Nice classes where the name is available (no conflicts).
@@ -872,7 +1194,7 @@ class BrandNameDB:
         """Get all names with a specific status"""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            query = "SELECT * FROM names WHERE status = ? ORDER BY score DESC"
+            query = "SELECT * FROM names WHERE status = ? ORDER BY score_phonaesthetic DESC"
             if limit:
                 query += f" LIMIT {limit}"
             cursor = conn.execute(query, (status.value,))
@@ -885,7 +1207,7 @@ class BrandNameDB:
             query = """
                 SELECT * FROM names
                 WHERE status IN (?, ?)
-                ORDER BY score DESC
+                ORDER BY score_phonaesthetic DESC
             """
             if limit:
                 query += f" LIMIT {limit}"
@@ -903,7 +1225,7 @@ class BrandNameDB:
             cursor = conn.execute("""
                 SELECT * FROM names
                 WHERE name_lower LIKE ?
-                ORDER BY score DESC
+                ORDER BY score_phonaesthetic DESC
             """, (f"%{query.lower()}%",))
             return [self._row_to_brand(row) for row in cursor.fetchall()]
 
@@ -915,7 +1237,7 @@ class BrandNameDB:
                 SELECT n.* FROM names n
                 JOIN tags t ON n.id = t.name_id
                 WHERE t.tag = ?
-                ORDER BY n.score DESC
+                ORDER BY n.score_phonaesthetic DESC
             """, (tag.lower(),))
             return [self._row_to_brand(row) for row in cursor.fetchall()]
 
@@ -978,6 +1300,9 @@ class BrandNameDB:
                                     fluency: float = None,
                                     rhythm: float = None,
                                     naturalness: float = None,
+                                    memorability: float = None,
+                                    cluster_quality: float = None,
+                                    ending_quality: float = None,
                                     quality_tier: str = None) -> bool:
         """
         Update phonaesthetic scores for a name.
@@ -990,6 +1315,9 @@ class BrandNameDB:
             fluency: Processing fluency score
             rhythm: Rhythm score
             naturalness: Phonotactic naturalness score
+            memorability: Memorability score
+            cluster_quality: Consonant cluster quality score
+            ending_quality: Ending quality score
             quality_tier: Quality tier (excellent/good/acceptable/poor)
 
         Returns:
@@ -1008,6 +1336,12 @@ class BrandNameDB:
             kwargs['score_rhythm'] = rhythm
         if naturalness is not None:
             kwargs['score_naturalness'] = naturalness
+        if memorability is not None:
+            kwargs['score_memorability'] = memorability
+        if cluster_quality is not None:
+            kwargs['score_cluster_quality'] = cluster_quality
+        if ending_quality is not None:
+            kwargs['score_ending_quality'] = ending_quality
         if quality_tier is not None:
             kwargs['quality_tier'] = quality_tier
 
@@ -1140,11 +1474,11 @@ class BrandNameDB:
                 stats['by_block_reason'][row[0]] = row[1]
 
             # Average score
-            cursor = conn.execute("SELECT AVG(score) FROM names WHERE score IS NOT NULL")
+            cursor = conn.execute("SELECT AVG(score_phonaesthetic) FROM names WHERE score_phonaesthetic IS NOT NULL")
             stats['avg_score'] = cursor.fetchone()[0]
 
             # Top score
-            cursor = conn.execute("SELECT MAX(score) FROM names")
+            cursor = conn.execute("SELECT MAX(score_phonaesthetic) FROM names")
             stats['top_score'] = cursor.fetchone()[0]
 
             return stats
@@ -1157,7 +1491,7 @@ class BrandNameDB:
         """Export entire database to JSON"""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
-            cursor = conn.execute("SELECT * FROM names ORDER BY score DESC")
+            cursor = conn.execute("SELECT * FROM names ORDER BY score_phonaesthetic DESC")
             names = []
             for row in cursor.fetchall():
                 brand = self._row_to_brand(row)
@@ -1340,7 +1674,7 @@ Examples:
             with sqlite3.connect(db.db_path) as conn:
                 conn.row_factory = sqlite3.Row
                 cursor = conn.execute(
-                    "SELECT * FROM names ORDER BY score DESC LIMIT ?",
+                    "SELECT * FROM names ORDER BY score_phonaesthetic DESC LIMIT ?",
                     (args.limit,)
                 )
                 names = [db._row_to_brand(row) for row in cursor.fetchall()]

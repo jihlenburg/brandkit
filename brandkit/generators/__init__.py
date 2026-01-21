@@ -4,8 +4,8 @@ Brand Name Generators
 =====================
 Provides multiple generation strategies:
 - RuleBased: Phonetic rules and morpheme combinations
-- Markov: Statistical character-level generation
-- LLM: Claude-powered creative generation
+- Cultural: Greek, Nordic, Japanese, Latin, Celtic, Celestial, Turkic
+- LLM: Claude-powered creative generation (optional)
 """
 
 import sys
@@ -27,12 +27,6 @@ from brand_generator import (
     Syllable,
     SemanticMorpheme,
     SyllableGenerator,
-)
-from markov_generator import (
-    MarkovGenerator,
-    MarkovModel,
-    MarkovTrainer,
-    HybridMarkovGenerator,
 )
 from llm_generator import (
     LLMGenerator,
@@ -60,6 +54,9 @@ from .cultural_generators import (
     LatinGenerator,
     CelticGenerator,
     CelestialGenerator,
+    AnimalsGenerator,
+    MythologyGenerator,
+    LandmarksGenerator,
 )
 from .base_generator import (
     CulturalGenerator,
@@ -78,8 +75,8 @@ from .base_generator import (
 # Clean aliases
 RuleBasedGenerator = BrandNameGenerator
 PhoneticGenerator = BrandNameGenerator
-BrandGenerator = BrandNameGenerator  # Alias for convenience
-GeneratedName = NameScore  # Alias for consistency
+BrandGenerator = BrandNameGenerator
+GeneratedName = NameScore
 
 __all__ = [
     # Rule-based
@@ -96,12 +93,7 @@ __all__ = [
     'Syllable',
     'SemanticMorpheme',
     'SyllableGenerator',
-    # Markov
-    'MarkovGenerator',
-    'MarkovModel',
-    'MarkovTrainer',
-    'HybridMarkovGenerator',
-    # LLM
+    # LLM (optional)
     'LLMGenerator',
     'LLMGeneratedName',
     'LLMGenerationResult',
@@ -118,11 +110,14 @@ __all__ = [
     'NordicGenerator',
     'NordicName',
     'generate_nordic',
-    # New Cultural Generators
+    # Cultural Generators
     'JapaneseGenerator',
     'LatinGenerator',
     'CelticGenerator',
     'CelestialGenerator',
+    'AnimalsGenerator',
+    'MythologyGenerator',
+    'LandmarksGenerator',
     # Base Generator Framework
     'CulturalGenerator',
     'CulturalGeneratedName',

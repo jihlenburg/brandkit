@@ -64,17 +64,18 @@ from .generators import (
     BrandGenerator,
     BrandNameGenerator,
     RuleBasedGenerator,
-    MarkovGenerator,
-    HybridMarkovGenerator,
     LLMGenerator,
     TurkicGenerator,
     GreekGenerator,
     NordicGenerator,
-    # New cultural generators
+    # Cultural generators
     JapaneseGenerator,
     LatinGenerator,
     CelticGenerator,
     CelestialGenerator,
+    AnimalsGenerator,
+    MythologyGenerator,
+    LandmarksGenerator,
     # Base generator framework
     CulturalGenerator,
     CulturalGeneratedName,
@@ -197,7 +198,6 @@ class BrandKit:
 
         # Initialize generators (lazy-loaded where expensive)
         self._rule_gen = BrandGenerator()
-        self._markov_gen = None  # Lazy-loaded (training takes time)
         self._turkic_gen = TurkicGenerator()
         self._greek_gen = GreekGenerator()
         self._nordic_gen = NordicGenerator()
@@ -210,6 +210,9 @@ class BrandKit:
         self._latin_gen = None
         self._celtic_gen = None
         self._celestial_gen = None
+        self._animals_gen = None
+        self._mythology_gen = None
+        self._landmarks_gen = None
 
         # Advanced features
         self._hazard_checker = HazardChecker()
@@ -244,12 +247,6 @@ class BrandKit:
     # Generation
     # -------------------------------------------------------------------------
 
-    def _get_markov_gen(self):
-        """Lazy-load the Markov generator (training takes time)."""
-        if self._markov_gen is None:
-            self._markov_gen = HybridMarkovGenerator()
-        return self._markov_gen
-
     def _get_japanese_gen(self):
         """Lazy-load the Japanese generator."""
         if self._japanese_gen is None:
@@ -274,6 +271,24 @@ class BrandKit:
             self._celestial_gen = CelestialGenerator()
         return self._celestial_gen
 
+    def _get_animals_gen(self):
+        """Lazy-load the Animals generator."""
+        if self._animals_gen is None:
+            self._animals_gen = AnimalsGenerator()
+        return self._animals_gen
+
+    def _get_mythology_gen(self):
+        """Lazy-load the Mythology generator."""
+        if self._mythology_gen is None:
+            self._mythology_gen = MythologyGenerator()
+        return self._mythology_gen
+
+    def _get_landmarks_gen(self):
+        """Lazy-load the Landmarks generator."""
+        if self._landmarks_gen is None:
+            self._landmarks_gen = LandmarksGenerator()
+        return self._landmarks_gen
+
     def generate(self,
                  count: int = 10,
                  method: str = "rule_based",
@@ -288,19 +303,22 @@ class BrandKit:
         method : str
             Generation method. One of:
             - "rule_based": Phonetic rules and morpheme combinations
-            - "markov": Statistical character-level generation
-            - "llm": Claude-powered creative generation
-            - "hybrid": Mix of rule-based and Markov
+            - "greek": Greek mythology-inspired names
+            - "nordic": Nordic/Scandinavian patterns
+            - "japanese": Japanese-inspired phonetics
+            - "latin": Latin/Romance morphemes
+            - "celtic": Celtic patterns
+            - "celestial": Space/cosmic themes
+            - "turkic": VW/Nissan style vowel harmony
+            - "blend": Cross-culture blending
+            - "llm": Claude-powered creative generation (optional)
         **kwargs
             Additional arguments passed to the generator
 
         Returns
         -------
         list
-            List of generated names. Type depends on method:
-            - rule_based/hybrid: List[NameScore]
-            - markov: List[str]
-            - llm: List[LLMGeneratedName]
+            List of generated names (NameScore or LLMGeneratedName)
 
         Raises
         ------
@@ -310,16 +328,12 @@ class BrandKit:
         Examples
         --------
             >>> names = kit.generate(count=5, method="rule_based")
+            >>> names = kit.generate(count=5, method="greek")
             >>> names = kit.generate(count=5, method="llm",
             ...                      context="Solar panels")
         """
         if method == "rule_based":
             return self._rule_gen.generate_batch(count, **kwargs)
-
-        elif method == "markov":
-            markov_gen = self._get_markov_gen()
-            results = markov_gen.generate(count=count, **kwargs)
-            return [name for name, _ in results]
 
         elif method == "llm":
             if not self._llm_gen:
@@ -328,15 +342,6 @@ class BrandKit:
             if result.error:
                 raise ValueError(f"LLM generation failed: {result.error}")
             return result.names
-
-        elif method == "hybrid":
-            # Mix of rule-based and Markov
-            rule_count = count // 2
-            markov_count = count - rule_count
-            names = self._rule_gen.generate_batch(rule_count, **kwargs)
-            markov_gen = self._get_markov_gen()
-            markov_gen.generate(count=markov_count, **kwargs)
-            return sorted(names, key=lambda n: n.total_score, reverse=True)
 
         elif method == "turkic":
             # Turkic-inspired names (VW/Nissan style)
@@ -370,6 +375,21 @@ class BrandKit:
             gen = self._get_celestial_gen()
             return gen.generate(count=count, **kwargs)
 
+        elif method == "animals":
+            # English wildlife-inspired names
+            gen = self._get_animals_gen()
+            return gen.generate(count=count, **kwargs)
+
+        elif method == "mythology":
+            # Modern mythology-inspired names
+            gen = self._get_mythology_gen()
+            return gen.generate(count=count, **kwargs)
+
+        elif method == "landmarks":
+            # Landmarks and natural wonders-inspired names
+            gen = self._get_landmarks_gen()
+            return gen.generate(count=count, **kwargs)
+
         elif method == "blend":
             # Cross-culture blending
             cultures = kwargs.pop('cultures', ['greek', 'latin', 'nordic', 'japanese'])
@@ -378,10 +398,11 @@ class BrandKit:
             return blender.blend(count=count, archetype=archetype)
 
         elif method == "all":
-            # Mix all methods randomly
+            # Mix all cultural methods randomly
             import random
-            methods = ["rule_based", "markov", "turkic", "greek", "nordic",
-                       "japanese", "latin", "celtic", "celestial"]
+            methods = ["rule_based", "turkic", "greek", "nordic",
+                       "japanese", "latin", "celtic", "celestial",
+                       "animals", "mythology", "landmarks"]
             names = []
             per_method = max(1, count // len(methods))
             remainder = count - (per_method * len(methods))
@@ -490,6 +511,128 @@ class BrandKit:
                             tm_result['uspto'].similar_matches)
                     result['warnings'].append(f"US trademark conflicts: {total}")
 
+        return result
+
+    def store_trademark_matches(self, name: str, check_result: dict) -> int:
+        """
+        Store trademark matches from a check result with risk assessment.
+
+        Call this after check() to persist conflicting trademarks for later review.
+        Computes phonetic similarity and risk level for each match.
+
+        Parameters
+        ----------
+        name : str
+            Brand name that was checked
+        check_result : dict
+            Result from check() containing 'trademark' field
+
+        Returns
+        -------
+        int
+            Number of matches stored
+        """
+        from .phonetic_similarity import (
+            compute_phonetic_similarity,
+            calculate_risk_level
+        )
+
+        tm_data = check_result.get('trademark', {})
+        if not tm_data:
+            return 0
+
+        total_stored = 0
+
+        # Store USPTO matches
+        uspto_result = tm_data.get('uspto')
+        if uspto_result and hasattr(uspto_result, 'matches') and uspto_result.matches:
+            matches = []
+            name_lower = name.lower()
+            for m in uspto_result.matches:
+                match_name = m.name if hasattr(m, 'name') else str(m)
+                is_exact = match_name.lower() == name_lower
+                match_status = getattr(m, 'status', None)
+
+                # Compute phonetic similarity and risk level
+                phon_sim = compute_phonetic_similarity(name, match_name)
+                risk = calculate_risk_level(
+                    match_status=match_status,
+                    is_exact=is_exact,
+                    phonetic_similarity=phon_sim
+                )
+
+                matches.append({
+                    'match_name': match_name,
+                    'match_serial': getattr(m, 'serial_number', None) or getattr(m, 'application_number', None),
+                    'match_classes': getattr(m, 'nice_classes', None),
+                    'match_status': match_status,
+                    'similarity_score': getattr(m, 'similarity_score', None),
+                    'is_exact': is_exact,
+                    'phonetic_similarity': phon_sim,
+                    'risk_level': risk,
+                })
+            if matches:
+                self._db.clear_trademark_matches(name, 'US')
+                total_stored += self._db.save_trademark_matches_batch(name, 'US', matches)
+
+        # Store EUIPO matches
+        euipo_result = tm_data.get('euipo')
+        if euipo_result and hasattr(euipo_result, 'matches') and euipo_result.matches:
+            matches = []
+            name_lower = name.lower()
+            for m in euipo_result.matches:
+                match_name = m.name if hasattr(m, 'name') else str(m)
+                is_exact = match_name.lower() == name_lower
+                match_status = getattr(m, 'status', None)
+
+                # Compute phonetic similarity and risk level
+                phon_sim = compute_phonetic_similarity(name, match_name)
+                risk = calculate_risk_level(
+                    match_status=match_status,
+                    is_exact=is_exact,
+                    phonetic_similarity=phon_sim
+                )
+
+                matches.append({
+                    'match_name': match_name,
+                    'match_serial': getattr(m, 'application_number', None),
+                    'match_classes': getattr(m, 'nice_classes', None),
+                    'match_status': match_status,
+                    'similarity_score': None,
+                    'is_exact': is_exact,
+                    'phonetic_similarity': phon_sim,
+                    'risk_level': risk,
+                })
+            if matches:
+                self._db.clear_trademark_matches(name, 'EU')
+                total_stored += self._db.save_trademark_matches_batch(name, 'EU', matches)
+
+        return total_stored
+
+    def check_and_store(self, name: str, check_all: bool = True, nice_classes=None) -> dict:
+        """
+        Check a brand name and store trademark matches.
+
+        Combines check() and store_trademark_matches() for convenience.
+
+        Parameters
+        ----------
+        name : str
+            Brand name to check
+        check_all : bool
+            If True, check all sources
+        nice_classes : str, list, or None
+            Nice classification filter
+
+        Returns
+        -------
+        dict
+            Check result (same as check())
+        """
+        result = self.check(name, check_all=check_all, nice_classes=nice_classes)
+        if 'trademark' in result:
+            matches_stored = self.store_trademark_matches(name, result)
+            result['matches_stored'] = matches_stored
         return result
 
     # -------------------------------------------------------------------------
@@ -661,9 +804,10 @@ class BrandKit:
     # Persistence
     # -------------------------------------------------------------------------
 
-    def save(self, name, status: str = "candidate", method: str = None) -> NameRecord:
+    def save(self, name, status: str = "candidate", method: str = None,
+             use_llm_meaning: bool = False, industry: str = None) -> NameRecord:
         """
-        Save a name to the database with phonaesthetic scores.
+        Save a name to the database with phonaesthetic scores and semantic meaning.
 
         Parameters
         ----------
@@ -675,6 +819,11 @@ class BrandKit:
         method : str, optional
             Generation method (e.g., 'greek', 'japanese'). Extracted from
             name object if available.
+        use_llm_meaning : bool
+            If True, use Claude LLM to generate richer brand meanings.
+            Requires ANTHROPIC_API_KEY. Default is False (template-based).
+        industry : str, optional
+            Target industry for context in LLM meaning generation.
 
         Returns
         -------
@@ -687,9 +836,12 @@ class BrandKit:
             >>> for name in names:
             ...     if kit.check(name.name)['available']:
             ...         kit.save(name)
+            >>> # With LLM-enhanced meaning:
+            >>> kit.save(name, use_llm_meaning=True, industry='tech')
         """
         from .db import NameStatus
         from .generators.phonemes import phonaesthetic_score
+        from .meaning_generator import generate_meaning_with_llm_fallback
 
         # Extract name string and metadata
         if hasattr(name, 'name'):
@@ -697,10 +849,31 @@ class BrandKit:
             score = getattr(name, 'total_score', None) or \
                     getattr(name, 'score_estimate', 0.5)
             method = method or getattr(name, 'method', None) or "brandkit"
+            # Extract semantic info for meaning generation
+            roots_used = getattr(name, 'roots_used', [])
+            meaning_hints = getattr(name, 'meaning_hints', [])
+            culture = getattr(name, 'culture', method)
+            category = getattr(name, 'archetype', None)
         else:
             name_str = str(name)
             score = 0.5
             method = method or "brandkit"
+            roots_used = []
+            meaning_hints = []
+            culture = method
+            category = None
+
+        # Generate semantic meaning from root components
+        roots = list(zip(roots_used, meaning_hints)) if roots_used and meaning_hints else []
+        semantic_meaning = generate_meaning_with_llm_fallback(
+            name=name_str,
+            culture=culture,
+            roots=roots,
+            category=category,
+            use_llm=use_llm_meaning,
+            api_key=self._config.anthropic_api_key if self._config.has_anthropic else None,
+            industry=industry,
+        )
 
         # Calculate phonaesthetic scores
         phon = phonaesthetic_score(name_str)
@@ -709,12 +882,12 @@ class BrandKit:
         if isinstance(status, str):
             status = NameStatus(status)
 
-        # Save to database with phonaesthetic scores
+        # Save to database
         name_id = self._db.add(
             name=name_str,
-            score=score,
             status=status,
             method=method,
+            semantic_meaning=semantic_meaning,
         )
 
         # Update with phonaesthetic scores if save was successful
@@ -727,6 +900,9 @@ class BrandKit:
                 fluency=phon['fluency_score'],
                 rhythm=phon['rhythm_score'],
                 naturalness=phon['naturalness_score'],
+                memorability=phon['memorability_score'],
+                cluster_quality=phon['cluster_quality_score'],
+                ending_quality=phon['ending_quality_score'],
                 quality_tier=phon['quality'],
             )
 
@@ -768,27 +944,25 @@ __all__ = [
     # Main class
     'BrandKit',
 
-    # Legacy Generators
+    # Rule-based Generators
     'BrandGenerator',
     'BrandNameGenerator',
     'RuleBasedGenerator',
-    'MarkovGenerator',
-    'HybridMarkovGenerator',
     'LLMGenerator',
+    'GeneratedName',
+    'NameScore',
+
+    # Cultural Generators
     'TurkicGenerator',
     'GreekGenerator',
     'NordicGenerator',
-    'GeneratedName',
-    'NameScore',
-    'TurkicName',
-    'GreekName',
-    'NordicName',
-
-    # New Cultural Generators
     'JapaneseGenerator',
     'LatinGenerator',
     'CelticGenerator',
     'CelestialGenerator',
+    'TurkicName',
+    'GreekName',
+    'NordicName',
 
     # Base Generator Framework
     'CulturalGenerator',
