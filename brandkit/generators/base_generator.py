@@ -107,11 +107,17 @@ def load_culture_config(culture: str) -> Dict:
 class HazardChecker:
     """
     Checks brand names for cross-linguistic hazards.
+
+    Enhanced with:
+    - Syllable-aware matching (hazards at syllable boundaries are more severe)
+    - G2P-based phonetic matching for EN/DE markets
+    - EN/DE homophone and minimal pair detection
     """
 
     def __init__(self):
         self._hazards = load_hazards()
         self._compile_patterns()
+        self._compile_en_de_patterns()
 
     def _compile_patterns(self):
         """Pre-compile regex patterns for efficiency."""
@@ -124,6 +130,22 @@ class HazardChecker:
                         'regex': re.compile(data['regex'], re.IGNORECASE),
                         'sounds_like': data.get('sounds_like', ''),
                         'severity': data.get('severity', 'medium')
+                    }
+                except re.error:
+                    pass
+
+    def _compile_en_de_patterns(self):
+        """Pre-compile EN/DE-specific patterns."""
+        self._en_de_patterns = {}
+        en_de = self._hazards.get('en_de_patterns', {})
+        universal = en_de.get('universal_avoid', [])
+        for pattern_data in universal:
+            if isinstance(pattern_data, dict) and 'regex' in pattern_data:
+                try:
+                    self._en_de_patterns[pattern_data['regex']] = {
+                        'regex': re.compile(pattern_data['regex'], re.IGNORECASE),
+                        'reason': pattern_data.get('reason', ''),
+                        'severity': pattern_data.get('severity', 'medium')
                     }
                 except re.error:
                     pass
@@ -206,6 +228,35 @@ class HazardChecker:
                     'severity': 'medium'
                 })
 
+        # Check EN/DE-specific patterns (universal_avoid)
+        for pattern_key, pattern_data in self._en_de_patterns.items():
+            if pattern_data['regex'].search(name_lower):
+                issues.append({
+                    'type': 'en_de_pattern',
+                    'pattern': pattern_key,
+                    'reason': pattern_data['reason'],
+                    'severity': pattern_data['severity']
+                })
+
+        # Check EN/DE homophones
+        en_de_homophones = self._hazards.get('en_de_homophones', {})
+        for word, data in en_de_homophones.items():
+            if word in name_lower:
+                severity = data.get('severity', 'medium')
+                issues.append({
+                    'type': 'en_de_homophone',
+                    'word': word,
+                    'german_meaning': data.get('german_meaning', ''),
+                    'english_sounds_like': data.get('english_sounds_like', ''),
+                    'severity': severity,
+                    'note': data.get('note', '')
+                })
+
+        # Syllable-aware hazard detection
+        # Check if hazards appear at syllable boundaries (more severe)
+        syllable_issues = self._check_syllable_hazards(name_lower)
+        issues.extend(syllable_issues)
+
         # Determine overall severity
         if not issues:
             return HazardResult(is_safe=True, severity='clear', issues=[])
@@ -238,6 +289,100 @@ class HazardChecker:
             return result
 
         return simplify(name) == simplify(hazard) or hazard in name
+
+    def _check_syllable_hazards(self, name: str) -> List[Dict[str, Any]]:
+        """
+        Check for hazards that appear at syllable boundaries.
+
+        Hazards at syllable boundaries are more severe because they:
+        1. Are more likely to be perceived as separate words
+        2. May be emphasized during natural speech stress patterns
+        3. Stand out more in segmented pronunciation
+
+        Returns list of hazard issues found.
+        """
+        issues = []
+        vowels = 'aeiouy'
+
+        # Find syllable boundaries (approximate)
+        # Syllable boundaries typically occur before consonant clusters or after vowels
+        syllable_starts = [0]
+        prev_vowel = False
+        for i, char in enumerate(name):
+            is_vowel = char in vowels
+            # New syllable starts after a vowel followed by a consonant
+            if prev_vowel and not is_vowel and i > 0:
+                # Check if there's a vowel after this consonant (onset of new syllable)
+                for j in range(i + 1, min(i + 3, len(name))):
+                    if name[j] in vowels:
+                        syllable_starts.append(i)
+                        break
+            prev_vowel = is_vowel
+
+        # Add end of word as a boundary
+        syllable_starts.append(len(name))
+
+        # Extract syllables
+        syllables = []
+        for i in range(len(syllable_starts) - 1):
+            syl = name[syllable_starts[i]:syllable_starts[i + 1]]
+            if syl:
+                syllables.append(syl)
+
+        # Check if any syllable matches a known hazard word exactly
+        words = self._hazards.get('words', {})
+        for syl in syllables:
+            if syl in words:
+                data = words[syl]
+                # Syllable-aligned hazard is more severe
+                base_severity = data.get('severity', 'medium')
+                # Upgrade severity for syllable alignment
+                severity_upgrade = {
+                    'low': 'medium',
+                    'medium': 'high',
+                    'high': 'critical',
+                    'critical': 'critical'
+                }
+                issues.append({
+                    'type': 'syllable_hazard',
+                    'syllable': syl,
+                    'meaning': data.get('meaning', ''),
+                    'language': data.get('language', ''),
+                    'severity': severity_upgrade.get(base_severity, 'high'),
+                    'note': f"Hazard appears as complete syllable (more severe): {data.get('note', '')}"
+                })
+
+        # Check for hazard patterns at syllable boundaries
+        patterns = self._hazards.get('patterns', {})
+        for pattern, data in patterns.items():
+            # Check if pattern matches start or end of a syllable
+            for syl in syllables:
+                if syl.startswith(pattern) or syl.endswith(pattern):
+                    issues.append({
+                        'type': 'syllable_pattern',
+                        'pattern': pattern,
+                        'syllable': syl,
+                        'similar_to': data.get('similar_to', ''),
+                        'severity': data.get('severity', 'medium'),
+                        'note': 'Pattern at syllable boundary'
+                    })
+                    break  # Only report once per pattern
+
+        # Check word-initial and word-final positions (most prominent)
+        # These positions receive natural stress and attention
+        prominent_hazards = ['fuk', 'fuc', 'shyt', 'cnt', 'dik', 'cok', 'kok', 'kum',
+                            'ass', 'pis', 'tit', 'fart', 'poop', 'kak', 'scheis', 'arsch']
+        for hazard in prominent_hazards:
+            if name.startswith(hazard) or name.endswith(hazard):
+                issues.append({
+                    'type': 'prominent_position',
+                    'hazard': hazard,
+                    'position': 'start' if name.startswith(hazard) else 'end',
+                    'severity': 'high',
+                    'note': 'Hazard at word-initial or word-final position'
+                })
+
+        return issues
 
 
 # =============================================================================
@@ -882,6 +1027,18 @@ class CulturalGenerator(ABC):
         for ptype, plist in prefixes.items():
             pool.extend(plist)
         return pool if pool else ['', '', '']
+
+    def _get_consonants(self, ctype: str = 'all') -> List[str]:
+        """Get consonants from phonetics config."""
+        phonetics = self._config.get('phonetics', {})
+        consonants = phonetics.get('consonants', {})
+        return list(consonants.get(ctype, consonants.get('all', list('bcdfghjklmnpqrstvwxyz'))))
+
+    def _get_vowels(self, vtype: str = 'all') -> List[str]:
+        """Get vowels from phonetics config."""
+        phonetics = self._config.get('phonetics', {})
+        vowels = phonetics.get('vowels', {})
+        return list(vowels.get(vtype, vowels.get('all', list('aeiou'))))
 
     def _get_connector(self, root_end: str, suffix_start: str) -> str:
         """Get appropriate connector between root and suffix."""

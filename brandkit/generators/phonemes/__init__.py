@@ -161,6 +161,45 @@ class StrategiesConfig:
         """Get phonaesthetic quality configuration."""
         return self.raw.get('phonaesthetic_quality', {})
 
+    # --- Locale-specific methods ---
+
+    def get_locale_pronounceability(self, locale: str) -> Dict[str, Any]:
+        """Get locale-specific pronounceability rules (en, de)."""
+        key = f'pronounceability_{locale}'
+        return self.raw.get(key, {})
+
+    def get_locale_allowed_initial(self, locale: str) -> set:
+        """Get allowed initial clusters for a specific locale."""
+        config = self.get_locale_pronounceability(locale)
+        return set(config.get('allowed_initial_clusters', []))
+
+    def get_locale_forbidden_initial(self, locale: str) -> set:
+        """Get forbidden initial clusters for a specific locale."""
+        config = self.get_locale_pronounceability(locale)
+        forbidden = config.get('forbidden_clusters', {})
+        return set(forbidden.get('initial', []))
+
+    def get_locale_forbidden_final(self, locale: str) -> set:
+        """Get forbidden final clusters for a specific locale."""
+        config = self.get_locale_pronounceability(locale)
+        forbidden = config.get('forbidden_clusters', {})
+        return set(forbidden.get('final', []))
+
+    def get_locale_forbidden_internal(self, locale: str) -> set:
+        """Get forbidden internal clusters for a specific locale."""
+        config = self.get_locale_pronounceability(locale)
+        forbidden = config.get('forbidden_clusters', {})
+        return set(forbidden.get('internal', []))
+
+    def get_german_normalization(self) -> Dict[str, Any]:
+        """Get German normalization rules (umlauts, eszett)."""
+        return self.raw.get('german_normalization', {})
+
+    def get_market_weights(self, market: str) -> Dict[str, Any]:
+        """Get market-specific phonaesthetic weights (en, de, en_de)."""
+        weights = self.raw.get('market_weights', {})
+        return weights.get(market, {})
+
 
 @dataclass
 class PhonaesthemesConfig:
@@ -517,6 +556,206 @@ def get_culture(name: str) -> Optional[PhonemeConfig]:
 
 
 # =============================================================================
+# German Orthography Normalization
+# =============================================================================
+
+def normalize_de(text: str, apply_final_devoicing: bool = True) -> str:
+    """
+    Normalize German orthography for phonetic comparison.
+
+    Applies:
+    - Umlaut expansion: ä→ae, ö→oe, ü→ue
+    - Eszett expansion: ß→ss
+    - Optional final devoicing: b→p, d→t, g→k, v→f, z→s at word end
+
+    Parameters
+    ----------
+    text : str
+        Text to normalize
+    apply_final_devoicing : bool
+        Whether to apply final devoicing (default True)
+
+    Returns
+    -------
+    str
+        Normalized text
+    """
+    # Umlaut mappings
+    result = text.replace('ä', 'ae').replace('Ä', 'Ae')
+    result = result.replace('ö', 'oe').replace('Ö', 'Oe')
+    result = result.replace('ü', 'ue').replace('Ü', 'Ue')
+    # Eszett
+    result = result.replace('ß', 'ss')
+
+    # Final devoicing (for similarity matching)
+    if apply_final_devoicing and result:
+        final_devoicing = {'b': 'p', 'd': 't', 'g': 'k', 'v': 'f', 'z': 's'}
+        if result[-1].lower() in final_devoicing:
+            if result[-1].isupper():
+                result = result[:-1] + final_devoicing[result[-1].lower()].upper()
+            else:
+                result = result[:-1] + final_devoicing[result[-1]]
+
+    return result
+
+
+# =============================================================================
+# Lightweight G2P (Grapheme-to-Phoneme Approximation)
+# =============================================================================
+
+def approx_g2p_en(text: str) -> str:
+    """
+    Approximate grapheme-to-phoneme conversion for English.
+
+    Uses ~40 orthographic rules to approximate pronunciation.
+    Returns simplified phonetic representation (not IPA).
+
+    Rules handle:
+    - Digraphs: th, sh, ch, ph, wh, ck, ng, gh
+    - Silent letters: kn-, gn-, wr-, -mb, -mn
+    - Vowel digraphs: ee, ea, oo, ou, oi, ow, aw
+    - Magic e: VCe → long vowel
+
+    Parameters
+    ----------
+    text : str
+        Text to convert
+
+    Returns
+    -------
+    str
+        Simplified phonetic representation
+    """
+    text = text.lower()
+
+    # === CONSONANT DIGRAPHS ===
+    # Order matters - longer patterns first
+    replacements = [
+        # Digraphs
+        ('tch', 'CH'),      # match, watch
+        ('sch', 'SH'),      # school (in loanwords)
+        ('th', 'TH'),       # the, think (simplify to TH)
+        ('sh', 'SH'),       # ship, fish
+        ('ch', 'CH'),       # chip, church
+        ('ph', 'F'),        # phone, graph
+        ('wh', 'W'),        # what, when
+        ('ck', 'K'),        # back, clock
+        ('ng', 'NG'),       # ring, song
+        ('dg', 'J'),        # edge, judge
+        ('gh', ''),         # silent: night, though (complex, simplify)
+        ('wr', 'R'),        # write, wrong
+        ('kn', 'N'),        # knife, know
+        ('gn', 'N'),        # gnome, gnat
+        ('mb', 'M'),        # lamb, comb (final mb)
+        ('mn', 'M'),        # autumn, column (final mn)
+
+        # Vowel digraphs
+        ('ee', 'EE'),       # see, tree (long e)
+        ('ea', 'EE'),       # eat, sea (usually long e)
+        ('oo', 'OO'),       # food, moon
+        ('ou', 'OW'),       # out, house
+        ('ow', 'OW'),       # cow, how (before consonant or end)
+        ('oi', 'OY'),       # oil, coin
+        ('oy', 'OY'),       # boy, toy
+        ('aw', 'AW'),       # saw, law
+        ('au', 'AW'),       # caught, fault
+        ('ie', 'EE'),       # field, piece (usually)
+        ('ai', 'AY'),       # rain, wait
+        ('ay', 'AY'),       # day, play
+    ]
+
+    result = text
+    for pattern, replacement in replacements:
+        result = result.replace(pattern, replacement)
+
+    # === FINAL SILENT E (Magic E) ===
+    # VCe pattern - vowel becomes long
+    import re
+    # Simple approximation: remove final e after consonant
+    if len(result) > 2 and result[-1] == 'e' and result[-2] not in 'aeiouAEIOUYW':
+        result = result[:-1]
+
+    return result
+
+
+def approx_g2p_de(text: str) -> str:
+    """
+    Approximate grapheme-to-phoneme conversion for German.
+
+    Uses ~50 orthographic rules to approximate pronunciation.
+    Returns simplified phonetic representation (not IPA).
+
+    Rules handle:
+    - German digraphs: sch, ch, pf, tz, st, sp
+    - Umlauts: ä, ö, ü (if not already normalized)
+    - Vowel length markers: eh, ah, ie, oo
+    - Final devoicing: -b→p, -d→t, -g→k
+
+    Parameters
+    ----------
+    text : str
+        Text to convert
+
+    Returns
+    -------
+    str
+        Simplified phonetic representation
+    """
+    # First normalize umlauts
+    text = normalize_de(text, apply_final_devoicing=False)
+    text = text.lower()
+
+    # === CONSONANT DIGRAPHS ===
+    replacements = [
+        # German-specific digraphs
+        ('tsch', 'CH'),     # deutsch, Tschüss
+        ('sch', 'SH'),      # schön, Schule
+        ('ch', 'CH'),       # ich, auch (simplify - actually /ç/ vs /x/)
+        ('pf', 'PF'),       # Pferd, Kopf
+        ('tz', 'TS'),       # Katze, Platz
+        ('ck', 'K'),        # Lack, dick
+
+        # Initial clusters (German pronounces these)
+        # st- and sp- at start are /ʃt/ and /ʃp/ in German
+        # We'll mark them specially
+
+        # Vowel length markers (long vowels)
+        ('eh', 'EH'),       # sehr, mehr (long e)
+        ('ah', 'AH'),       # Jahr, Bahn (long a)
+        ('oh', 'OH'),       # Sohn, Bohne (long o)
+        ('ie', 'EE'),       # Bier, Spiel (long i)
+        ('ee', 'EE'),       # See, Fee (long e)
+        ('aa', 'AA'),       # Saal (long a)
+        ('oo', 'OO'),       # Boot (long o)
+
+        # Common endings
+        ('ung', 'UNG'),     # Hoffnung
+        ('heit', 'HAIT'),   # Freiheit
+        ('keit', 'KAIT'),   # Möglichkeit
+        ('lich', 'LIKH'),   # freundlich
+        ('ig', 'IKH'),      # fertig (final -ig = /ɪç/)
+    ]
+
+    result = text
+    for pattern, replacement in replacements:
+        result = result.replace(pattern, replacement)
+
+    # === INITIAL ST/SP ===
+    # German pronounces initial st- as /ʃt/ and sp- as /ʃp/
+    if result.startswith('st'):
+        result = 'SHT' + result[2:]
+    elif result.startswith('sp'):
+        result = 'SHP' + result[2:]
+
+    # === FINAL DEVOICING ===
+    final_devoicing = {'b': 'P', 'd': 'T', 'g': 'K', 'v': 'F', 'z': 'S'}
+    if result and result[-1] in final_devoicing:
+        result = result[:-1] + final_devoicing[result[-1]]
+
+    return result
+
+
+# =============================================================================
 # Utility Functions
 # =============================================================================
 
@@ -553,7 +792,8 @@ def get_connector(root_end: str, suffix_start: str, strategies: StrategiesConfig
     return ''
 
 
-def is_pronounceable(name: str, strategies: StrategiesConfig = None) -> tuple[bool, str]:
+def is_pronounceable(name: str, strategies: StrategiesConfig = None,
+                     markets: str = 'en_de') -> tuple[bool, str]:
     """
     Check if a name is pronounceable using linguistic rules from config.
 
@@ -562,6 +802,16 @@ def is_pronounceable(name: str, strategies: StrategiesConfig = None) -> tuple[bo
     Uses the Sonority Sequencing Principle and phonotactic constraints
     for English/German cross-linguistic pronounceability.
     Rules are loaded from strategies.yaml pronounceability section.
+
+    Parameters
+    ----------
+    name : str
+        The name to check
+    strategies : StrategiesConfig, optional
+        Strategies config. Loads default if None.
+    markets : str
+        Target market(s): 'en', 'de', or 'en_de' (default).
+        For 'en_de', name must be pronounceable in BOTH languages.
     """
     if strategies is None:
         strategies = load_strategies()
@@ -571,7 +821,15 @@ def is_pronounceable(name: str, strategies: StrategiesConfig = None) -> tuple[bo
     if len(name_lower) < 2:
         return False, "too_short"
 
-    # Load rules from config
+    # Determine which locales to check
+    if markets == 'en':
+        locales = ['en']
+    elif markets == 'de':
+        locales = ['de']
+    else:  # en_de or default
+        locales = ['en', 'de']
+
+    # Load shared rules from config (language-agnostic)
     impossible_endings = strategies.get_impossible_endings()
     valid_final_chars = strategies.get_valid_final_chars()
     valid_final_clusters = strategies.get_valid_final_clusters()
@@ -580,7 +838,7 @@ def is_pronounceable(name: str, strategies: StrategiesConfig = None) -> tuple[bo
     awkward_initial = strategies.get_awkward_initial_clusters()
     chemical_endings = strategies.get_chemical_endings()
 
-    # Check for awkward initial clusters (hard for English/German speakers)
+    # Check for awkward initial clusters (shared rules)
     for cluster in awkward_initial:
         if name_lower.startswith(cluster):
             return False, f"awkward_start:{cluster}"
@@ -590,7 +848,28 @@ def is_pronounceable(name: str, strategies: StrategiesConfig = None) -> tuple[bo
         if name_lower.endswith(ending):
             return False, f"chemical_ending:{ending}"
 
-    # Check ending
+    # === LOCALE-SPECIFIC CHECKS ===
+    # For each target locale, check forbidden clusters
+    for locale in locales:
+        # Forbidden initial clusters for this locale
+        forbidden_initial = strategies.get_locale_forbidden_initial(locale)
+        for cluster in forbidden_initial:
+            if name_lower.startswith(cluster):
+                return False, f"forbidden_start_{locale}:{cluster}"
+
+        # Forbidden final clusters for this locale
+        forbidden_final = strategies.get_locale_forbidden_final(locale)
+        for cluster in forbidden_final:
+            if name_lower.endswith(cluster):
+                return False, f"forbidden_end_{locale}:{cluster}"
+
+        # Forbidden internal clusters for this locale
+        forbidden_internal = strategies.get_locale_forbidden_internal(locale)
+        for cluster in forbidden_internal:
+            if cluster in name_lower:
+                return False, f"forbidden_internal_{locale}:{cluster}"
+
+    # Check ending (shared rules)
     last1 = name_lower[-1]
     last2 = name_lower[-2:] if len(name_lower) >= 2 else ''
     last3 = name_lower[-3:] if len(name_lower) >= 3 else ''
@@ -612,7 +891,7 @@ def is_pronounceable(name: str, strategies: StrategiesConfig = None) -> tuple[bo
         # Final character isn't in valid list
         return False, f"unusual_ending:{last1}"
 
-    # Check for impossible internal clusters
+    # Check for impossible internal clusters (shared)
     for cluster in impossible_internal:
         if cluster in name_lower:
             return False, f"impossible_cluster:{cluster}"
@@ -643,7 +922,7 @@ def is_pronounceable(name: str, strategies: StrategiesConfig = None) -> tuple[bo
 
 
 def score_name(name: str, strategies: StrategiesConfig = None,
-               category: str = None) -> float:
+               category: str = None, markets: str = 'en_de') -> float:
     """
     Score a name using linguistic pronounceability + phonaesthetic criteria.
 
@@ -653,6 +932,7 @@ def score_name(name: str, strategies: StrategiesConfig = None,
     1. Hard gate: Must be pronounceable (if not, score = 0)
     2. Basic scoring: Length, CV balance, patterns
     3. Phonaesthetic scoring: Research-based beauty assessment
+    4. Market-specific adjustments: Apply EN/DE-specific weights
 
     Parameters
     ----------
@@ -662,6 +942,8 @@ def score_name(name: str, strategies: StrategiesConfig = None,
         Strategies config. Loads default if None.
     category : str, optional
         Category for sound-fit scoring ('tech', 'luxury', 'power', 'nature', 'speed')
+    markets : str
+        Target market(s): 'en', 'de', or 'en_de' (default).
 
     Returns
     -------
@@ -674,7 +956,7 @@ def score_name(name: str, strategies: StrategiesConfig = None,
     name_lower = name.lower()
 
     # === PHASE 1: PRONOUNCEABILITY GATE ===
-    is_ok, reason = is_pronounceable(name)
+    is_ok, reason = is_pronounceable(name, strategies, markets)
     if not is_ok:
         return 0.0  # Hard fail - unpronounceable names get 0
 
@@ -720,6 +1002,22 @@ def score_name(name: str, strategies: StrategiesConfig = None,
 
     # Combine: 40% basic, 60% phonaesthetic
     final_score = basic_score * 0.4 + phon_score * 0.6
+
+    # === PHASE 4: MARKET-SPECIFIC ADJUSTMENTS ===
+    market_weights = strategies.get_market_weights(markets)
+    if market_weights:
+        consonant_adj = market_weights.get('consonant_adjustments', {})
+        # Apply adjustments based on consonants present in name
+        for consonant, adjustment in consonant_adj.items():
+            if consonant in name_lower:
+                final_score += adjustment
+
+        # Check ending preferences
+        ending_adj = market_weights.get('ending_adjustments', {})
+        for ending, adjustment in ending_adj.items():
+            if name_lower.endswith(ending):
+                final_score += adjustment
+                break  # Only apply one ending adjustment
 
     return min(max(final_score, 0.0), 1.0)
 
@@ -1238,6 +1536,68 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
             scores['category_fit'] = min(fit_ratio * 2, 1.0)  # Scale up
             details['category_fit'] = f"{category}: {fit_count} matching sounds"
 
+    # === MEMORABILITY ===
+    # Based on cognitive psychology research:
+    # - Optimal length (4-7 characters) aids recall
+    # - Strong initial consonants create distinctiveness
+    # - 2-3 syllables is easiest to remember
+    # - Repetition/alliteration aids encoding
+    memorability_score = 0.5  # Base
+
+    # Length factor: optimal 4-7 characters
+    name_len = len(name_lower)
+    if 4 <= name_len <= 7:
+        memorability_score += 0.15  # Optimal length
+    elif name_len <= 3:
+        memorability_score += 0.05  # Very short - easy but maybe too simple
+    elif name_len <= 9:
+        memorability_score += 0.08  # Acceptable
+    else:
+        memorability_score -= 0.05  # Too long
+
+    # Syllable count: 2-3 is optimal
+    syllable_count = rhythm_info.get('syllable_count', 2)
+    if 2 <= syllable_count <= 3:
+        memorability_score += 0.12
+    elif syllable_count == 1:
+        memorability_score += 0.05  # Very short
+    elif syllable_count == 4:
+        memorability_score += 0.03  # Acceptable
+    else:
+        memorability_score -= 0.05  # Too many syllables
+
+    # Strong initial consonant (plosives, fricatives)
+    strong_initials = set('bcdgkptvf')
+    if name_lower and name_lower[0] in strong_initials:
+        memorability_score += 0.08
+
+    # Alliteration bonus (repeated initial sounds within word)
+    syllables = rhythm_info.get('syllables', [])
+    has_alliteration = False
+    if len(syllables) >= 2:
+        first_sounds = [s[0] for s in syllables if s]
+        if len(first_sounds) >= 2 and first_sounds[0] == first_sounds[1]:
+            memorability_score += 0.06  # Alliteration
+            has_alliteration = True
+
+    # Assonance bonus (repeated vowels)
+    vowel_counts = {}
+    for v in 'aeiou':
+        cnt = name_lower.count(v)
+        if cnt >= 2:
+            vowel_counts[v] = cnt
+    if vowel_counts:
+        memorability_score += 0.05  # Has vowel repetition
+
+    memorability_score = min(max(memorability_score, 0.0), 1.0)
+    scores['memorability'] = memorability_score
+    details['memorability'] = {
+        'length': name_len,
+        'syllable_count': syllable_count,
+        'strong_initial': name_lower[0] if name_lower else '',
+        'has_alliteration': has_alliteration,
+    }
+
     # === WEIGHTED FINAL SCORE ===
     weights = config.get('weights', {})
     w_cons = weights.get('consonant_quality', 0.22)
@@ -1284,6 +1644,7 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
         'rhythm_score': scores['rhythm'],
         'cluster_quality_score': scores['cluster_quality'],
         'ending_quality_score': scores['ending_quality'],
+        'memorability_score': scores['memorability'],
         'category_fit_score': scores.get('category_fit'),
         'details': details,
     }

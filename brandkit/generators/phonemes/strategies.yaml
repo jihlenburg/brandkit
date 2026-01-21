@@ -643,6 +643,194 @@ pronounceability:
     - uuu
 
 # =============================================================================
+# LOCALE-SPECIFIC PRONOUNCEABILITY (EN/DE)
+# =============================================================================
+# German and English have different phonotactic constraints.
+# These rules enable market-specific validation.
+
+pronounceability_en:
+  # English-specific allowed clusters
+  allowed_initial_clusters:
+    - st
+    - sp
+    - sk
+    - sm
+    - sn
+    - sl
+    - sw
+    - tr
+    - dr
+    - kr
+    - gr
+    - pr
+    - br
+    - fr
+    - fl
+    - bl
+    - gl
+    - kl
+    - pl
+    - th      # English has 'th'
+    - shr
+    - str
+    - spr
+    - skr
+
+  allowed_final_clusters:
+    - st
+    - nt
+    - nd
+    - ng
+    - nk
+    - lt
+    - rt
+    - rd
+    - rn
+    - rm
+    - th      # English allows 'th' finally (growth, stealth)
+    - ks
+    - ts
+    - ps
+    - ft
+    - pt
+    - ct
+    - xt
+
+  # Clusters that don't work in English
+  forbidden_clusters:
+    initial:
+      - pf      # German only (Pferd)
+      - kn      # Silent k (knife)
+      - gn      # Silent g (gnome)
+      - ps      # Silent p (psychology)
+      - ts      # Hard at start (tsunami)
+      - wr      # Archaic (write)
+    final:
+      - pf      # German only
+      - fn
+      - gn
+      - bn
+
+  # Endings that sound awkward in English
+  awkward_endings:
+    - cht     # German (Nacht)
+    - pft     # German (hüpft)
+    - mpf     # German (Kampf)
+    - nft     # German (Vernunft)
+
+pronounceability_de:
+  # German-specific allowed clusters
+  allowed_initial_clusters:
+    - st
+    - sp
+    - sch     # German 'sch' = /ʃ/
+    - schr
+    - schm
+    - schn
+    - schw
+    - schp    # rare but possible
+    - str
+    - spr
+    - pf      # German has initial 'pf'
+    - kn      # German keeps 'kn' (Knie)
+    - gn      # German keeps 'gn'
+    - ps      # German keeps 'ps'
+    - tr
+    - dr
+    - kr
+    - gr
+    - pr
+    - br
+    - fr
+    - fl
+    - bl
+    - gl
+    - kl
+    - pl
+    - zw      # German 'zw' (zwei)
+
+  allowed_final_clusters:
+    - st
+    - nt
+    - nd
+    - ng
+    - nk
+    - lt
+    - rt
+    - rd
+    - rn
+    - rm
+    - cht     # German 'cht' (Nacht)
+    - pft     # German 'pft'
+    - mpf     # German 'mpf'
+    - nft     # German 'nft'
+    - ks
+    - ts
+    - ps
+    - ft
+    - pt
+    - pf      # German 'pf' (Kopf)
+
+  # Clusters that don't work in German
+  forbidden_clusters:
+    initial:
+      - th      # German doesn't have 'th' /θ/ - becomes 't' or 's'
+      - wr      # Not German
+    final:
+      - th      # German speakers say 't' or 's'
+      - fn
+      - gn
+      - bn
+
+  # Final devoicing: German devoices final obstruents
+  # b → p, d → t, g → k, v → f, z → s
+  final_devoicing:
+    b: p
+    d: t
+    g: k
+    v: f
+    z: s
+
+  # German vowel length markers (orthographic cues)
+  # Double vowels or 'h' after vowel = long
+  # Double consonant after vowel = short
+  vowel_length:
+    long_markers:
+      - ee      # See, Fee
+      - eh      # sehr
+      - ie      # Bier
+      - aa      # Saal
+      - ah      # Jahr
+      - oo      # Boot
+      - oh      # Sohn
+    short_markers:
+      - ck      # after short vowel (Lack)
+      - tt      # after short vowel (Wetter)
+      - ss      # after short vowel (Wasser)
+      - mm      # after short vowel (Sommer)
+      - nn      # after short vowel (Sonne)
+      - pp      # after short vowel (Suppe)
+      - ll      # after short vowel (Welle)
+      - ff      # after short vowel (Koffer)
+
+# German orthography normalization rules
+# Apply before phonetic comparison and hazard checking
+german_normalization:
+  # Umlaut mappings (for search/comparison)
+  umlauts:
+    ä: ae
+    ö: oe
+    ü: ue
+    Ä: Ae
+    Ö: Oe
+    Ü: Ue
+  # Eszett
+  eszett:
+    ß: ss
+  # Note: Final devoicing (b→p, d→t, g→k) should also be applied
+  # for similarity matching against German words
+
+# =============================================================================
 # Cross-Language Euphony
 # =============================================================================
 # Rules for names that sound good in both German and English
@@ -907,3 +1095,68 @@ phonaesthetic_quality:
     good: 0.570       # Top 50% phonetic pleasantness (global p50)
     acceptable: 0.550 # Top 75% phonetic pleasantness
     poor: 0.520       # Bottom 25% - may have phonetic issues
+
+# =============================================================================
+# MARKET-SPECIFIC PHONAESTHETIC WEIGHTS
+# =============================================================================
+# German and English speakers perceive sounds differently.
+# These weights adjust scoring based on target market.
+
+market_weights:
+  # English market weights
+  en:
+    # English speakers are comfortable with 'th', 'w', 'y'
+    consonant_adjustments:
+      th: 0.0       # Neutral (common in English)
+      w: 0.0        # Neutral
+      y: 0.0        # Neutral
+      pf: -0.04     # Uncommon, Germanic feel
+      sch: -0.02    # Foreign, German feel
+      ch: 0.0       # Common (church, change)
+      x_midword: -0.02  # Slightly awkward mid-word
+
+    # 'th' endings are fine in English
+    ending_adjustments:
+      th: 0.0       # growth, stealth - fine
+      pf: -0.05     # Foreign
+      cht: -0.04    # German feel
+
+  # German market weights
+  de:
+    # German speakers struggle with English 'th' and 'w'
+    consonant_adjustments:
+      th: -0.05     # Germans say 't' or 's' instead
+      w: -0.02      # German 'w' is English 'v'
+      y: -0.01      # Less common in German
+      pf: 0.0       # Common in German
+      sch: 0.01     # Very natural in German
+      ch: 0.0       # Common (ich, auch)
+      x_midword: -0.02
+
+    # German-comfortable endings
+    ending_adjustments:
+      th: -0.05     # Germans struggle with this
+      pf: 0.0       # Natural (Kopf)
+      cht: 0.01     # Natural (Nacht)
+      mpf: 0.0      # Natural (Kampf)
+
+  # Combined EN/DE market (conservative)
+  en_de:
+    # Avoid sounds problematic in either language
+    consonant_adjustments:
+      th: -0.03     # Hard for Germans
+      w: -0.01      # Different in each
+      y: 0.0        # OK in both
+      pf: -0.02     # Hard for English
+      sch: -0.01    # Ambiguous
+      ch: 0.0       # OK in both (different sounds)
+      x_midword: -0.02
+
+    ending_adjustments:
+      th: -0.03     # Avoid for German speakers
+      pf: -0.02     # Avoid for English speakers
+      cht: -0.02    # Avoid for English speakers
+
+    # Safe sounds for both markets
+    preferred_consonants: [k, t, p, b, d, g, f, s, m, n, l, r, v]
+    preferred_endings: [a, o, is, us, "on", an, or, er, ix, ex]

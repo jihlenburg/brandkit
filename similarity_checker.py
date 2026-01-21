@@ -63,6 +63,133 @@ KNOWN_BRANDS = {
 }
 
 
+def cologne_phonetics(name: str) -> str:
+    """
+    Generate Cologne Phonetics (Kölner Phonetik) code for a name.
+
+    Specifically designed for German names and pronunciation.
+    More accurate than Soundex/Metaphone for German words.
+
+    Based on Hans Joachim Postel's algorithm (1969).
+    """
+    name = name.upper()
+    name = re.sub(r'[^A-ZÄÖÜß]', '', name)
+
+    if not name:
+        return ""
+
+    # Handle German umlauts and eszett
+    name = name.replace('Ä', 'A').replace('Ö', 'O').replace('Ü', 'U').replace('ß', 'SS')
+
+    result = []
+    i = 0
+
+    while i < len(name):
+        char = name[i]
+        prev = name[i-1] if i > 0 else ''
+        next_char = name[i+1] if i < len(name) - 1 else ''
+
+        code = None
+
+        # Vowels (A, E, I, O, U, Y) → 0
+        if char in 'AEIOUY':
+            code = '0'
+
+        # H → ignored (no code)
+        elif char == 'H':
+            pass
+
+        # B → 1
+        elif char == 'B':
+            code = '1'
+
+        # P → 1 (except before H → 3)
+        elif char == 'P':
+            if next_char == 'H':
+                code = '3'
+            else:
+                code = '1'
+
+        # D, T → 2 (except before C, S, Z → 8)
+        elif char in 'DT':
+            if next_char in 'CSZ':
+                code = '8'
+            else:
+                code = '2'
+
+        # F, V, W → 3
+        elif char in 'FVW':
+            code = '3'
+
+        # G, K, Q → 4
+        elif char in 'GKQ':
+            code = '4'
+
+        # C rules (complex)
+        elif char == 'C':
+            # C at start: before A, H, K, L, O, Q, R, U, X → 4, else 8
+            if i == 0:
+                if next_char in 'AHKLOQRUX':
+                    code = '4'
+                else:
+                    code = '8'
+            # C after S, Z → 8
+            elif prev in 'SZ':
+                code = '8'
+            # C not at start: before A, H, K, O, Q, U, X → 4
+            elif next_char in 'AHKOQUX':
+                code = '4'
+            else:
+                code = '8'
+
+        # X → 48 (except after C, K, Q → 8)
+        elif char == 'X':
+            if prev in 'CKQ':
+                code = '8'
+            else:
+                code = '48'
+
+        # L → 5
+        elif char == 'L':
+            code = '5'
+
+        # M, N → 6
+        elif char in 'MN':
+            code = '6'
+
+        # R → 7
+        elif char == 'R':
+            code = '7'
+
+        # S, Z → 8
+        elif char in 'SZ':
+            code = '8'
+
+        # J → 0 (same as vowels in German context)
+        elif char == 'J':
+            code = '0'
+
+        if code:
+            result.append(code)
+
+        i += 1
+
+    # Remove consecutive duplicates
+    if not result:
+        return ""
+
+    final = [result[0]]
+    for code in result[1:]:
+        if code != final[-1]:
+            final.append(code)
+
+    # Remove leading zeros (except if it's all zeros)
+    code_str = ''.join(final)
+    code_str = code_str.lstrip('0') or '0'
+
+    return code_str
+
+
 def soundex(name: str) -> str:
     """
     Generate Soundex code for a name.
@@ -273,6 +400,7 @@ class SimilarityMatch:
     known_brand: str
     soundex_match: bool
     metaphone_match: bool
+    cologne_match: bool  # Cologne Phonetics match (German-optimized)
     text_similarity: float
 
     @property
@@ -280,7 +408,13 @@ class SimilarityMatch:
         """Check if this match is problematic (too similar)"""
         return (self.soundex_match or
                 self.metaphone_match or
+                self.cologne_match or
                 self.text_similarity > 0.7)
+
+    @property
+    def phonetic_match_count(self) -> int:
+        """Number of phonetic algorithms that flagged this match"""
+        return sum([self.soundex_match, self.metaphone_match, self.cologne_match])
 
 
 @dataclass
@@ -307,35 +441,45 @@ class SimilarityChecker:
             print(f"Too similar to: {result.similar_brands}")
     """
 
-    def __init__(self, additional_brands: set = None):
+    def __init__(self, additional_brands: set = None, markets: str = 'en_de'):
         """
         Initialize with known brands.
 
         Args:
             additional_brands: Extra brand names to check against
+            markets: Target market(s): 'en', 'de', or 'en_de' (default).
+                     Affects which phonetic algorithms are emphasized.
         """
         self.known_brands = KNOWN_BRANDS.copy()
+        self.markets = markets
         if additional_brands:
             self.known_brands.update(b.lower() for b in additional_brands)
 
         # Pre-compute phonetic codes for known brands
         self._soundex_cache = {b: soundex(b) for b in self.known_brands}
         self._metaphone_cache = {b: metaphone(b) for b in self.known_brands}
+        self._cologne_cache = {b: cologne_phonetics(b) for b in self.known_brands}
 
-    def check(self, name: str, threshold: float = 0.6) -> SimilarityResult:
+    def check(self, name: str, threshold: float = 0.6,
+              markets: str = None) -> SimilarityResult:
         """
         Check a name for similarity to known brands.
 
         Args:
             name: Brand name to check
             threshold: Minimum similarity score to flag (0-1)
+            markets: Override instance markets setting for this check.
+                     'en' = Soundex+Metaphone, 'de' = Cologne+Metaphone,
+                     'en_de' = all three algorithms (default).
 
         Returns:
             SimilarityResult with matches found
         """
+        markets = markets or self.markets
         name_lower = name.lower()
         name_soundex = soundex(name)
         name_metaphone = metaphone(name)
+        name_cologne = cologne_phonetics(name)
 
         matches = []
         highest_sim = 0.0
@@ -345,22 +489,35 @@ class SimilarityChecker:
             if brand == name_lower:
                 continue
 
-            # Check Soundex match
+            # Check Soundex match (English-focused)
             soundex_match = self._soundex_cache[brand] == name_soundex
 
-            # Check Metaphone match
+            # Check Metaphone match (English, but good for both)
             metaphone_match = self._metaphone_cache[brand] == name_metaphone
+
+            # Check Cologne Phonetics match (German-focused)
+            cologne_match = self._cologne_cache[brand] == name_cologne
 
             # Calculate text similarity
             text_sim = normalized_similarity(name_lower, brand)
 
+            # Determine if any phonetic match is significant based on market
+            has_phonetic_match = False
+            if markets == 'en':
+                has_phonetic_match = soundex_match or metaphone_match
+            elif markets == 'de':
+                has_phonetic_match = cologne_match or metaphone_match
+            else:  # en_de
+                has_phonetic_match = soundex_match or metaphone_match or cologne_match
+
             # If any match is significant, record it
-            if soundex_match or metaphone_match or text_sim > threshold:
+            if has_phonetic_match or text_sim > threshold:
                 match = SimilarityMatch(
                     name=name,
                     known_brand=brand,
                     soundex_match=soundex_match,
                     metaphone_match=metaphone_match,
+                    cologne_match=cologne_match,
                     text_similarity=text_sim
                 )
                 matches.append(match)
@@ -416,18 +573,27 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check brand name similarity')
     parser.add_argument('names', nargs='+', help='Names to check')
     parser.add_argument('--threshold', type=float, default=0.6, help='Similarity threshold')
+    parser.add_argument('--markets', choices=['en', 'de', 'en_de'], default='en_de',
+                        help='Target market(s): en, de, or en_de (default)')
 
     args = parser.parse_args()
 
-    checker = SimilarityChecker()
+    checker = SimilarityChecker(markets=args.markets)
 
     for name in args.names:
         result = checker.check(name, args.threshold)
 
         print(f"\n{'='*50}")
         print(f"Name: {name}")
+        print(f"Markets: {args.markets}")
         print(f"Safe: {'Yes' if result.is_safe else 'NO - Similar to existing brands!'}")
         print(f"Highest similarity: {result.highest_similarity:.2f}")
+
+        # Show phonetic codes for the input name
+        print(f"\nPhonetic codes for '{name}':")
+        print(f"  Soundex:  {soundex(name)}")
+        print(f"  Metaphone: {metaphone(name)}")
+        print(f"  Cologne:  {cologne_phonetics(name)}")
 
         if result.similar_brands:
             print("\nSimilar brands found:")
@@ -437,5 +603,7 @@ if __name__ == '__main__':
                     flags.append("Soundex")
                 if m.metaphone_match:
                     flags.append("Metaphone")
+                if m.cologne_match:
+                    flags.append("Cologne")
                 flags.append(f"Sim:{m.text_similarity:.2f}")
                 print(f"  - {m.known_brand}: [{', '.join(flags)}]")

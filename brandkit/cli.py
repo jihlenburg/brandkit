@@ -29,8 +29,9 @@ from brandkit import __version__
 # =============================================================================
 
 GENERATION_METHODS = [
-    'rule_based', 'markov', 'llm', 'hybrid',
+    'rule_based', 'llm',
     'greek', 'turkic', 'nordic', 'japanese', 'latin', 'celtic', 'celestial',
+    'animals', 'mythology', 'landmarks',
     'blend', 'all'
 ]
 
@@ -296,7 +297,7 @@ def cmd_hazards(args, out: Output):
 
 def cmd_score(args, out: Output):
     """Get phonaesthetic score for a name."""
-    from brandkit.generators.phonemes import phonaesthetic_score, is_pronounceable, analyze_rhythm
+    from brandkit.generators.phonemes import phonaesthetic_score, is_pronounceable, analyze_rhythm, score_name
 
     valid, result = validate_name(args.name)
     if not valid:
@@ -304,11 +305,15 @@ def cmd_score(args, out: Output):
         return 1
     name = result
 
+    # Determine markets
+    markets = args.markets if hasattr(args, 'markets') and args.markets else 'en_de'
+
     out.print(f"Scoring: {name}")
+    out.print(f"Markets: {markets}")
     out.print("=" * 50)
 
-    # Pronounceability check
-    is_ok, reason = is_pronounceable(name)
+    # Pronounceability check with markets
+    is_ok, reason = is_pronounceable(name, markets=markets)
     if not is_ok:
         out.print(f"\nPronounceability: FAIL ({reason})")
         out.print("Score: 0.00 (unpronounceable)")
@@ -316,7 +321,7 @@ def cmd_score(args, out: Output):
 
     out.print(f"\nPronounceability: PASS")
 
-    # Get detailed score
+    # Get detailed score with markets
     result = phonaesthetic_score(name, category=args.category)
 
     out.print(f"\nOverall Score: {result['score']:.3f} ({result['quality']})")
@@ -422,20 +427,227 @@ def cmd_list(args, out: Output):
     return 0
 
 
-def cmd_export(args, out: Output):
-    """Export database to JSON."""
+def cmd_tm_conflicts(args, out: Output):
+    """Show stored trademark conflicts for review."""
     from brandkit import get_db
+
+    db = get_db()
+
+    if args.name:
+        # Show conflicts for a specific name
+        matches = db.get_trademark_matches(args.name, region=args.region)
+        if not matches:
+            out.print(f"No trademark matches stored for '{args.name}'")
+            return 0
+
+        out.print(f"\nTrademark matches for '{args.name}':\n")
+        for m in matches:
+            classes = ', '.join(str(c) for c in m['match_classes']) if m['match_classes'] else 'N/A'
+            match_type = "EXACT" if m.get('is_exact') else "similar"
+            out.print(f"  [{m['region']}] {m['match_name']} ({match_type})")
+            out.print(f"      Serial: {m['match_serial'] or 'N/A'}")
+            out.print(f"      Classes: {classes}")
+            out.print(f"      Status: {m['match_status'] or 'N/A'}")
+            out.print("")
+    else:
+        # Show all names with stored conflicts
+        import sqlite3
+        conn = sqlite3.connect(db.db_path)
+        cursor = conn.execute("""
+            SELECT n.name, tm.region, COUNT(*) as match_count
+            FROM names n
+            JOIN trademark_matches tm ON n.id = tm.name_id
+            GROUP BY n.name, tm.region
+            ORDER BY n.name, tm.region
+        """)
+
+        rows = []
+        for row in cursor.fetchall():
+            rows.append([row[0], row[1], str(row[2])])
+
+        conn.close()
+
+        if not rows:
+            out.print("No trademark matches stored.")
+            return 0
+
+        out.table(['Name', 'Region', 'Matches'], rows, [20, 8, 10])
+        out.print(f"\nTotal: {len(rows)} entries")
+        out.print("\nUse 'brandkit tm-conflicts <name>' to see details.")
+
+    return 0
+
+
+def cmd_export(args, out: Output):
+    """Export database to JSON or Excel."""
+    from brandkit import get_db
+    import json as json_module
 
     db = get_db()
 
     output_path = args.output or 'brandkit_export.json'
 
-    json_str = db.export_json(output_path)
+    # Determine format from extension or flag
+    if output_path.endswith('.xlsx') or output_path.endswith('.xls') or getattr(args, 'excel', False):
+        # Excel export - clean format matching brand_names.xlsx
+        try:
+            import pandas as pd
+            import sqlite3
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill, Alignment
+            from openpyxl.utils.dataframe import dataframe_to_rows
 
-    if args.output:
-        out.success(f"Exported to {output_path}")
+            conn = sqlite3.connect(db.db_path)
+            df_raw = pd.read_sql_query('SELECT * FROM names ORDER BY score_phonaesthetic DESC', conn)
+            conn.close()
+
+            # Check pronounceability for each name
+            from brandkit.generators.phonemes import is_pronounceable
+
+            def check_pronounceable(name):
+                if pd.isna(name):
+                    return ''
+                is_ok, reason = is_pronounceable(str(name))
+                return 'OK' if is_ok else reason
+
+            # Create clean DataFrame with friendly column names
+            df = pd.DataFrame()
+            df['Name'] = df_raw['name']
+            df['Status'] = df_raw['status']
+            df['Score'] = df_raw['score_phonaesthetic'].round(3)
+            df['Quality'] = df_raw['quality_tier']
+
+            # Sub-scores
+            df['Consonant'] = df_raw['score_consonant'].round(2) if 'score_consonant' in df_raw else None
+            df['Vowel'] = df_raw['score_vowel'].round(2) if 'score_vowel' in df_raw else None
+            df['Fluency'] = df_raw['score_fluency'].round(2) if 'score_fluency' in df_raw else None
+            df['Rhythm'] = df_raw['score_rhythm'].round(2) if 'score_rhythm' in df_raw else None
+            df['Natural'] = df_raw['score_naturalness'].round(2) if 'score_naturalness' in df_raw else None
+            df['Cluster'] = df_raw['score_cluster_quality'].round(2) if 'score_cluster_quality' in df_raw else None
+            df['Ending'] = df_raw['score_ending_quality'].round(2) if 'score_ending_quality' in df_raw else None
+            df['Memory'] = df_raw['score_memorability'].round(2) if 'score_memorability' in df_raw else None
+
+            # Add pronounceability check
+            df['Pronounce'] = df_raw['name'].apply(check_pronounceable)
+
+            df['US TM'] = df_raw['us_conflict'].apply(lambda x: 'Yes' if x == 1 else 'No' if x == 0 else '')
+            df['EU TM'] = df_raw['eu_conflict'].apply(lambda x: 'Yes' if x == 1 else 'No' if x == 0 else '')
+
+            # Parse domains_available JSON to clean comma-separated list
+            def format_domains(d):
+                if pd.isna(d) or not d:
+                    return ''
+                try:
+                    data = json_module.loads(d) if isinstance(d, str) else d
+                    if isinstance(data, dict):
+                        available = [k for k, v in data.items() if v]
+                        return ', '.join(available) if available else ''
+                    elif isinstance(data, list):
+                        return ', '.join(str(x) for x in data)
+                    return str(data)
+                except:
+                    s = str(d) if d else ''
+                    return s.replace('[', '').replace(']', '').replace("'", '').replace('"', '')
+
+            df['Domains'] = df_raw['domains_available'].apply(format_domains)
+            df['Block Reason'] = df_raw['block_reason']
+
+            # Clean up output path
+            if not (output_path.endswith('.xlsx') or output_path.endswith('.xls')):
+                output_path = output_path.replace('.json', '.xlsx') if output_path.endswith('.json') else output_path + '.xlsx'
+
+            # Create workbook with formatting
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Brand Names"
+
+            # Define styles
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_font = Font(bold=True, color="FFFFFF")
+            blocked_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+            excellent_fill = PatternFill(start_color="006400", end_color="006400", fill_type="solid")
+            excellent_font = Font(color="FFFFFF")
+            good_fill = PatternFill(start_color="92D050", end_color="92D050", fill_type="solid")
+            conflict_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+            # Write data
+            for r_idx, row in enumerate(dataframe_to_rows(df, index=False, header=True), 1):
+                for c_idx, value in enumerate(row, 1):
+                    cell = ws.cell(row=r_idx, column=c_idx, value=value)
+
+                    # Header row formatting
+                    if r_idx == 1:
+                        cell.fill = header_fill
+                        cell.font = header_font
+                        cell.alignment = Alignment(horizontal='center')
+                    else:
+                        # Status column (B=2) - blocked = red
+                        if c_idx == 2 and value == 'blocked':
+                            cell.fill = blocked_fill
+
+                        # Quality column (D=4) - excellent = dark green, good = light green
+                        if c_idx == 4:
+                            if value == 'excellent':
+                                cell.fill = excellent_fill
+                                cell.font = excellent_font
+                            elif value == 'good':
+                                cell.fill = good_fill
+
+                        # Pronounce column (M=13) - not OK = orange
+                        if c_idx == 13 and value and value != 'OK':
+                            cell.fill = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid")
+
+                        # US TM column (N=14) - Yes = red (conflict)
+                        if c_idx == 14 and value == 'Yes':
+                            cell.fill = conflict_fill
+
+                        # EU TM column (O=15) - Yes = red (conflict)
+                        if c_idx == 15 and value == 'Yes':
+                            cell.fill = conflict_fill
+
+            # Set column widths (A-Q for 17 columns)
+            col_widths = {
+                'A': 15,  # Name
+                'B': 10,  # Status
+                'C': 7,   # Score
+                'D': 10,  # Quality
+                'E': 9,   # Consonant
+                'F': 7,   # Vowel
+                'G': 8,   # Fluency
+                'H': 7,   # Rhythm
+                'I': 8,   # Natural
+                'J': 8,   # Cluster
+                'K': 7,   # Ending
+                'L': 8,   # Memory
+                'M': 25,  # Pronounce
+                'N': 7,   # US TM
+                'O': 7,   # EU TM
+                'P': 22,  # Domains
+                'Q': 18,  # Block Reason
+            }
+            for col, width in col_widths.items():
+                ws.column_dimensions[col].width = width
+
+            # Add auto-filter (17 columns now)
+            ws.auto_filter.ref = f"A1:Q{len(df) + 1}"
+
+            # Freeze header row
+            ws.freeze_panes = "A2"
+
+            wb.save(output_path)
+            out.success(f"Exported {len(df)} names to {output_path}")
+
+        except ImportError as e:
+            out.error(f"Excel export requires pandas and openpyxl: pip install pandas openpyxl\n{e}")
+            return 1
     else:
-        print(json_str)
+        # JSON export
+        json_str = db.export_json(output_path)
+
+        if args.output:
+            out.success(f"Exported to {output_path}")
+        else:
+            print(json_str)
 
     return 0
 
@@ -534,7 +746,8 @@ def cmd_industries(args, out: Output):
 
 def _discover_accumulate(args, out: Output, kit, sim_checker, domain_checker, profiler,
                          min_score: float, min_quality: str, nice_profile: str,
-                         target_count: int, use_parallel: bool, max_concurrent: int):
+                         target_count: int, use_parallel: bool, max_concurrent: int,
+                         markets: str = 'en_de'):
     """
     Accumulate-then-validate discovery mode.
 
@@ -603,7 +816,7 @@ def _discover_accumulate(args, out: Output, kit, sim_checker, domain_checker, pr
                     for name in names:
                         name_str = get_name_str(name)
 
-                        is_ok, reason = is_pronounceable(name_str)
+                        is_ok, reason = is_pronounceable(name_str, markets=markets)
                         if not is_ok:
                             continue
 
@@ -781,7 +994,10 @@ def cmd_discover(args, out: Output):
     profiler.start()
 
     kit = BrandKit()
-    sim_checker = SimilarityChecker()
+
+    # Initialize similarity checker with markets parameter
+    markets = getattr(args, 'markets', 'en_de')
+    sim_checker = SimilarityChecker(markets=markets)
 
     # Initialize domain checker with parallel TLD checking if --parallel
     use_parallel = getattr(args, 'parallel', False)
@@ -817,7 +1033,7 @@ def cmd_discover(args, out: Output):
         total_saved, total_generated, all_viable = _discover_accumulate(
             args, out, kit, sim_checker, domain_checker, profiler,
             min_score, min_quality, nice_profile, target_count,
-            use_parallel, max_concurrent
+            use_parallel, max_concurrent, markets
         )
         profiler.stop()
         if args.profiling:
@@ -929,7 +1145,7 @@ def cmd_discover(args, out: Output):
                     name_str = get_name_str(name)
 
                     with profiler.stage("pronounceability"):
-                        is_ok, reason = is_pronounceable(name_str)
+                        is_ok, reason = is_pronounceable(name_str, markets=markets)
                     if not is_ok:
                         continue
 
@@ -1218,6 +1434,8 @@ Examples:
     p = subparsers.add_parser('score', aliases=['s'], help='Get phonaesthetic score')
     p.add_argument('name', help='Brand name to score')
     p.add_argument('--category', '-c', help='Category for fit scoring (tech, luxury, power, etc.)')
+    p.add_argument('--markets', choices=['en', 'de', 'en_de'], default='en_de',
+                   help='Target market(s) for scoring (default: en_de)')
     p.add_argument('--verbose', '-v', action='store_true', help='Show rhythm analysis')
 
     # --- stats ---
@@ -1235,6 +1453,11 @@ Examples:
     # --- export ---
     p = subparsers.add_parser('export', help='Export database to JSON')
     p.add_argument('--output', '-o', help='Output file path')
+
+    # --- tm-conflicts ---
+    p = subparsers.add_parser('tm-conflicts', aliases=['tmc'], help='Show trademark conflicts for review')
+    p.add_argument('name', nargs='?', help='Show conflicts for specific name')
+    p.add_argument('--region', '-r', choices=['US', 'EU'], help='Filter by region')
 
     # --- save ---
     p = subparsers.add_parser('save', help='Save a name to database')
@@ -1268,6 +1491,8 @@ Examples:
     p.add_argument('--top', '-t', type=int, default=30, help='Top candidates per batch (default: 30)')
     p.add_argument('--parallel', action='store_true', help='Enable parallel domain/trademark checking')
     p.add_argument('--max-concurrent', type=int, default=10, help='Max concurrent checks (default: 10)')
+    p.add_argument('--markets', choices=['en', 'de', 'en_de'], default='en_de',
+                   help='Target market(s) for similarity/pronounceability (default: en_de)')
     p.add_argument('--profiling', action='store_true', help='Enable profiling to identify bottlenecks')
     p.add_argument('--profile-output', help='Save profiling data to JSON file')
 
@@ -1312,6 +1537,7 @@ Examples:
         'stats': cmd_stats,
         'list': cmd_list,
         'export': cmd_export,
+        'tm-conflicts': cmd_tm_conflicts,
         'save': cmd_save,
         'block': cmd_block,
         'profiles': cmd_profiles,

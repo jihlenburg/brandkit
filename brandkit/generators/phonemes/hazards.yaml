@@ -848,3 +848,335 @@ market_notes:
   germany:
     - "Nazi-era terminology strictly regulated by law"
     - "Certain symbols are illegal"
+
+# =============================================================================
+# EN/DE Homophones and Minimal Pairs
+# =============================================================================
+# Words that sound identical or near-identical in English and German,
+# where one meaning is problematic. Critical for EN/DE focus groups.
+
+en_de_homophones:
+  # German words that sound like English vulgar terms
+  volk:
+    german_meaning: "people, nation"
+    english_sounds_like: "fuck (in some accents)"
+    severity: medium
+    note: "Especially problematic in UK English"
+
+  ficker:
+    german_meaning: "fucker (actual German vulgar)"
+    english_sounds_like: "fucker"
+    severity: critical
+
+  scheiß:
+    german_meaning: "shit"
+    english_sounds_like: "shice/scheiss"
+    severity: critical
+    note: "Cognate - vulgar in both"
+
+  wichser:
+    german_meaning: "masturbator (vulgar)"
+    english_sounds_like: "wixer"
+    severity: critical
+
+  # English words problematic for German speakers
+  beach:
+    english_meaning: "sandy shore"
+    german_sounds_like: "bitch (German pronunciation)"
+    severity: high
+    note: "Germans often pronounce 'ea' as short 'i'"
+
+  sheet:
+    english_meaning: "flat cloth/paper"
+    german_sounds_like: "shit (German vowel shortening)"
+    severity: high
+
+  bitch:
+    english_meaning: "female dog / vulgar"
+    german_pronunciation: "often unclear ea/i distinction"
+    severity: critical
+
+  piece:
+    english_meaning: "part, portion"
+    german_sounds_like: "piss (when mispronounced)"
+    severity: medium
+
+  focus:
+    english_meaning: "concentration"
+    german_sounds_like: "fuck us (German o→u shift)"
+    severity: medium
+
+  # German false friends with negative English connotations
+  bekommen:
+    german_meaning: "to receive"
+    english_sounds_like: "become (different meaning)"
+    severity: low
+    note: "Meaning confusion, not vulgar"
+
+  bad:
+    german_meaning: "bath"
+    english_sounds_like: "bad (negative)"
+    severity: low
+    note: "Brand perception issue"
+
+  hell:
+    german_meaning: "bright, light"
+    english_sounds_like: "hell"
+    severity: medium
+    note: "Religious connotation issue"
+
+  still:
+    german_meaning: "quiet, peaceful"
+    english_sounds_like: "still (same, but neutral)"
+    severity: low
+
+  fast:
+    german_meaning: "almost"
+    english_sounds_like: "fast (speed)"
+    severity: low
+    note: "Meaning confusion"
+
+  see:
+    german_meaning: "lake"
+    english_sounds_like: "see (vision)"
+    severity: low
+
+  # Phonetically similar pairs that cause confusion
+  rat:
+    german_meaning: "advice, council"
+    english_sounds_like: "rat (rodent)"
+    severity: medium
+    note: "Negative animal connotation"
+
+  art:
+    german_meaning: "type, kind"
+    english_sounds_like: "art (fine arts)"
+    severity: low
+    note: "No negative, but different meaning"
+
+  chef:
+    german_meaning: "boss"
+    english_sounds_like: "chef (cook)"
+    severity: low
+    note: "Role confusion"
+
+  billion:
+    german_meaning: "trillion (false friend)"
+    english_sounds_like: "billion"
+    severity: low
+    note: "Numeric confusion in business context"
+
+  # Words with TH-sounds (Germans struggle with th)
+  thing:
+    english_meaning: "object"
+    german_pronunciation: "often becomes 'sing' or 'ting'"
+    severity: low
+    note: "Pronunciation difficulty, not hazard"
+
+  three:
+    english_meaning: "number 3"
+    german_pronunciation: "often becomes 'sree' or 'tree'"
+    severity: low
+
+  this:
+    english_meaning: "demonstrative"
+    german_pronunciation: "often becomes 'zis' or 'dis'"
+    severity: low
+
+# =============================================================================
+# EN/DE Minimal Pairs for Pronunciation Testing
+# =============================================================================
+# These pairs differ by one sound that EN or DE speakers may confuse.
+# Useful for testing if a brand name is distinct enough.
+
+en_de_minimal_pairs:
+  # Vowel length confusion (critical in German)
+  short_long_vowels:
+    - [bit, beat]       # German speakers may not distinguish
+    - [sit, seat]
+    - [ship, sheep]
+    - [hit, heat]
+    - [fill, feel]
+    - [still, steel]
+    - [mill, meal]
+    - [live, leave]     # verb distinction
+    - [rich, reach]
+    - [wick, week]
+    - [bitch, beach]    # PROBLEMATIC
+    - [dip, deep]
+    - [slip, sleep]
+    - [chip, cheap]
+    - [grin, green]
+
+  # W/V confusion (Germans often swap these)
+  w_v_pairs:
+    - [wine, vine]
+    - [west, vest]
+    - [wet, vet]
+    - [wail, veil]
+    - [wary, vary]
+    - [worse, verse]
+    - [wiper, viper]
+    - [wow, vow]
+    - [wile, vile]
+
+  # TH/S/Z confusion
+  th_confusion:
+    - [think, sink]
+    - [thought, sought]
+    - [thick, sick]
+    - [thin, sin]
+    - [three, tree]
+    - [thing, ting]
+    - [breath, bress]   # German pronunciation
+    - [bath, bass]
+    - [path, pass]
+    - [math, mass]
+
+  # Final devoicing (German applies this automatically)
+  final_devoicing:
+    - [bed, bet]        # Germans may say 'bet' for both
+    - [bad, bat]
+    - [bud, but]
+    - [pig, pick]
+    - [bag, back]
+    - [dog, dock]
+    - [rib, rip]
+    - [robe, rope]
+    - [lobe, lope]
+    - [cub, cup]
+    - [hub, hup]
+    - [live, life]      # adjective vs noun
+    - [have, half]
+
+  # R-coloring (American vs German R)
+  r_variants:
+    - [art, at]         # German R doesn't color vowels
+    - [car, ca]
+    - [far, fa]
+    - [bar, ba]
+    - [star, sta]
+
+  # CH variations
+  ch_variants:
+    - [ache, ak]        # German 'ch' differs
+    - [tech, tek]
+    - [rich, rik]
+    - [such, suk]
+
+  # SCH/SH distinction
+  sch_sh:
+    - [ship, schip]     # German uses 'sch' for /ʃ/
+    - [shade, schade]
+    - [shell, schell]
+
+# =============================================================================
+# Phonetic Hazards Specific to EN/DE Markets
+# =============================================================================
+en_de_phonetic_hazards:
+  # Sounds that create EN/DE confusion
+  initial_st_sp:
+    note: "German pronounces initial st/sp as /ʃt/ and /ʃp/"
+    examples:
+      - "sport → shport in German"
+      - "start → shtart in German"
+      - "special → shpecial in German"
+    severity: low
+    hazard_type: "pronunciation_variant"
+
+  pf_initial:
+    note: "German /pf/ cluster is hard for English speakers"
+    examples:
+      - "Pferd (horse)"
+      - "Pflanze (plant)"
+      - "Pfennig (penny)"
+    severity: medium
+    hazard_type: "pronunciation_difficulty"
+
+  uvular_r:
+    note: "German R is uvular, English R is approximant"
+    examples:
+      - "Brand names with R may sound different"
+      - "Rot vs Red"
+    severity: low
+    hazard_type: "pronunciation_variant"
+
+  ich_ach_laut:
+    note: "German has two CH sounds: ich-Laut /ç/ and ach-Laut /x/"
+    examples:
+      - "ich, nicht, Licht → front CH"
+      - "Bach, Nacht, Dach → back CH"
+    severity: medium
+    hazard_type: "pronunciation_difficulty"
+
+  umlauts:
+    note: "ä, ö, ü have no English equivalents"
+    examples:
+      - "ä → often becomes 'e' for English speakers"
+      - "ö → often becomes 'er' or 'o'"
+      - "ü → often becomes 'oo' or 'ee'"
+    severity: medium
+    hazard_type: "pronunciation_difficulty"
+
+# =============================================================================
+# Combined EN/DE Hazard Patterns
+# =============================================================================
+en_de_patterns:
+  # Patterns that are problematic in BOTH markets
+  universal_avoid:
+    - regex: "[fp][aouüö][ck]"
+      reason: "Sounds like f*ck in both"
+      severity: critical
+
+    - regex: "sh[iy]t"
+      reason: "Sounds like shit in both"
+      severity: critical
+
+    - regex: "k[oö]t"
+      reason: "kot = feces in German"
+      severity: critical
+
+    - regex: "m[iy]st"
+      reason: "Mist = manure in German"
+      severity: high
+
+    - regex: "g[iy]ft"
+      reason: "Gift = poison in German"
+      severity: critical
+
+    - regex: "p[iy]ss?"
+      reason: "Vulgar in English"
+      severity: high
+
+    - regex: "a[fv]ter"
+      reason: "After = anus in German"
+      severity: critical
+
+    - regex: "d[iy][ck]+"
+      reason: "Dick = thick in German, vulgar in English"
+      severity: high
+
+    - regex: "sch[ei]+[sß]"
+      reason: "Scheiss = shit in German"
+      severity: critical
+
+    - regex: "ar[sc]h"
+      reason: "Arsch = ass in German"
+      severity: high
+
+  # Patterns that need locale-specific warnings
+  locale_specific:
+    - pattern: "th"
+      en_ok: true
+      de_warning: "German speakers may struggle with TH"
+      severity: low
+
+    - pattern: "pf"
+      de_ok: true
+      en_warning: "English speakers may struggle with PF"
+      severity: low
+
+    - pattern: "sch"
+      de_ok: true
+      en_warning: "May be mispronounced as 's-k' not 'sh'"
+      severity: low
