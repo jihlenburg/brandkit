@@ -8,6 +8,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Phonetic similarity scoring module (`brandkit/phonetic_similarity.py`):
+  - Soundex algorithm (USPTO standard)
+  - Double Metaphone for pronunciation-based matching
+  - Normalized Levenshtein for visual similarity
+  - Combined weighted scoring (Soundex 35%, Metaphone 40%, Levenshtein 25%)
+  - Risk level calculation based on trademark status (CRITICAL/HIGH/MEDIUM/LOW)
+- EU/German trademark law compliance module (`brandkit/eu_trademark_analysis.py`):
+  - German phonetic equivalents (ei/ai, v/f, sch/sh, umlauts)
+  - Related Nice classes (Dienstleistungsähnlichkeit) mapping
+  - Well-known marks (Bekannte Marken) database for Art. 8(5) EUTMR
+  - Conceptual similarity (begriffliche Ähnlichkeit) checking
+  - Comprehensive EU trademark conflict analysis
+- Database methods for risk assessment:
+  - `recalculate_trademark_risks()` - batch update existing matches
+  - `update_trademark_match_risk()` - update individual match
+  - `get_high_risk_matches()` - query CRITICAL/HIGH risk conflicts
+- `risk_level` and `phonetic_similarity` columns in trademark_matches table
+- Trademark match storage for conflict review:
+  - New `trademark_matches` table stores individual conflicting marks
+  - Stores: match name, serial number, Nice classes, status, similarity score
+  - Methods: `save_trademark_match()`, `save_trademark_matches_batch()`, `get_trademark_matches()`, `clear_trademark_matches()`
+- Memorability scoring based on cognitive psychology research:
+  - Optimal length (4-7 characters) bonus
+  - Syllable count factor (2-3 syllables optimal)
+  - Strong initial consonant detection
+  - Alliteration and assonance bonuses
+- CLI: Excel export now includes sub-scores and pronounceability:
+  - Consonant, Vowel, Fluency, Rhythm, Natural, Memorability columns
+  - Pronounceability check column with detailed failure reasons
+  - Color coding: pronounceability issues highlighted in orange
 - Versioning workflow documentation in CLAUDE.md
 - CLAUDE.md now tracked in git for consistent development guidelines
 - CLI: All generation methods now available (nordic, japanese, latin, celtic, celestial, blend)
@@ -62,6 +92,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cross-validation of threshold accuracy
 
 ### Changed
+- Database schema cleaned up - removed 7 legacy columns:
+  - Removed: `score`, `score_de`, `score_en`, `score_euphony`, `euipo_checked`, `euipo_matches`, `euipo_url`
+  - Added: `score_cluster_quality`, `score_ending_quality` (previously calculated but not stored)
+  - All phonaesthetic sub-scores now stored and exported
 - Quality thresholds scientifically recalibrated using empirical data:
   - Corpus: 134 excellent brands (Interbrand Top 100), 21 problematic, 57 neutral
   - Finding: Cohen's d = 0.41 (moderate separation), 77% overlap between categories
