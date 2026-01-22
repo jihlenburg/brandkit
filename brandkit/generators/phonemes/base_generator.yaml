@@ -126,7 +126,7 @@ memorability:
     memorable_endings:
       - ix
       - ex
-      - on
+      - "on"
       - ar
       - or
       - a

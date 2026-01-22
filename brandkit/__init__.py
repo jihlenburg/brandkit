@@ -144,6 +144,22 @@ from .config import (
 from .quality import filter_and_rank
 from .settings import get_setting
 
+from dataclasses import dataclass
+from typing import Optional, List, Any
+
+
+@dataclass
+class QualityFilterConfig:
+    """Configuration for post-generation quality filtering."""
+    enabled: bool
+    min_score: float
+    similarity_threshold: float
+    max_suffix_pct: float
+    max_prefix_pct: float
+    oversample: float
+    markets: str
+
+
 # =============================================================================
 # BrandKit Main Class
 # =============================================================================
@@ -291,6 +307,81 @@ class BrandKit:
             self._landmarks_gen = LandmarksGenerator()
         return self._landmarks_gen
 
+    # -------------------------------------------------------------------------
+    # Quality Filtering Helpers
+    # -------------------------------------------------------------------------
+
+    def _get_quality_config(self, kwargs: dict) -> QualityFilterConfig:
+        """
+        Extract and validate quality filter configuration from settings and kwargs.
+
+        Parameters are popped from kwargs to avoid passing them to generators.
+        """
+        gen_defaults = get_setting("generation.defaults", {}) or {}
+        quality_cfg = get_setting("quality_filter", {}) or {}
+
+        # Extract from kwargs (override) or config (default)
+        enabled = kwargs.pop('post_filter', quality_cfg.get("enabled"))
+        min_score = kwargs.pop('quality_min_score', quality_cfg.get("min_score"))
+        similarity = kwargs.pop('quality_similarity', quality_cfg.get("similarity_threshold"))
+        max_suffix = kwargs.pop('quality_max_suffix_pct', quality_cfg.get("max_suffix_pct"))
+        max_prefix = kwargs.pop('quality_max_prefix_pct', quality_cfg.get("max_prefix_pct"))
+        oversample = kwargs.pop('quality_oversample', quality_cfg.get("oversample"))
+        markets = kwargs.get('phonetic_markets', gen_defaults.get("markets"))
+
+        # Validate all required settings are present
+        if any(v is None for v in [enabled, min_score, similarity, max_suffix, max_prefix, oversample]):
+            raise ValueError("quality_filter settings must be set in app.yaml")
+        if markets is None:
+            raise ValueError("generation.defaults.markets must be set in app.yaml")
+
+        return QualityFilterConfig(
+            enabled=enabled,
+            min_score=min_score,
+            similarity_threshold=similarity,
+            max_suffix_pct=max_suffix,
+            max_prefix_pct=max_prefix,
+            oversample=oversample,
+            markets=markets,
+        )
+
+    def _apply_quality_filter(
+        self,
+        names: List[Any],
+        target_count: int,
+        config: QualityFilterConfig,
+    ) -> List[Any]:
+        """
+        Apply quality filtering to generated names if enabled.
+
+        Returns filtered names if config.enabled, otherwise returns names as-is.
+        """
+        if not config.enabled:
+            return names
+
+        return filter_and_rank(
+            names,
+            target_count=target_count,
+            markets=config.markets,
+            min_score=config.min_score,
+            similarity_threshold=config.similarity_threshold,
+            max_suffix_pct=config.max_suffix_pct,
+            max_prefix_pct=config.max_prefix_pct,
+        )
+
+    def _tag_method(self, names: List[Any], method: str) -> None:
+        """Tag names with their generation method (in-place)."""
+        for n in names:
+            if not hasattr(n, 'method') or not getattr(n, 'method', None):
+                try:
+                    setattr(n, 'method', method)
+                except Exception:
+                    pass
+
+    # -------------------------------------------------------------------------
+    # Generation
+    # -------------------------------------------------------------------------
+
     def generate(self,
                  count: int = None,
                  method: str = None,
@@ -334,6 +425,7 @@ class BrandKit:
             >>> names = kit.generate(count=5, method="llm",
             ...                      context="Solar panels")
         """
+        # Get defaults from config
         gen_defaults = get_setting("generation.defaults", {}) or {}
         if count is None:
             count = gen_defaults.get("count")
@@ -342,58 +434,34 @@ class BrandKit:
         if count is None or method is None:
             raise ValueError("generation.defaults must be set in app.yaml")
 
-        quality_cfg = get_setting("quality_filter", {}) or {}
-        quality_enabled = kwargs.pop('post_filter', None)
-        if quality_enabled is None:
-            quality_enabled = quality_cfg.get("enabled")
-        quality_min_score = kwargs.pop('quality_min_score', None)
-        if quality_min_score is None:
-            quality_min_score = quality_cfg.get("min_score")
-        quality_similarity = kwargs.pop('quality_similarity', None)
-        if quality_similarity is None:
-            quality_similarity = quality_cfg.get("similarity_threshold")
-        quality_max_suffix_pct = kwargs.pop('quality_max_suffix_pct', None)
-        if quality_max_suffix_pct is None:
-            quality_max_suffix_pct = quality_cfg.get("max_suffix_pct")
-        quality_max_prefix_pct = kwargs.pop('quality_max_prefix_pct', None)
-        if quality_max_prefix_pct is None:
-            quality_max_prefix_pct = quality_cfg.get("max_prefix_pct")
-        quality_oversample = kwargs.pop('quality_oversample', None)
-        if quality_oversample is None:
-            quality_oversample = quality_cfg.get("oversample")
+        # Get quality filter config (pops relevant kwargs)
+        qf = self._get_quality_config(kwargs)
+        raw_count = max(count, int(count * qf.oversample)) if qf.enabled else count
 
-        if (quality_enabled is None or quality_min_score is None or
-                quality_similarity is None or quality_max_suffix_pct is None or
-                quality_max_prefix_pct is None or quality_oversample is None):
-            raise ValueError("quality_filter settings must be set in app.yaml")
+        # Generator dispatch table for simple generators
+        simple_generators = {
+            "turkic": lambda: self._turkic_gen.generate(count=raw_count, **kwargs),
+            "greek": lambda: self._greek_gen.generate(count=raw_count, **kwargs),
+            "nordic": lambda: self._nordic_gen.generate(count=raw_count, **kwargs),
+            "japanese": lambda: self._get_japanese_gen().generate(count=raw_count, **kwargs),
+            "latin": lambda: self._get_latin_gen().generate(count=raw_count, **kwargs),
+            "celtic": lambda: self._get_celtic_gen().generate(count=raw_count, **kwargs),
+            "celestial": lambda: self._get_celestial_gen().generate(count=raw_count, **kwargs),
+            "animals": lambda: self._get_animals_gen().generate(count=raw_count, **kwargs),
+            "mythology": lambda: self._get_mythology_gen().generate(count=raw_count, **kwargs),
+            "landmarks": lambda: self._get_landmarks_gen().generate(count=raw_count, **kwargs),
+        }
 
-        quality_markets = kwargs.get('phonetic_markets')
-        if quality_markets is None:
-            quality_markets = gen_defaults.get("markets")
-        if quality_markets is None:
-            raise ValueError("generation.defaults.markets must be set in app.yaml")
+        # Handle simple generator methods via dispatch
+        if method in simple_generators:
+            names = simple_generators[method]()
+            return self._apply_quality_filter(names, count, qf)
 
-        raw_count = max(count, int(count * quality_oversample)) if quality_enabled else count
-
+        # Handle special cases that need custom logic
         if method == "rule_based":
             names = self._rule_gen.generate_batch(raw_count, **kwargs)
-            for n in names:
-                if not hasattr(n, 'method') or not getattr(n, 'method', None):
-                    try:
-                        setattr(n, 'method', 'rule_based')
-                    except Exception:
-                        pass
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
+            self._tag_method(names, 'rule_based')
+            return self._apply_quality_filter(names, count, qf)
 
         elif method == "llm":
             if not self._llm_gen:
@@ -402,180 +470,8 @@ class BrandKit:
             if result.error:
                 raise ValueError(f"LLM generation failed: {result.error}")
             names = result.names
-            for n in names:
-                if not hasattr(n, 'method') or not getattr(n, 'method', None):
-                    try:
-                        setattr(n, 'method', 'llm')
-                    except Exception:
-                        pass
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "turkic":
-            # Turkic-inspired names (VW/Nissan style)
-            names = self._turkic_gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "greek":
-            # Greek mythology-inspired names
-            names = self._greek_gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "nordic":
-            # Nordic/Scandinavian-inspired names
-            names = self._nordic_gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "japanese":
-            # Japanese-inspired names
-            gen = self._get_japanese_gen()
-            names = gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "latin":
-            # Latin/Romance-inspired names
-            gen = self._get_latin_gen()
-            names = gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "celtic":
-            # Celtic-inspired names
-            gen = self._get_celtic_gen()
-            names = gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "celestial":
-            # Celestial/Space-inspired names
-            gen = self._get_celestial_gen()
-            names = gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "animals":
-            # English wildlife-inspired names
-            gen = self._get_animals_gen()
-            names = gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "mythology":
-            # Modern mythology-inspired names
-            gen = self._get_mythology_gen()
-            names = gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
-
-        elif method == "landmarks":
-            # Landmarks and natural wonders-inspired names
-            gen = self._get_landmarks_gen()
-            names = gen.generate(count=raw_count, **kwargs)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
+            self._tag_method(names, 'llm')
+            return self._apply_quality_filter(names, count, qf)
 
         elif method == "blend":
             # Cross-culture blending
@@ -587,17 +483,7 @@ class BrandKit:
             archetype = kwargs.get('archetype')
             blender = CultureBlender(cultures)
             names = blender.blend(count=raw_count, archetype=archetype)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
-            return names
+            return self._apply_quality_filter(names, count, qf)
 
         elif method == "all":
             # Mix all cultural methods randomly
@@ -619,16 +505,8 @@ class BrandKit:
                     pass  # Skip failed methods
 
             random.shuffle(names)
-            if quality_enabled:
-                return filter_and_rank(
-                    names,
-                    target_count=count,
-                    markets=quality_markets,
-                    min_score=quality_min_score,
-                    similarity_threshold=quality_similarity,
-                    max_suffix_pct=quality_max_suffix_pct,
-                    max_prefix_pct=quality_max_prefix_pct,
-                )
+            if qf.enabled:
+                return self._apply_quality_filter(names, count, qf)
             return names[:count]
 
         else:

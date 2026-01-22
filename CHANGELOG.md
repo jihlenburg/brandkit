@@ -149,8 +149,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trademark risk assessment now considers class overlap when assigning risk levels
 - Trademark collision thresholds and status risk mapping now load from `strategies.yaml`
 - Quality filter similarity threshold now loads from `strategies.yaml`
+- [Claude] Refactored `BrandKit.generate()` to eliminate ~200 lines of repetitive code:
+  - Added `QualityFilterConfig` dataclass to encapsulate filter parameters
+  - Added `_get_quality_config()`, `_apply_quality_filter()`, `_tag_method()` helper methods
+  - Replaced 14 repetitive `filter_and_rank()` blocks with dispatch table pattern
+  - Method reduced from ~250 to ~90 lines with identical functionality
+
+### Added
+- [Claude] Extended test suite from 127 to 399 tests (+272 new tests):
+  - `test_brandkit.py` - BrandKit main class, generation methods, quality helpers
+  - `test_quality_filter.py` - filter_and_rank, Candidate dataclass, diversity selection
+  - `test_cultural_generators.py` - Japanese, Latin, Celtic, Celestial generators
+  - `test_phonaesthetics.py` - phonaesthetic scoring, pronounceability, rhythm analysis
+  - `test_memorability.py` - MemorabilityScorer, SyllableAnalyzer, archetype scoring
+  - `test_database.py` - BrandNameDB, status management, trademark checks
+  - `test_cli.py` - CLI commands, aliases, validation, output formatting
 
 ### Fixed
+- [Claude] Fixed YAML parsing bug in `base_generator.yaml` where `on` in `memorable_endings` was parsed as boolean `True` instead of string `"on"`
 - [Codex] Corrected invalid f-string escape in `brandkit/parallel.py`.
 - [Codex] Fixed indentation error in `brandkit/cli.py` that broke CLI execution.
 - [Codex] Expanded English sexual/profanity hazards and phonetic patterns to block names like “Orgesex” and “Pinis”.
