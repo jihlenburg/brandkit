@@ -23,6 +23,7 @@ from urllib.parse import quote_plus
 import http.client
 import ssl
 
+from settings import get_setting, resolve_path
 
 @dataclass
 class TrademarkResult:
@@ -72,10 +73,6 @@ class EUIPOChecker:
         print(result.search_url)  # Open in browser
     """
 
-    API_BASE = "api.euipo.europa.eu"
-    AUTH_URL = "euipo.europa.eu"
-    ESEARCH_URL = "https://euipo.europa.eu/eSearch/#basic/{query}"
-
     def __init__(self,
                  client_id: Optional[str] = None,
                  client_secret: Optional[str] = None,
@@ -90,18 +87,50 @@ class EUIPOChecker:
             cache_dir: Directory to cache results (default: ~/.cache/euipo)
             sandbox: Use sandbox environment for testing
         """
+        cfg = get_setting("trademark.euipo", {}) or {}
         self.client_id = client_id or os.environ.get('EUIPO_CLIENT_ID')
         self.client_secret = client_secret or os.environ.get('EUIPO_CLIENT_SECRET')
         self.sandbox = sandbox
+        self.api_base = cfg.get("api_base_sandbox") if sandbox else cfg.get("api_base")
+        self.auth_url = cfg.get("auth_url")
+        self.esearch_url = cfg.get("esearch_url")
+        self.request_timeout_seconds = cfg.get("request_timeout_seconds")
+        self.cache_ttl_seconds = cfg.get("cache_ttl_seconds")
+        self.token_expiry_leeway_seconds = cfg.get("token_expiry_leeway_seconds")
+        self.token_default_expires_seconds = cfg.get("token_default_expires_seconds")
+        self.api_limit = cfg.get("api_limit")
+        self.access_token_path = cfg.get("access_token_path")
+        self.trademark_search_path = cfg.get("trademark_search_path")
+        self.cache_hash_length = cfg.get("cache_hash_length")
 
-        if sandbox:
-            self.API_BASE = "api-sandbox.euipo.europa.eu"
+        if not self.api_base:
+            raise ValueError("trademark.euipo.api_base must be set in app.yaml")
+        if not self.auth_url:
+            raise ValueError("trademark.euipo.auth_url must be set in app.yaml")
+        if not self.esearch_url:
+            raise ValueError("trademark.euipo.esearch_url must be set in app.yaml")
+        if self.request_timeout_seconds is None:
+            raise ValueError("trademark.euipo.request_timeout_seconds must be set in app.yaml")
+        if self.cache_ttl_seconds is None:
+            raise ValueError("trademark.euipo.cache_ttl_seconds must be set in app.yaml")
+        if self.token_expiry_leeway_seconds is None:
+            raise ValueError("trademark.euipo.token_expiry_leeway_seconds must be set in app.yaml")
+        if self.token_default_expires_seconds is None:
+            raise ValueError("trademark.euipo.token_default_expires_seconds must be set in app.yaml")
+        if self.api_limit is None:
+            raise ValueError("trademark.euipo.api_limit must be set in app.yaml")
+        if self.cache_hash_length is None:
+            raise ValueError("trademark.euipo.cache_hash_length must be set in app.yaml")
+        if not self.access_token_path:
+            raise ValueError("trademark.euipo.access_token_path must be set in app.yaml")
+        if not self.trademark_search_path:
+            raise ValueError("trademark.euipo.trademark_search_path must be set in app.yaml")
 
         # Setup cache
         if cache_dir:
-            self.cache_dir = Path(cache_dir)
+            self.cache_dir = resolve_path(cache_dir)
         else:
-            self.cache_dir = Path.home() / ".cache" / "euipo"
+            self.cache_dir = resolve_path(cfg.get("cache_dir"))
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         self._access_token = None
@@ -112,22 +141,35 @@ class EUIPOChecker:
         """Check if API credentials are available"""
         return bool(self.client_id and self.client_secret)
 
-    def _get_cache_path(self, query: str) -> Path:
-        """Get cache file path for a query"""
-        query_hash = hashlib.md5(query.lower().encode()).hexdigest()[:12]
+    def _get_cache_path(self, query: str, nice_classes: list = None) -> Path:
+        """Get cache file path for a query and class filter"""
+        classes_key = "all"
+        if nice_classes:
+            classes_key = ",".join(str(c) for c in sorted(nice_classes))
+        key = f"{query.lower()}|{classes_key}|{self.api_base}"
+        query_hash = hashlib.md5(key.encode()).hexdigest()[:self.cache_hash_length]
         return self.cache_dir / f"{query_hash}.json"
 
-    def _load_from_cache(self, query: str) -> Optional[TrademarkResult]:
+    def _load_from_cache(self, query: str, nice_classes: list = None) -> Optional[TrademarkResult]:
         """Load cached result if available and fresh (< 24h)"""
-        cache_path = self._get_cache_path(query)
+        cache_path = self._get_cache_path(query, nice_classes)
         if not cache_path.exists():
             return None
 
         try:
             data = json.loads(cache_path.read_text())
-            # Check if cache is fresh (24 hours)
-            if time.time() - data.get('timestamp', 0) > 86400:
+            if time.time() - data.get('timestamp', 0) > self.cache_ttl_seconds:
                 return None
+
+            # Ensure class filter matches
+            if data.get('nice_classes') is not None:
+                cached_classes = data.get('nice_classes')
+                if nice_classes is None:
+                    if cached_classes != "all":
+                        return None
+                else:
+                    if cached_classes != sorted(nice_classes):
+                        return None
 
             matches = [TrademarkMatch(**m) for m in data.get('matches', [])]
             return TrademarkResult(
@@ -141,9 +183,9 @@ class EUIPOChecker:
         except (json.JSONDecodeError, KeyError):
             return None
 
-    def _save_to_cache(self, result: TrademarkResult):
+    def _save_to_cache(self, result: TrademarkResult, nice_classes: list = None):
         """Save result to cache"""
-        cache_path = self._get_cache_path(result.query)
+        cache_path = self._get_cache_path(result.query, nice_classes)
         data = {
             'query': result.query,
             'found': result.found,
@@ -161,6 +203,7 @@ class EUIPOChecker:
                 for m in result.matches
             ],
             'search_url': result.search_url,
+            'nice_classes': sorted(nice_classes) if nice_classes else "all",
             'timestamp': time.time()
         }
         cache_path.write_text(json.dumps(data, indent=2))
@@ -171,13 +214,14 @@ class EUIPOChecker:
             return None
 
         # Return cached token if still valid
-        if self._access_token and time.time() < self._token_expiry - 60:
+        if self._access_token and time.time() < self._token_expiry - self.token_expiry_leeway_seconds:
             return self._access_token
 
         try:
             conn = http.client.HTTPSConnection(
-                self.AUTH_URL,
-                context=ssl.create_default_context()
+                self.auth_url,
+                context=ssl.create_default_context(),
+                timeout=self.request_timeout_seconds
             )
 
             # Client credentials grant
@@ -193,7 +237,7 @@ class EUIPOChecker:
 
             conn.request(
                 "POST",
-                "/cas-server-webapp/oidc/accessToken",
+                self.access_token_path,
                 payload,
                 headers
             )
@@ -202,7 +246,7 @@ class EUIPOChecker:
             if response.status == 200:
                 data = json.loads(response.read().decode())
                 self._access_token = data.get('access_token')
-                expires_in = data.get('expires_in', 3600)
+                expires_in = data.get('expires_in', self.token_default_expires_seconds)
                 self._token_expiry = time.time() + expires_in
                 return self._access_token
 
@@ -231,8 +275,9 @@ class EUIPOChecker:
 
         try:
             conn = http.client.HTTPSConnection(
-                self.API_BASE,
-                context=ssl.create_default_context()
+                self.api_base,
+                context=ssl.create_default_context(),
+                timeout=self.request_timeout_seconds
             )
 
             # RSQL query for verbal element (case-insensitive search)
@@ -253,7 +298,7 @@ class EUIPOChecker:
 
             conn.request(
                 "GET",
-                f"/trademark-search/trademarks?query={encoded_query}&limit=20",
+                f"{self.trademark_search_path}?query={encoded_query}&limit={self.api_limit}",
                 headers=headers
             )
 
@@ -351,7 +396,7 @@ class EUIPOChecker:
     def _generate_esearch_url(self, query: str) -> str:
         """Generate eSearch URL for manual checking"""
         encoded = quote_plus(query)
-        return self.ESEARCH_URL.format(query=encoded)
+        return self.esearch_url.format(query=encoded)
 
     def check(self, name: str, nice_classes: list = None, use_cache: bool = True) -> TrademarkResult:
         """
@@ -365,9 +410,9 @@ class EUIPOChecker:
         Returns:
             TrademarkResult with search results
         """
-        # Check cache first (note: cache doesn't distinguish by class filter)
+        # Check cache first
         if use_cache:
-            cached = self._load_from_cache(name)
+            cached = self._load_from_cache(name, nice_classes)
             if cached:
                 return cached
 
@@ -385,7 +430,7 @@ class EUIPOChecker:
 
         # Cache result
         if use_cache and not result.error:
-            self._save_to_cache(result)
+            self._save_to_cache(result, nice_classes)
 
         return result
 
@@ -490,8 +535,11 @@ if __name__ == '__main__':
             print(f"Manual check: {result.search_url}")
 
             if result.matches:
+                top_matches = get_setting("trademark.cli_top_matches")
+                if top_matches is None:
+                    raise ValueError("trademark.cli_top_matches must be set in app.yaml")
                 print("\nTop matches:")
-                for m in result.matches[:5]:
+                for m in result.matches[:top_matches]:
                     status_emoji = "✓" if m.status == "REGISTERED" else "○"
                     print(f"  {status_emoji} {m.name} ({m.status})")
                     if m.applicant:

@@ -493,6 +493,12 @@ def load_industries() -> IndustriesConfig:
 
 
 @lru_cache(maxsize=1)
+def load_rule_based_config() -> Dict[str, Any]:
+    """Load rule-based generator configuration."""
+    return _load_yaml('rule_based.yaml')
+
+
+@lru_cache(maxsize=1)
 def load_strategies() -> StrategiesConfig:
     """Load generation strategies configuration."""
     raw = _load_yaml('strategies.yaml')
@@ -525,6 +531,7 @@ def reload_configs():
     load_phonaesthemes.cache_clear()
     load_hazards.cache_clear()
     load_industries.cache_clear()
+    load_rule_based_config.cache_clear()
 
 
 def get_all_cultures() -> Dict[str, PhonemeConfig]:
@@ -962,7 +969,8 @@ def score_name(name: str, strategies: StrategiesConfig = None,
 
     # === PHASE 2: BASIC SCORING ===
     scoring = strategies.scoring
-    basic_score = 0.6  # Base score for pronounceable names
+    basic_cfg = scoring.get("basic", {})
+    basic_score = float(basic_cfg.get("base_score"))
 
     # Length scoring
     length_params = scoring.get('length', {})
@@ -972,27 +980,39 @@ def score_name(name: str, strategies: StrategiesConfig = None,
     abs_min = length_params.get('absolute_min', 4)
     abs_max = length_params.get('absolute_max', 9)
 
+    length_basic = basic_cfg.get("length", {})
     if name_len < abs_min:
-        basic_score -= 0.2
+        basic_score += float(length_basic.get("too_short_penalty"))
     elif name_len > abs_max:
-        basic_score -= 0.15
+        basic_score += float(length_basic.get("too_long_penalty"))
     elif ideal_min <= name_len <= ideal_max:
-        basic_score += 0.1
+        basic_score += float(length_basic.get("ideal_bonus"))
 
     # Penalize double vowels (still awkward even if pronounceable)
-    for v in 'aeiou':
+    double_vowel_penalty = float(basic_cfg.get("double_vowel_penalty"))
+    double_vowel_chars = basic_cfg.get("double_vowel_chars")
+    if double_vowel_chars is None:
+        raise ValueError("scoring.basic.double_vowel_chars must be set in strategies.yaml")
+    for v in double_vowel_chars:
         if v + v in name_lower:
-            basic_score -= 0.15
+            basic_score += double_vowel_penalty
 
     # Reward strong openings
-    if name_lower[0] in 'kptbdgvrstlm':
-        basic_score += 0.05
+    strong_start = basic_cfg.get("strong_start", {})
+    strong_chars = strong_start.get("chars", "")
+    strong_bonus = float(strong_start.get("bonus"))
+    if name_lower[0] in strong_chars:
+        basic_score += strong_bonus
 
     # Reward clean endings
-    if name_lower[-1] in 'aeiox':
-        basic_score += 0.05
-    elif name_lower[-2:] in {'us', 'is', 'on', 'an', 'ar', 'or', 'er', 'ix', 'ex'}:
-        basic_score += 0.05
+    good_endings = basic_cfg.get("good_endings", {})
+    end_chars = good_endings.get("chars", "")
+    end_sequences = set(good_endings.get("sequences", []))
+    end_bonus = float(good_endings.get("bonus"))
+    if name_lower[-1] in end_chars:
+        basic_score += end_bonus
+    elif name_lower[-2:] in end_sequences:
+        basic_score += end_bonus
 
     basic_score = min(max(basic_score, 0.0), 1.0)
 
@@ -1001,7 +1021,10 @@ def score_name(name: str, strategies: StrategiesConfig = None,
     phon_score = phon_result['score']
 
     # Combine: 40% basic, 60% phonaesthetic
-    final_score = basic_score * 0.4 + phon_score * 0.6
+    combine = basic_cfg.get("combine_weights", {})
+    basic_weight = float(combine.get("basic"))
+    phon_weight = float(combine.get("phonaesthetic"))
+    final_score = basic_score * basic_weight + phon_score * phon_weight
 
     # === PHASE 4: MARKET-SPECIFIC ADJUSTMENTS ===
     market_weights = strategies.get_market_weights(markets)
@@ -1215,7 +1238,9 @@ def analyze_rhythm(name: str, strategies: StrategiesConfig = None) -> Dict[str, 
 
     # Calculate rhythm score from config
     stress_patterns = rhythm_config.get('stress_patterns', {})
-    rhythm_score = 0.5  # Default
+    rhythm_score = rhythm_config.get('default_score')
+    if rhythm_score is None:
+        raise ValueError("rhythm.default_score must be set in strategies.yaml")
 
     # Look up score in config
     for category, patterns in stress_patterns.items():
@@ -1315,26 +1340,43 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
     scores = {}
 
     # === CONSONANT QUALITY ===
-    consonant_config = config.get('consonant_scores', {})
+    consonant_config = config.get('consonant_scores')
+    if not consonant_config:
+        raise ValueError("phonaesthetic_quality.consonant_scores must be set in strategies.yaml")
 
-    # Pleasant consonants (l, m, n, s, r)
-    pleasant_cons = set(consonant_config.get('pleasant', {}).get('consonants', ['l', 'm', 'n', 's', 'r']))
-    pleasant_bonus = consonant_config.get('pleasant', {}).get('score_bonus', 0.02)
+    pleasant_cfg = consonant_config.get('pleasant')
+    if not pleasant_cfg:
+        raise ValueError("phonaesthetic_quality.consonant_scores.pleasant must be set in strategies.yaml")
+    pleasant_cons = set(pleasant_cfg.get('consonants', []))
+    pleasant_bonus = pleasant_cfg.get('score_bonus')
 
-    # Powerful consonants (plosives)
-    powerful_cons = set(consonant_config.get('powerful', {}).get('consonants', ['k', 't', 'p', 'b', 'd', 'g']))
-    powerful_bonus = consonant_config.get('powerful', {}).get('score_bonus', 0.01)
+    powerful_cfg = consonant_config.get('powerful')
+    if not powerful_cfg:
+        raise ValueError("phonaesthetic_quality.consonant_scores.powerful must be set in strategies.yaml")
+    powerful_cons = set(powerful_cfg.get('consonants', []))
+    powerful_bonus = powerful_cfg.get('score_bonus')
 
-    # Awkward consonants
-    awkward_cons = set(consonant_config.get('awkward', {}).get('consonants', ['x', 'z', 'q']))
-    awkward_penalty = consonant_config.get('awkward', {}).get('score_penalty', -0.03)
+    awkward_cfg = consonant_config.get('awkward')
+    if not awkward_cfg:
+        raise ValueError("phonaesthetic_quality.consonant_scores.awkward must be set in strategies.yaml")
+    awkward_cons = set(awkward_cfg.get('consonants', []))
+    awkward_penalty = awkward_cfg.get('score_penalty')
 
-    # Avoid patterns
-    avoid_patterns = consonant_config.get('avoid', {}).get('patterns', ['zh', 'dj'])
-    avoid_penalty = consonant_config.get('avoid', {}).get('score_penalty', -0.05)
+    avoid_cfg = consonant_config.get('avoid')
+    if not avoid_cfg:
+        raise ValueError("phonaesthetic_quality.consonant_scores.avoid must be set in strategies.yaml")
+    avoid_patterns = avoid_cfg.get('patterns', [])
+    avoid_penalty = avoid_cfg.get('score_penalty')
 
-    # Calculate consonant score
-    cons_score = 0.5  # Base
+    if pleasant_bonus is None or powerful_bonus is None or awkward_penalty is None or avoid_penalty is None:
+        raise ValueError("consonant score bonuses/penalties must be set in strategies.yaml")
+
+    base_scores = config.get('base_scores')
+    if not base_scores:
+        raise ValueError("phonaesthetic_quality.base_scores must be set in strategies.yaml")
+    cons_score = base_scores.get('consonant')
+    if cons_score is None:
+        raise ValueError("phonaesthetic_quality.base_scores.consonant must be set in strategies.yaml")
     pleasant_count = sum(1 for c in name_lower if c in pleasant_cons)
     powerful_count = sum(1 for c in name_lower if c in powerful_cons)
     awkward_count = sum(1 for c in name_lower if c in awkward_cons)
@@ -1357,18 +1399,34 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
     }
 
     # === VOWEL QUALITY ===
-    vowel_config = config.get('vowel_scores', {})
+    vowel_config = config.get('vowel_scores')
+    if not vowel_config:
+        raise ValueError("phonaesthetic_quality.vowel_scores must be set in strategies.yaml")
 
-    front_vowels = set(vowel_config.get('front', {}).get('vowels', ['e', 'i']))
-    front_bonus = vowel_config.get('front', {}).get('score_bonus', 0.02)
+    front_cfg = vowel_config.get('front')
+    if not front_cfg:
+        raise ValueError("phonaesthetic_quality.vowel_scores.front must be set in strategies.yaml")
+    front_vowels = set(front_cfg.get('vowels', []))
+    front_bonus = front_cfg.get('score_bonus')
 
-    back_vowels = set(vowel_config.get('back', {}).get('vowels', ['o', 'u']))
-    back_bonus = vowel_config.get('back', {}).get('score_bonus', 0.0)
+    back_cfg = vowel_config.get('back')
+    if not back_cfg:
+        raise ValueError("phonaesthetic_quality.vowel_scores.back must be set in strategies.yaml")
+    back_vowels = set(back_cfg.get('vowels', []))
+    back_bonus = back_cfg.get('score_bonus')
 
-    central_vowels = set(vowel_config.get('central', {}).get('vowels', ['a']))
-    central_bonus = vowel_config.get('central', {}).get('score_bonus', 0.01)
+    central_cfg = vowel_config.get('central')
+    if not central_cfg:
+        raise ValueError("phonaesthetic_quality.vowel_scores.central must be set in strategies.yaml")
+    central_vowels = set(central_cfg.get('vowels', []))
+    central_bonus = central_cfg.get('score_bonus')
 
-    vowel_score = 0.5  # Base
+    if front_bonus is None or back_bonus is None or central_bonus is None:
+        raise ValueError("vowel score bonuses must be set in strategies.yaml")
+
+    vowel_score = base_scores.get('vowel')
+    if vowel_score is None:
+        raise ValueError("phonaesthetic_quality.base_scores.vowel must be set in strategies.yaml")
     front_count = sum(1 for c in name_lower if c in front_vowels)
     back_count = sum(1 for c in name_lower if c in back_vowels)
     central_count = sum(1 for c in name_lower if c in central_vowels)
@@ -1386,21 +1444,32 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
     }
 
     # === PROCESSING FLUENCY ===
-    fluency_config = config.get('fluency', {})
-    fluency_score = 0.5  # Base
+    fluency_config = config.get('fluency')
+    if not fluency_config:
+        raise ValueError("phonaesthetic_quality.fluency must be set in strategies.yaml")
+    fluency_score = base_scores.get('fluency')
+    if fluency_score is None:
+        raise ValueError("phonaesthetic_quality.base_scores.fluency must be set in strategies.yaml")
 
     # CV ratio
-    cv_config = fluency_config.get('cv_ratio', {})
-    vowels_all = set('aeiou')
+    cv_config = fluency_config.get('cv_ratio')
+    if not cv_config:
+        raise ValueError("phonaesthetic_quality.fluency.cv_ratio must be set in strategies.yaml")
+    vowel_chars = fluency_config.get('vowel_chars')
+    if not vowel_chars:
+        raise ValueError("phonaesthetic_quality.fluency.vowel_chars must be set in strategies.yaml")
+    vowels_all = set(vowel_chars)
     n_vowels = sum(1 for c in name_lower if c in vowels_all)
     n_consonants = sum(1 for c in name_lower if c.isalpha() and c not in vowels_all)
 
     if n_vowels > 0:
         cv_ratio = n_consonants / n_vowels
-        ideal_min = cv_config.get('ideal_min', 0.8)
-        ideal_max = cv_config.get('ideal_max', 1.5)
-        ratio_bonus = cv_config.get('bonus', 0.05)
-        ratio_penalty = cv_config.get('penalty', -0.05)
+        ideal_min = cv_config.get('ideal_min')
+        ideal_max = cv_config.get('ideal_max')
+        ratio_bonus = cv_config.get('bonus')
+        ratio_penalty = cv_config.get('penalty')
+        if None in (ideal_min, ideal_max, ratio_bonus, ratio_penalty):
+            raise ValueError("phonaesthetic_quality.fluency.cv_ratio values must be set in strategies.yaml")
 
         if ideal_min <= cv_ratio <= ideal_max:
             fluency_score += ratio_bonus
@@ -1412,18 +1481,27 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
         details['cv_ratio'] = "no vowels"
 
     # Mild repetition bonus
-    repetition_config = fluency_config.get('mild_repetition', {})
-    for pattern_info in repetition_config.get('patterns', []):
+    repetition_config = fluency_config.get('mild_repetition')
+    if not repetition_config:
+        raise ValueError("phonaesthetic_quality.fluency.mild_repetition must be set in strategies.yaml")
+    repetition_patterns = repetition_config.get('patterns')
+    if repetition_patterns is None:
+        raise ValueError("phonaesthetic_quality.fluency.mild_repetition.patterns must be set in strategies.yaml")
+    for pattern_info in repetition_patterns:
         pattern = pattern_info.get('pattern', '')
         bonus = pattern_info.get('bonus', 0)
         if pattern and re.search(pattern, name_lower):
             fluency_score += bonus
 
     # CV alternation
-    cv_alt_config = fluency_config.get('cv_alternation', {})
+    cv_alt_config = fluency_config.get('cv_alternation')
+    if not cv_alt_config:
+        raise ValueError("phonaesthetic_quality.fluency.cv_alternation must be set in strategies.yaml")
     cv_pattern = _get_cv_pattern(name)
-    cv_alt_patterns = cv_alt_config.get('patterns', ['CVCV', 'CVCVC', 'VCVCV'])
-    cv_alt_bonus = cv_alt_config.get('bonus', 0.03)
+    cv_alt_patterns = cv_alt_config.get('patterns')
+    cv_alt_bonus = cv_alt_config.get('bonus')
+    if cv_alt_patterns is None or cv_alt_bonus is None:
+        raise ValueError("phonaesthetic_quality.fluency.cv_alternation values must be set in strategies.yaml")
 
     if cv_pattern in cv_alt_patterns:
         fluency_score += cv_alt_bonus
@@ -1435,10 +1513,17 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
     scores['fluency'] = fluency_score
 
     # === PHONOTACTIC NATURALNESS ===
-    naturalness_config = config.get('naturalness', {})
-    naturalness_score = 0.5  # Base
+    naturalness_config = config.get('naturalness')
+    if not naturalness_config:
+        raise ValueError("phonaesthetic_quality.naturalness must be set in strategies.yaml")
+    naturalness_score = base_scores.get('naturalness')
+    if naturalness_score is None:
+        raise ValueError("phonaesthetic_quality.base_scores.naturalness must be set in strategies.yaml")
 
-    for pattern_info in naturalness_config.get('natural_patterns', []):
+    natural_patterns = naturalness_config.get('natural_patterns')
+    if natural_patterns is None:
+        raise ValueError("phonaesthetic_quality.naturalness.natural_patterns must be set in strategies.yaml")
+    for pattern_info in natural_patterns:
         pattern = pattern_info.get('pattern', '')
         bonus = pattern_info.get('bonus', 0)
         if pattern and re.search(pattern, name_lower):
@@ -1454,12 +1539,18 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
 
     # === CLUSTER QUALITY ===
     # Penalize harsh consonant clusters even if pronounceable
-    cluster_config = config.get('cluster_quality', {})
-    cluster_score = 0.6  # Base score
+    cluster_config = config.get('cluster_quality')
+    if not cluster_config:
+        raise ValueError("phonaesthetic_quality.cluster_quality must be set in strategies.yaml")
+    cluster_score = base_scores.get('cluster_quality')
+    if cluster_score is None:
+        raise ValueError("phonaesthetic_quality.base_scores.cluster_quality must be set in strategies.yaml")
 
     # Check for harsh clusters
-    harsh_clusters = cluster_config.get('harsh_clusters', ['sph', 'gry', 'bry', 'scr', 'spr'])
-    penalty_per_cluster = cluster_config.get('penalty_per_cluster', -0.05)
+    harsh_clusters = cluster_config.get('harsh_clusters')
+    penalty_per_cluster = cluster_config.get('penalty_per_cluster')
+    if harsh_clusters is None or penalty_per_cluster is None:
+        raise ValueError("phonaesthetic_quality.cluster_quality.harsh_clusters/penalty_per_cluster must be set in strategies.yaml")
 
     harsh_found = []
     for cluster in harsh_clusters:
@@ -1468,8 +1559,12 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
             harsh_found.append(cluster)
 
     # Check for triple consonants (e.g., "lll", "nnn")
-    triple_penalty = cluster_config.get('triple_consonant_penalty', -0.08)
-    consonants_str = 'bcdfghjklmnpqrstvwxyz'
+    triple_penalty = cluster_config.get('triple_consonant_penalty')
+    if triple_penalty is None:
+        raise ValueError("phonaesthetic_quality.cluster_quality.triple_consonant_penalty must be set in strategies.yaml")
+    consonants_str = cluster_config.get('consonant_chars')
+    if not consonants_str:
+        raise ValueError("phonaesthetic_quality.cluster_quality.consonant_chars must be set in strategies.yaml")
     triple_cons_found = []
     for c in consonants_str:
         if c * 3 in name_lower:
@@ -1485,18 +1580,26 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
 
     # === ENDING QUALITY ===
     # Good endings enhance memorability, bad ones detract
-    ending_config = config.get('ending_quality', {})
-    ending_score = 0.5  # Base score
+    ending_config = config.get('ending_quality')
+    if not ending_config:
+        raise ValueError("phonaesthetic_quality.ending_quality must be set in strategies.yaml")
+    ending_score = base_scores.get('ending_quality')
+    if ending_score is None:
+        raise ValueError("phonaesthetic_quality.base_scores.ending_quality must be set in strategies.yaml")
 
-    good_endings = ending_config.get('good_endings', {})
-    good_bonus = ending_config.get('good_bonus', 0.04)
-    bad_endings = ending_config.get('bad_endings', [])
-    bad_penalty = ending_config.get('bad_penalty', -0.06)
+    good_endings = ending_config.get('good_endings')
+    good_bonus = ending_config.get('good_bonus')
+    bad_endings = ending_config.get('bad_endings')
+    bad_penalty = ending_config.get('bad_penalty')
+    if None in (good_endings, good_bonus, bad_endings, bad_penalty):
+        raise ValueError("phonaesthetic_quality.ending_quality fields must be set in strategies.yaml")
 
     # Check good endings (tier1, tier2, tier3)
-    tier1 = good_endings.get('tier1', ['a', 'o', 'ia', 'io'])
-    tier2 = good_endings.get('tier2', ['is', 'us', 'on', 'an', 'or', 'er'])
-    tier3 = good_endings.get('tier3', ['ix', 'ex', 'ax'])
+    tier1 = good_endings.get('tier1')
+    tier2 = good_endings.get('tier2')
+    tier3 = good_endings.get('tier3')
+    if tier1 is None or tier2 is None or tier3 is None:
+        raise ValueError("phonaesthetic_quality.ending_quality.good_endings tiers must be set in strategies.yaml")
 
     # Ensure all endings are strings and sort by length (longer first for specificity)
     all_good_endings = [str(e) for e in tier1 + tier2 + tier3 if e]
@@ -1533,7 +1636,10 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
         if preferred:
             fit_count = sum(1 for c in name_lower if c in preferred)
             fit_ratio = fit_count / len(name_lower) if name_lower else 0
-            scores['category_fit'] = min(fit_ratio * 2, 1.0)  # Scale up
+            category_fit_scale = config.get('category_fit_scale')
+            if category_fit_scale is None:
+                raise ValueError("phonaesthetic_quality.category_fit_scale must be set in strategies.yaml")
+            scores['category_fit'] = min(fit_ratio * category_fit_scale, 1.0)
             details['category_fit'] = f"{category}: {fit_count} matching sounds"
 
     # === MEMORABILITY ===
@@ -1542,34 +1648,53 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
     # - Strong initial consonants create distinctiveness
     # - 2-3 syllables is easiest to remember
     # - Repetition/alliteration aids encoding
-    memorability_score = 0.5  # Base
+    memorability_cfg = config.get('memorability')
+    if not memorability_cfg:
+        raise ValueError("phonaesthetic_quality.memorability must be set in strategies.yaml")
+    memorability_score = base_scores.get('memorability')
+    if memorability_score is None:
+        raise ValueError("phonaesthetic_quality.base_scores.memorability must be set in strategies.yaml")
 
     # Length factor: optimal 4-7 characters
     name_len = len(name_lower)
-    if 4 <= name_len <= 7:
-        memorability_score += 0.15  # Optimal length
-    elif name_len <= 3:
-        memorability_score += 0.05  # Very short - easy but maybe too simple
-    elif name_len <= 9:
-        memorability_score += 0.08  # Acceptable
-    else:
-        memorability_score -= 0.05  # Too long
+    length_cfg = memorability_cfg.get('length')
+    if not length_cfg:
+        raise ValueError("phonaesthetic_quality.memorability.length must be set in strategies.yaml")
+    if length_cfg:
+        if length_cfg.get('optimal_min') <= name_len <= length_cfg.get('optimal_max'):
+            memorability_score += length_cfg.get('bonus_optimal', 0)
+        elif name_len <= length_cfg.get('very_short_max'):
+            memorability_score += length_cfg.get('bonus_very_short', 0)
+        elif name_len <= length_cfg.get('acceptable_max'):
+            memorability_score += length_cfg.get('bonus_acceptable', 0)
+        else:
+            memorability_score += length_cfg.get('penalty_too_long', 0)
 
     # Syllable count: 2-3 is optimal
     syllable_count = rhythm_info.get('syllable_count', 2)
-    if 2 <= syllable_count <= 3:
-        memorability_score += 0.12
-    elif syllable_count == 1:
-        memorability_score += 0.05  # Very short
-    elif syllable_count == 4:
-        memorability_score += 0.03  # Acceptable
-    else:
-        memorability_score -= 0.05  # Too many syllables
+    syll_cfg = memorability_cfg.get('syllables')
+    if not syll_cfg:
+        raise ValueError("phonaesthetic_quality.memorability.syllables must be set in strategies.yaml")
+    if syll_cfg:
+        if syll_cfg.get('optimal_min') <= syllable_count <= syll_cfg.get('optimal_max'):
+            memorability_score += syll_cfg.get('bonus_optimal', 0)
+        elif syllable_count == 1:
+            memorability_score += syll_cfg.get('bonus_single', 0)
+        elif syllable_count == 4:
+            memorability_score += syll_cfg.get('bonus_four', 0)
+        else:
+            memorability_score += syll_cfg.get('penalty_too_many', 0)
 
     # Strong initial consonant (plosives, fricatives)
-    strong_initials = set('bcdgkptvf')
+    strong_initials_cfg = memorability_cfg.get('strong_initials')
+    if not strong_initials_cfg:
+        raise ValueError("phonaesthetic_quality.memorability.strong_initials must be set in strategies.yaml")
+    strong_initials = set(strong_initials_cfg)
+    strong_initial_bonus = memorability_cfg.get('strong_initial_bonus')
+    if strong_initial_bonus is None:
+        raise ValueError("phonaesthetic_quality.memorability.strong_initial_bonus must be set in strategies.yaml")
     if name_lower and name_lower[0] in strong_initials:
-        memorability_score += 0.08
+        memorability_score += strong_initial_bonus
 
     # Alliteration bonus (repeated initial sounds within word)
     syllables = rhythm_info.get('syllables', [])
@@ -1577,17 +1702,26 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
     if len(syllables) >= 2:
         first_sounds = [s[0] for s in syllables if s]
         if len(first_sounds) >= 2 and first_sounds[0] == first_sounds[1]:
-            memorability_score += 0.06  # Alliteration
+            alliteration_bonus = memorability_cfg.get('alliteration_bonus')
+            if alliteration_bonus is None:
+                raise ValueError("phonaesthetic_quality.memorability.alliteration_bonus must be set in strategies.yaml")
+            memorability_score += alliteration_bonus
             has_alliteration = True
 
     # Assonance bonus (repeated vowels)
     vowel_counts = {}
-    for v in 'aeiou':
+    vowel_chars = memorability_cfg.get('vowel_chars')
+    if not vowel_chars:
+        raise ValueError("phonaesthetic_quality.memorability.vowel_chars must be set in strategies.yaml")
+    for v in vowel_chars:
         cnt = name_lower.count(v)
         if cnt >= 2:
             vowel_counts[v] = cnt
     if vowel_counts:
-        memorability_score += 0.05  # Has vowel repetition
+        assonance_bonus = memorability_cfg.get('assonance_bonus')
+        if assonance_bonus is None:
+            raise ValueError("phonaesthetic_quality.memorability.assonance_bonus must be set in strategies.yaml")
+        memorability_score += assonance_bonus
 
     memorability_score = min(max(memorability_score, 0.0), 1.0)
     scores['memorability'] = memorability_score
@@ -1620,8 +1754,10 @@ def phonaesthetic_score(name: str, strategies: StrategiesConfig = None,
 
     # If category fit was calculated, blend it in
     if 'category_fit' in scores:
-        # Give category fit 10% weight, reduce others proportionally
-        final_score = final_score * 0.9 + scores['category_fit'] * 0.1
+        category_fit_weight = config.get('category_fit_weight')
+        if category_fit_weight is None:
+            raise ValueError("phonaesthetic_quality.category_fit_weight must be set in strategies.yaml")
+        final_score = final_score * (1.0 - category_fit_weight) + scores['category_fit'] * category_fit_weight
 
     # Determine quality tier
     thresholds = config.get('thresholds', {})
@@ -1815,6 +1951,7 @@ __all__ = [
     'load_phonaesthemes',
     'load_hazards',
     'load_industries',
+    'load_rule_based_config',
     # Utility Loaders
     'reload_configs',
     'get_all_cultures',

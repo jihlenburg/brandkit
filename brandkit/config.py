@@ -8,73 +8,23 @@ Provides Nice classification profiles for trademark searches.
 
 import os
 from pathlib import Path
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
+
+from brandkit.settings import get_setting
 
 
 # =============================================================================
 # Nice Classification Profiles
 # =============================================================================
-# Predefined product category profiles mapping to relevant Nice classes.
-# Users can use these or specify custom class lists.
-#
-# Reference: https://www.wipo.int/classifications/nice/nclpub/en/fr/
+def load_nice_profiles() -> dict:
+    profiles = get_setting("nice_profiles", {}) or {}
+    if not isinstance(profiles, dict):
+        raise ValueError("nice_profiles must be a mapping in app.yaml")
+    return profiles
 
-NICE_PROFILES = {
-    # Electronics & Technology
-    "electronics": {
-        "classes": [9],
-        "description": "Electrical and electronic apparatus, computers, software",
-    },
-    "software": {
-        "classes": [9, 42],
-        "description": "Computer software and related services",
-    },
 
-    # Energy & Power
-    "energy": {
-        "classes": [7, 9, 11],
-        "description": "Power generation, electrical apparatus, energy systems",
-    },
-    "power_electronics": {
-        "classes": [7, 9],
-        "description": "DC/DC converters, inverters, power supplies",
-    },
-
-    # Vehicles & Transport
-    "automotive": {
-        "classes": [7, 9, 12],
-        "description": "Vehicles, automotive parts and accessories",
-    },
-    "camping_rv": {
-        "classes": [7, 9, 11, 12],
-        "description": "Camping equipment, RV/caravan accessories, mobile power",
-    },
-
-    # Consumer Goods
-    "clothing": {
-        "classes": [25, 35],
-        "description": "Clothing, footwear, headgear",
-    },
-    "household": {
-        "classes": [11, 21],
-        "description": "Household appliances and utensils",
-    },
-    "food_beverage": {
-        "classes": [29, 30, 32, 33],
-        "description": "Food products and beverages",
-    },
-
-    # Services
-    "retail": {
-        "classes": [35],
-        "description": "Retail services, advertising, business management",
-    },
-    "consulting": {
-        "classes": [35, 42],
-        "description": "Business and technical consulting services",
-    },
-}
+NICE_PROFILES = load_nice_profiles()
 
 
 def get_nice_classes(profile_or_classes) -> list:

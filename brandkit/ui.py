@@ -29,6 +29,8 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, List, Any
 from enum import Enum
 
+from settings import get_setting
+
 # Check if Rich is available
 try:
     from rich.console import Console, Group
@@ -174,7 +176,9 @@ class DiscoveryUI:
 
         # Results feed (last N results)
         self.results: List[ResultEntry] = []
-        self.max_results = 10
+        self.max_results = get_setting("ui.max_results")
+        if self.max_results is None:
+            raise ValueError("ui.max_results must be set in app.yaml")
 
         # Threading
         self._lock = threading.Lock()

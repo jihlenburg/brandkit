@@ -27,6 +27,8 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 
+from settings import get_setting
+
 
 @dataclass
 class LLMGeneratedName:
@@ -54,123 +56,35 @@ class LLMGenerationResult:
 # Archetype Definitions (for prompt enhancement)
 # =============================================================================
 
-ARCHETYPE_GUIDANCE = {
-    'power': {
-        'description': 'Strong, dominant, authoritative',
-        'sounds': 'strong plosives (k, t, p, b, d, g), short vowels, hard endings',
-        'examples': 'Kraft, Titan, Apex, Vortex',
-        'avoid': 'soft sounds, diminutive endings',
-    },
-    'elegance': {
-        'description': 'Refined, sophisticated, luxurious',
-        'sounds': 'flowing consonants (l, s, f, v), open vowels (a, o), soft endings',
-        'examples': 'Lumina, Serena, Velara, Aura',
-        'avoid': 'harsh clusters, abrupt endings',
-    },
-    'speed': {
-        'description': 'Fast, dynamic, energetic',
-        'sounds': 'sharp consonants (z, x, v), quick rhythm, short syllables',
-        'examples': 'Vex, Zephyr, Flux, Swift',
-        'avoid': 'heavy sounds, slow rhythms',
-    },
-    'nature': {
-        'description': 'Organic, earthy, sustainable',
-        'sounds': 'soft consonants (l, m, n), earthy vowels, flowing sounds',
-        'examples': 'Terra, Arbor, Flora, Verde',
-        'avoid': 'mechanical sounds, harsh consonants',
-    },
-    'tech': {
-        'description': 'Modern, innovative, precise',
-        'sounds': 'crisp consonants (x, k, z), clean vowels, tech suffixes (-ix, -ex, -on)',
-        'examples': 'Nexus, Vertex, Syntex, Quantix',
-        'avoid': 'dated sounds, overly soft endings',
-    },
-    'trust': {
-        'description': 'Reliable, stable, dependable',
-        'sounds': 'solid consonants (b, d, m), stable rhythm, grounded endings',
-        'examples': 'Solidus, Fidelis, Constans, Verum',
-        'avoid': 'flighty sounds, unstable patterns',
-    },
-    'innovation': {
-        'description': 'Creative, forward-thinking, unique',
-        'sounds': 'unusual combinations, distinctive patterns, memorable hooks',
-        'examples': 'Quiron, Novix, Ideara, Zenith',
-        'avoid': 'conventional patterns, generic sounds',
-    },
-}
+LLM_SETTINGS = get_setting("llm", {}) or {}
+ARCHETYPE_GUIDANCE = LLM_SETTINGS.get("archetype_guidance")
+INDUSTRY_GUIDANCE = LLM_SETTINGS.get("industry_guidance")
+CULTURE_GUIDANCE = LLM_SETTINGS.get("culture_guidance")
+DEFAULT_MAX_TOKENS = LLM_SETTINGS.get("max_tokens")
+PROMPT_OVERGENERATE = LLM_SETTINGS.get("prompt_overgenerate")
+DEFAULT_CONTEXT = LLM_SETTINGS.get("default_context")
+DEFAULT_STYLE = LLM_SETTINGS.get("default_style")
+LLM_API_HOST = LLM_SETTINGS.get("api_host")
+LLM_API_VERSION = LLM_SETTINGS.get("api_version")
+LLM_MODEL = LLM_SETTINGS.get("model")
 
-INDUSTRY_GUIDANCE = {
-    'tech': {
-        'description': 'Software, hardware, SaaS, AI',
-        'style': 'Modern, clean, innovative',
-        'cultures': ['Greek', 'Japanese', 'Latin', 'Celestial'],
-        'suffixes': '-ix, -ex, -io, -ly, -fy',
-    },
-    'automotive': {
-        'description': 'Vehicles, parts, mobility',
-        'style': 'Powerful, dynamic, reliable',
-        'cultures': ['Turkic', 'Nordic', 'Latin'],
-        'suffixes': '-a, -o, -on, -us',
-    },
-    'pharma': {
-        'description': 'Pharmaceuticals, biotech, medical',
-        'style': 'Scientific, trustworthy, precise',
-        'cultures': ['Greek', 'Latin'],
-        'suffixes': '-in, -ol, -ex, -ia',
-    },
-    'luxury': {
-        'description': 'Premium goods, fashion, jewelry',
-        'style': 'Elegant, refined, exclusive',
-        'cultures': ['Latin', 'French', 'Italian'],
-        'suffixes': '-a, -elle, -ini, -or',
-    },
-    'wellness': {
-        'description': 'Health, yoga, meditation, supplements',
-        'style': 'Calming, natural, spiritual',
-        'cultures': ['Japanese', 'Celtic', 'Latin'],
-        'suffixes': '-a, -ana, -ya, -i',
-    },
-    'energy': {
-        'description': 'Power, solar, batteries, electrical',
-        'style': 'Powerful, reliable, innovative',
-        'cultures': ['Greek', 'Nordic', 'Latin', 'Celestial'],
-        'suffixes': '-on, -ex, -ix, -or',
-    },
-    'outdoor': {
-        'description': 'Camping, hiking, adventure gear',
-        'style': 'Rugged, natural, adventurous',
-        'cultures': ['Nordic', 'Celtic'],
-        'suffixes': '-er, -or, -a, -en',
-    },
-    'gaming': {
-        'description': 'Video games, esports, gaming gear',
-        'style': 'Dynamic, exciting, memorable',
-        'cultures': ['Japanese', 'Greek', 'Nordic'],
-        'suffixes': '-ix, -ex, -a, -o',
-    },
-    'food_beverage': {
-        'description': 'Food products, drinks, restaurants',
-        'style': 'Appetizing, warm, memorable',
-        'cultures': ['Latin', 'Celtic', 'Nordic'],
-        'suffixes': '-a, -o, -y, -ia',
-    },
-    'finance': {
-        'description': 'Banking, investment, fintech',
-        'style': 'Trustworthy, stable, professional',
-        'cultures': ['Latin', 'Greek'],
-        'suffixes': '-us, -is, -ex, -or',
-    },
-}
-
-CULTURE_GUIDANCE = {
-    'greek': 'Greek mythology and classical roots (gods, titans, concepts like dynamis, logos)',
-    'latin': 'Classical Latin and Romance languages (elegant, scientific, premium feel)',
-    'nordic': 'Norse mythology and Scandinavian nature (strong, rugged, natural)',
-    'japanese': 'Japanese CV patterns, minimalist (clean, tech-forward, zen aesthetic)',
-    'celtic': 'Irish, Welsh, Scottish roots (mystical, nature-based, heritage feel)',
-    'celestial': 'Space and astronomy roots (stars, planets, cosmic phenomena, futuristic)',
-    'turkic': 'Turkic language patterns with vowel harmony (automotive, dynamic)',
-}
+_missing = []
+for key, value in (
+    ("archetype_guidance", ARCHETYPE_GUIDANCE),
+    ("industry_guidance", INDUSTRY_GUIDANCE),
+    ("culture_guidance", CULTURE_GUIDANCE),
+    ("max_tokens", DEFAULT_MAX_TOKENS),
+    ("prompt_overgenerate", PROMPT_OVERGENERATE),
+    ("default_context", DEFAULT_CONTEXT),
+    ("default_style", DEFAULT_STYLE),
+    ("api_host", LLM_API_HOST),
+    ("api_version", LLM_API_VERSION),
+    ("model", LLM_MODEL),
+):
+    if value is None:
+        _missing.append(key)
+if _missing:
+    raise ValueError(f"llm settings missing in app.yaml: {', '.join(_missing)}")
 
 
 class LLMGenerator:
@@ -197,9 +111,9 @@ class LLMGenerator:
         )
     """
 
-    API_HOST = "api.anthropic.com"
-    API_VERSION = "2023-06-01"
-    MODEL = "claude-sonnet-4-20250514"
+    API_HOST = LLM_API_HOST
+    API_VERSION = LLM_API_VERSION
+    MODEL = LLM_MODEL
 
     def __init__(self, api_key: str = None):
         """
@@ -336,12 +250,14 @@ IMPORTANT: Avoid names that could sound embarrassing in any major language. Chec
 """
         return prompt
 
-    def _call_api(self, messages: list, system_prompt: str, max_tokens: int = 2000) -> dict:
+    def _call_api(self, messages: list, system_prompt: str, max_tokens: Optional[int] = None) -> dict:
         """Make API call to Claude."""
         if not self.has_api_access:
             return {'error': 'No API key available'}
 
         try:
+            if max_tokens is None:
+                max_tokens = DEFAULT_MAX_TOKENS
             conn = http.client.HTTPSConnection(
                 self.API_HOST,
                 context=ssl.create_default_context()
@@ -373,9 +289,9 @@ IMPORTANT: Avoid names that could sound embarrassing in any major language. Chec
             return {'error': f'Request failed: {e}'}
 
     def generate(self,
-                 count: int = 10,
-                 context: str = "DC/DC converters and power electronics for camping and recreational vehicles",
-                 style: str = "modern, technical but approachable",
+                 count: Optional[int] = None,
+                 context: Optional[str] = None,
+                 style: Optional[str] = None,
                  archetype: str = None,
                  industry: str = None,
                  cultures: List[str] = None,
@@ -401,6 +317,15 @@ IMPORTANT: Avoid names that could sound embarrassing in any major language. Chec
         Returns:
             LLMGenerationResult with generated names
         """
+        if count is None:
+            count = get_setting("generation.defaults.count")
+        if count is None:
+            raise ValueError("generation.defaults.count must be set in app.yaml")
+        if context is None:
+            context = DEFAULT_CONTEXT
+        if style is None:
+            style = DEFAULT_STYLE
+
         if not self.has_api_access:
             return LLMGenerationResult(
                 names=[],
@@ -411,7 +336,7 @@ IMPORTANT: Avoid names that could sound embarrassing in any major language. Chec
         system_prompt = self._build_system_prompt(archetype, industry, cultures)
 
         # Build the user prompt
-        prompt = f"""Generate {count + 5} unique brand names for the following context:
+        prompt = f"""Generate {count + PROMPT_OVERGENERATE} unique brand names for the following context:
 
 PRODUCT/MARKET: {context}
 
@@ -717,8 +642,8 @@ Format as JSON:
 
         return {'error': 'Unknown error'}
 
-    def generate_for_archetype(self, archetype: str, count: int = 10,
-                                context: str = None, **kwargs) -> LLMGenerationResult:
+    def generate_for_archetype(self, archetype: str, count: Optional[int] = None,
+                                context: Optional[str] = None, **kwargs) -> LLMGenerationResult:
         """
         Convenience method to generate names for a specific archetype.
 
@@ -737,19 +662,28 @@ Format as JSON:
                 error=f"Unknown archetype: {archetype}. Available: {list(ARCHETYPE_GUIDANCE.keys())}"
             )
 
+        if count is None:
+            count = get_setting("generation.defaults.count")
+        if count is None:
+            raise ValueError("generation.defaults.count must be set in app.yaml")
+
+        archetype_context_default = LLM_SETTINGS.get("archetype_fallback_context")
+        if not archetype_context_default:
+            raise ValueError("llm.archetype_fallback_context must be set in app.yaml")
+
         arch = ARCHETYPE_GUIDANCE[archetype.lower()]
         style = f"{arch['description']}, with {arch['sounds']}"
 
         return self.generate(
             count=count,
-            context=context or "brand products",
+            context=context or archetype_context_default,
             style=style,
             archetype=archetype,
             **kwargs
         )
 
-    def generate_for_industry(self, industry: str, count: int = 10,
-                               context: str = None, **kwargs) -> LLMGenerationResult:
+    def generate_for_industry(self, industry: str, count: Optional[int] = None,
+                               context: Optional[str] = None, **kwargs) -> LLMGenerationResult:
         """
         Convenience method to generate names for a specific industry.
 
@@ -767,6 +701,11 @@ Format as JSON:
                 names=[],
                 error=f"Unknown industry: {industry}. Available: {list(INDUSTRY_GUIDANCE.keys())}"
             )
+
+        if count is None:
+            count = get_setting("generation.defaults.count")
+        if count is None:
+            raise ValueError("generation.defaults.count must be set in app.yaml")
 
         ind = INDUSTRY_GUIDANCE[industry.lower()]
         full_context = f"{ind['description']}"
@@ -814,12 +753,15 @@ if __name__ == '__main__':
                 os.environ.setdefault(key.strip(), value.strip())
 
     parser = argparse.ArgumentParser(description='Generate brand names with Claude')
-    parser.add_argument('--count', '-n', type=int, default=10, help='Number of names')
+    default_count = get_setting("generation.defaults.count")
+    if default_count is None:
+        raise ValueError("generation.defaults.count must be set in app.yaml")
+    parser.add_argument('--count', '-n', type=int, default=default_count, help='Number of names')
     parser.add_argument('--context', '-c', type=str,
-                        default='DC/DC converters for camping vehicles',
+                        default=DEFAULT_CONTEXT,
                         help='Product context')
     parser.add_argument('--style', '-s', type=str,
-                        default='modern, technical but approachable',
+                        default=DEFAULT_STYLE,
                         help='Brand style')
     parser.add_argument('--archetype', '-a', type=str,
                         choices=list(ARCHETYPE_GUIDANCE.keys()),

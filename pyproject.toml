@@ -48,6 +48,7 @@ ui = [
 ]
 dev = [
     "pytest>=7.0",
+    "pytest-asyncio>=0.23",
     "pytest-cov>=4.0",
     "black>=23.0",
     "ruff>=0.1",
@@ -71,6 +72,7 @@ include = ["brandkit*"]
 
 [tool.setuptools.package-data]
 "brandkit.generators.phonemes" = ["*.yaml"]
+"brandkit.configs" = ["*.yaml"]
 
 [tool.black]
 line-length = 100
@@ -87,3 +89,5 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"

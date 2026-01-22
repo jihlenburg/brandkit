@@ -197,6 +197,8 @@ brandkit stats                                  # Database statistics
 brandkit save "NewName"                         # Save manually
 brandkit block "BadName" -r "negative_meaning"  # Block a name
 brandkit export -o names.json                   # Export to JSON
+brandkit tm-conflicts "Voltix"                  # Show stored trademark matches
+brandkit tm-risk --limit 20                     # Show blocking trademark risks
 
 # Discovery pipeline
 brandkit discover -n 100 -m blend               # Single batch
@@ -403,6 +405,7 @@ All in `brandkit/generators/phonemes/`:
 | `phonaesthemes.yaml` | Sound symbolism, 7 brand archetypes |
 | `hazards.yaml` | Cross-linguistic hazards, sound-alikes, patterns |
 | `industries.yaml` | 11 industry profiles with cultural sources |
+| `base_generator.yaml` | Cultural generator tuning (memorability, hazard gating, blending) |
 | `strategies.yaml` | Phonotactics, scoring rules, rhythm, phonaesthetic quality, pronounceability gates |
 
 ### Loading Configs Directly
@@ -616,11 +619,46 @@ class BlockReason(Enum):
 - **MINOR (Y)**: New features, backward compatible
 - **PATCH (Z)**: Bug fixes, backward compatible
 
+### Multi-Agent Collaboration Rules
+
+This project may be worked on by multiple AI agents (Claude, Codex, etc.). Follow these rules:
+
+**Session Start Protocol:**
+- Always run `git status` and `git log -5` before starting work
+- Check CHANGELOG.md for recent changes and pending TODOs
+- Pull latest changes if working with remote
+
+**Session End Protocol:**
+- Run `pytest` to ensure all tests pass
+- Commit all changes with descriptive messages
+- Update CHANGELOG.md with changes made
+- Mark any incomplete work with TODOs
+
+**File Locking Convention:**
+- Add `<!-- WIP: [AgentName] -->` comment at top of files being actively edited
+- Remove the marker when done with the file
+- Don't modify files marked by another agent without user approval
+
+**TODO Attribution:**
+- Mark TODOs with agent name: `# TODO [Claude]: implement caching`
+- Include context for why the TODO exists
+
+**Code Modification Rules:**
+- **No silent refactoring** - Don't refactor code another agent wrote without explicit user request
+- **Prefer extending over rewriting** - Add new functions rather than rewriting existing ones
+- **Dependency changes** - Document any new dependencies in CHANGELOG immediately
+- **Conflict resolution** - If unsure about another agent's code, ask user rather than overwriting
+
+**CHANGELOG Attribution:**
+- Mark each change with agent name: `[Claude]`, `[Codex]`
+- Example: `- [Claude] Added multi-agent collaboration rules`
+
 ### Workflow for Every Change
 
 1. **Before committing**: Update `CHANGELOG.md`
    - Add changes under `[Unreleased]` section
    - Use categories: Added, Changed, Fixed, Removed, Security
+   - **Multi-agent collaboration**: Mark each change with the agent name (e.g., `[Claude]`, `[Codex]`) for tracking and accountability
 
 2. **When releasing a new version**:
    ```bash

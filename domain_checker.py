@@ -18,6 +18,7 @@ from typing import Optional
 import http.client
 import ssl
 
+from settings import get_setting, resolve_path
 
 @dataclass
 class DomainResult:
@@ -62,10 +63,8 @@ class DomainChecker:
         result = checker.check("voltix")
     """
 
-    DEFAULT_TLDS = ['com', 'de', 'eu', 'io', 'co']
-
     def __init__(self, tlds: list = None, cache_dir: str = None,
-                 parallel: bool = False, max_workers: int = 5):
+                 parallel: Optional[bool] = None, max_workers: Optional[int] = None):
         """
         Initialize domain checker.
 
@@ -75,20 +74,53 @@ class DomainChecker:
             parallel: Enable parallel TLD checking (default: False)
             max_workers: Max concurrent TLD checks when parallel=True
         """
-        self.tlds = tlds or self.DEFAULT_TLDS
+        cfg = get_setting("domain_checker", {}) or {}
+        if tlds is None:
+            tlds = cfg.get("default_tlds")
+        if not tlds:
+            raise ValueError("domain_checker.default_tlds must be set in app.yaml")
+        self.tlds = tlds
+
+        if parallel is None:
+            parallel = cfg.get("parallel_default")
+        if parallel is None:
+            raise ValueError("domain_checker.parallel_default must be set in app.yaml")
         self.parallel = parallel
+
+        if max_workers is None:
+            max_workers = cfg.get("max_workers")
+        if max_workers is None:
+            raise ValueError("domain_checker.max_workers must be set in app.yaml")
         self.max_workers = max_workers
+
+        self.cache_ttl_seconds = cfg.get("cache_ttl_seconds")
+        self.dns_timeout_seconds = cfg.get("dns_timeout_seconds")
+        self.http_timeout_seconds = cfg.get("http_timeout_seconds")
+        self.delay_seconds = cfg.get("delay_seconds")
+        self.cache_hash_length = cfg.get("cache_hash_length")
+        if self.cache_ttl_seconds is None:
+            raise ValueError("domain_checker.cache_ttl_seconds must be set in app.yaml")
+        if self.dns_timeout_seconds is None:
+            raise ValueError("domain_checker.dns_timeout_seconds must be set in app.yaml")
+        if self.http_timeout_seconds is None:
+            raise ValueError("domain_checker.http_timeout_seconds must be set in app.yaml")
+        if self.delay_seconds is None:
+            raise ValueError("domain_checker.delay_seconds must be set in app.yaml")
+        if self.cache_hash_length is None:
+            raise ValueError("domain_checker.cache_hash_length must be set in app.yaml")
 
         # Setup cache
         if cache_dir:
-            self.cache_dir = Path(cache_dir)
+            self.cache_dir = resolve_path(cache_dir)
         else:
-            self.cache_dir = Path.home() / ".cache" / "domain_checker"
+            self.cache_dir = resolve_path(cfg.get("cache_dir"))
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_cache_path(self, name: str) -> Path:
-        """Get cache file path for a name"""
-        name_hash = hashlib.md5(name.lower().encode()).hexdigest()[:12]
+        """Get cache file path for a name + TLD set"""
+        tlds_key = ",".join(self.tlds)
+        key = f"{name.lower()}|{tlds_key}"
+        name_hash = hashlib.md5(key.encode()).hexdigest()[:self.cache_hash_length]
         return self.cache_dir / f"{name_hash}.json"
 
     def _load_from_cache(self, name: str) -> Optional[DomainCheckResult]:
@@ -99,8 +131,12 @@ class DomainChecker:
 
         try:
             data = json.loads(cache_path.read_text())
-            # Check if cache is fresh (24 hours)
-            if time.time() - data.get('timestamp', 0) > 86400:
+            if self.cache_ttl_seconds is None:
+                raise ValueError("domain_checker.cache_ttl_seconds must be set in app.yaml")
+            if time.time() - data.get('timestamp', 0) > self.cache_ttl_seconds:
+                return None
+            # Ensure cache matches current TLDs
+            if data.get('tlds') != self.tlds:
                 return None
 
             domains = {}
@@ -128,6 +164,7 @@ class DomainChecker:
         cache_path = self._get_cache_path(result.name)
         data = {
             'name': result.name,
+            'tlds': self.tlds,
             'domains': {
                 tld: {
                     'name': d.name,
@@ -158,20 +195,25 @@ class DomainChecker:
 
         try:
             # Try to resolve the domain
-            socket.setdefaulttimeout(3)
+            prev_timeout = socket.getdefaulttimeout()
+            if self.dns_timeout_seconds is None:
+                raise ValueError("domain_checker.dns_timeout_seconds must be set in app.yaml")
+            socket.setdefaulttimeout(self.dns_timeout_seconds)
             ip = socket.gethostbyname(domain)
             is_registered = True
 
             # Check if there's a web server
             try:
-                conn = http.client.HTTPSConnection(domain, timeout=3)
+                if self.http_timeout_seconds is None:
+                    raise ValueError("domain_checker.http_timeout_seconds must be set in app.yaml")
+                conn = http.client.HTTPSConnection(domain, timeout=self.http_timeout_seconds)
                 conn.request("HEAD", "/")
                 response = conn.getresponse()
                 has_website = response.status < 500
                 conn.close()
             except:
                 try:
-                    conn = http.client.HTTPConnection(domain, timeout=3)
+                    conn = http.client.HTTPConnection(domain, timeout=self.http_timeout_seconds)
                     conn.request("HEAD", "/")
                     response = conn.getresponse()
                     has_website = response.status < 500
@@ -188,6 +230,11 @@ class DomainChecker:
         except Exception:
             # Other error - unknown
             pass
+        finally:
+            try:
+                socket.setdefaulttimeout(prev_timeout)
+            except Exception:
+                pass
 
         return is_registered, has_website
 
@@ -224,8 +271,9 @@ class DomainChecker:
         for tld in self.tlds:
             result = self._check_single_domain(name, tld)
             domains[tld] = result
-            # Small delay to avoid rate limiting
-            time.sleep(0.1)
+            if self.delay_seconds is None:
+                raise ValueError("domain_checker.delay_seconds must be set in app.yaml")
+            time.sleep(self.delay_seconds)
         return domains
 
     def _check_tlds_parallel(self, name: str) -> dict:
@@ -395,7 +443,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Check domain availability')
     parser.add_argument('names', nargs='+', help='Brand names to check')
-    parser.add_argument('--tlds', nargs='+', default=['com', 'de', 'eu'],
+    default_cli_tlds = get_setting("domain_checker.default_tlds")
+    if not default_cli_tlds:
+        raise ValueError("domain_checker.default_tlds must be set in app.yaml")
+    parser.add_argument('--tlds', nargs='+', default=default_cli_tlds,
                         help='TLDs to check')
     parser.add_argument('--no-cache', action='store_true', help='Skip cache')
 

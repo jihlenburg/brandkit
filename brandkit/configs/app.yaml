@@ -1,0 +1,439 @@
+# Central configuration for BrandKit
+
+paths:
+  data_db: "data/brandnames.db"
+
+cli:
+  generation_methods:
+    - rule_based
+    - llm
+    - greek
+    - turkic
+    - nordic
+    - japanese
+    - latin
+    - celtic
+    - celestial
+    - animals
+    - mythology
+    - landmarks
+    - blend
+    - all
+  industries:
+    - tech
+    - automotive
+    - pharma
+    - luxury
+    - food_beverage
+    - finance
+    - energy
+    - outdoor
+    - wellness
+    - gaming
+    - ecommerce
+  name_validation:
+    min_length: 2
+    max_length: 30
+    regex: "^[a-zA-Z][a-zA-Z0-9]*$"
+  defaults:
+    count: 10
+    method: all
+  command_defaults:
+    list_limit: 50
+    tm_risk_limit: 20
+    save_status: candidate
+    discover:
+      profile: camping_rv
+      min_quality: acceptable
+      max_rounds: 50
+      top: 30
+      max_concurrent: 10
+      markets: en_de
+
+generation:
+  defaults:
+    count: 10
+    method: all
+    markets: en_de
+  all_methods:
+    - rule_based
+    - turkic
+    - greek
+    - nordic
+    - japanese
+    - latin
+    - celtic
+    - celestial
+    - animals
+    - mythology
+    - landmarks
+  blend_default_cultures:
+    - greek
+    - latin
+    - nordic
+    - japanese
+  industry_fallback_cultures:
+    - greek
+    - latin
+
+quality_filter:
+  enabled: true
+  min_score: 0.57
+  similarity_threshold: 0.82
+  max_suffix_pct: 0.06
+  max_prefix_pct: 0.06
+  oversample: 3
+  diversity_penalties:
+    suffix3: 0.05
+    suffix2: 0.025
+    prefix2: 0.025
+
+similarity_checker:
+  default_threshold: 0.6
+  problematic_threshold: 0.7
+  default_markets: en_de
+  top_matches: 5
+  known_brands:
+    # Camping/RV
+    - dometic
+    - truma
+    - fiamma
+    - thule
+    - webasto
+    - campingaz
+    - coleman
+    - outwell
+    - vango
+    - karcher
+    - waeco
+    - mobicool
+    # Energy/Power
+    - victron
+    - renogy
+    - ecoflow
+    - bluetti
+    - jackery
+    - goalzero
+    - anker
+    - duracell
+    - energizer
+    - varta
+    - bosch
+    - makita
+    - dewalt
+    - milwaukee
+    - ryobi
+    - festool
+    - metabo
+    - hilti
+    # Tech Giants
+    - tesla
+    - apple
+    - samsung
+    - sony
+    - panasonic
+    - philips
+    - siemens
+    - miele
+    - braun
+    - dyson
+    - bose
+    - harman
+    # Automotive
+    - volkswagen
+    - mercedes
+    - bmw
+    - audi
+    - porsche
+    - volvo
+    - ford
+    - toyota
+    - honda
+    - mazda
+    - nissan
+    - hyundai
+    # Well-known consumer brands
+    - amazon
+    - google
+    - microsoft
+    - facebook
+    - netflix
+    - spotify
+    - nike
+    - adidas
+    - puma
+    - reebok
+    - asics
+    - fila
+    - coca
+    - pepsi
+    - nestle
+    - kraft
+    - heinz
+    - unilever
+    # Potentially confusing with our domain
+    - voltron
+    - volton
+    - voltex
+    - voltaic
+    - voltage
+    - solaris
+    - solar
+    - solarex
+    - sunpower
+    - sunrun
+    - flux
+    - fluxus
+    - flexon
+    - fluxx
+    - trek
+    - trekking
+    - tracker
+    - windex
+    - windows
+    - windstream
+    - ampex
+    - ampere
+    - amplitude
+    - luxor
+    - luxus
+    - luxury
+    - nomad
+    - nomadic
+    - aurora
+    - aura
+    - aurum
+    - terra
+    - terrain
+    - terran
+    - aqua
+    - aquafina
+    - aquaman
+    - apex
+    - apexel
+    - core
+    - corel
+    - prime
+    - primus
+    - primo
+    - max
+    - maxi
+    - maxim
+    - neo
+    - neon
+    - pulse
+    - pulsar
+    - spark
+    - sparky
+    - wave
+    - waveform
+    - flow
+    - flowtec
+    - link
+    - lynx
+    - sync
+    - synco
+    - hub
+    - hubspot
+
+trademark:
+  cli_top_matches: 5
+  variant_queries_default: true
+  euipo:
+    api_base: api.euipo.europa.eu
+    api_base_sandbox: api-sandbox.euipo.europa.eu
+    auth_url: euipo.europa.eu
+    esearch_url: "https://euipo.europa.eu/eSearch/#basic/{query}"
+    request_timeout_seconds: 10
+    cache_dir: "data/cache/euipo"
+    cache_ttl_seconds: 86400
+    token_expiry_leeway_seconds: 60
+    token_default_expires_seconds: 3600
+    api_limit: 20
+    access_token_path: "/cas-server-webapp/oidc/accessToken"
+    trademark_search_path: "/trademark-search/trademarks"
+    cache_hash_length: 12
+  rapidapi:
+    api_host: trademark-lookup-api.p.rapidapi.com
+    request_timeout_seconds: 10
+    cache_dir: "data/cache/rapidapi_trademark"
+    cache_ttl_seconds: 604800
+    max_results: 20
+    search:
+      page: 1
+      count: 10
+      path_template: "/{query}/namesearch/{page}/{count}"
+    cache_hash_length: 12
+
+parallel:
+  domain_workers: 10
+  domain_tld_parallel: true
+  trademark_workers: 5
+  trademark_rate_limit: 2.0
+  max_retries: 3
+  retry_base_delay: 1.0
+  retry_max_delay: 30.0
+  retry_exponential_base: 2.0
+  request_timeout: 10.0
+  pipeline_defaults:
+    min_domains: 1
+    require_com: false
+
+domain_checker:
+  default_tlds: [com, de, eu, io, co]
+  cache_dir: "data/cache/domain_checker"
+  cache_ttl_seconds: 86400
+  dns_timeout_seconds: 3
+  http_timeout_seconds: 3
+  delay_seconds: 0.1
+  parallel_default: false
+  max_workers: 5
+  cache_hash_length: 12
+
+ui:
+  max_results: 10
+
+llm:
+  api_host: api.anthropic.com
+  api_version: "2023-06-01"
+  model: claude-sonnet-4-20250514
+  max_tokens: 2000
+  prompt_overgenerate: 5
+  default_context: "DC/DC converters for camping vehicles"
+  default_style: "modern, technical but approachable"
+  archetype_fallback_context: "brand products"
+  archetype_guidance:
+    power:
+      description: "Strong, dominant, authoritative"
+      sounds: "strong plosives (k, t, p, b, d, g), short vowels, hard endings"
+      examples: "Kraft, Titan, Apex, Vortex"
+      avoid: "soft sounds, diminutive endings"
+    elegance:
+      description: "Refined, sophisticated, luxurious"
+      sounds: "flowing consonants (l, s, f, v), open vowels (a, o), soft endings"
+      examples: "Lumina, Serena, Velara, Aura"
+      avoid: "harsh clusters, abrupt endings"
+    speed:
+      description: "Fast, dynamic, energetic"
+      sounds: "sharp consonants (z, x, v), quick rhythm, short syllables"
+      examples: "Vex, Zephyr, Flux, Swift"
+      avoid: "heavy sounds, slow rhythms"
+    nature:
+      description: "Organic, earthy, sustainable"
+      sounds: "soft consonants (l, m, n), earthy vowels, flowing sounds"
+      examples: "Terra, Arbor, Flora, Verde"
+      avoid: "mechanical sounds, harsh consonants"
+    tech:
+      description: "Modern, innovative, precise"
+      sounds: "crisp consonants (x, k, z), clean vowels, tech suffixes (-ix, -ex, -on)"
+      examples: "Nexus, Vertex, Syntex, Quantix"
+      avoid: "dated sounds, overly soft endings"
+    trust:
+      description: "Reliable, stable, dependable"
+      sounds: "solid consonants (b, d, m), stable rhythm, grounded endings"
+      examples: "Solidus, Fidelis, Constans, Verum"
+      avoid: "flighty sounds, unstable patterns"
+    innovation:
+      description: "Creative, forward-thinking, unique"
+      sounds: "unusual combinations, distinctive patterns, memorable hooks"
+      examples: "Quiron, Novix, Ideara, Zenith"
+      avoid: "conventional patterns, generic sounds"
+  industry_guidance:
+    tech:
+      description: "Software, hardware, SaaS, AI"
+      style: "Modern, clean, innovative"
+      cultures: [Greek, Japanese, Latin, Celestial]
+      suffixes: "-ix, -ex, -io, -ly, -fy"
+    automotive:
+      description: "Vehicles, parts, mobility"
+      style: "Powerful, dynamic, reliable"
+      cultures: [Turkic, Nordic, Latin]
+      suffixes: "-a, -o, -on, -us"
+    pharma:
+      description: "Pharmaceuticals, biotech, medical"
+      style: "Scientific, trustworthy, precise"
+      cultures: [Greek, Latin]
+      suffixes: "-in, -ol, -ex, -ia"
+    luxury:
+      description: "Premium goods, fashion, jewelry"
+      style: "Elegant, refined, exclusive"
+      cultures: [Latin, French, Italian]
+      suffixes: "-a, -elle, -ini, -or"
+    wellness:
+      description: "Health, yoga, meditation, supplements"
+      style: "Calming, natural, spiritual"
+      cultures: [Japanese, Celtic, Latin]
+      suffixes: "-a, -ana, -ya, -i"
+    energy:
+      description: "Power, solar, batteries, electrical"
+      style: "Powerful, reliable, innovative"
+      cultures: [Greek, Nordic, Latin, Celestial]
+      suffixes: "-on, -ex, -ix, -or"
+    outdoor:
+      description: "Camping, hiking, adventure gear"
+      style: "Rugged, natural, adventurous"
+      cultures: [Nordic, Celtic]
+      suffixes: "-er, -or, -a, -en"
+    gaming:
+      description: "Video games, esports, gaming gear"
+      style: "Dynamic, exciting, memorable"
+      cultures: [Japanese, Greek, Nordic]
+      suffixes: "-ix, -ex, -a, -o"
+    food_beverage:
+      description: "Food products, drinks, restaurants"
+      style: "Appetizing, warm, memorable"
+      cultures: [Latin, Celtic, Nordic]
+      suffixes: "-a, -o, -y, -ia"
+    finance:
+      description: "Banking, investment, fintech"
+      style: "Trustworthy, stable, professional"
+      cultures: [Latin, Greek]
+      suffixes: "-us, -is, -ex, -or"
+  culture_guidance:
+    greek: "Greek mythology and classical roots (gods, titans, concepts like dynamis, logos)"
+    latin: "Classical Latin and Romance languages (elegant, scientific, premium feel)"
+    nordic: "Norse mythology and Scandinavian nature (strong, rugged, natural)"
+    japanese: "Japanese CV patterns, minimalist (clean, tech-forward, zen aesthetic)"
+    celtic: "Irish, Welsh, Scottish roots (mystical, nature-based, heritage feel)"
+    celestial: "Space and astronomy roots (stars, planets, cosmic phenomena, futuristic)"
+    turkic: "Turkic language patterns with vowel harmony (automotive, dynamic)"
+
+nice_profiles:
+  electronics:
+    classes: [9]
+    description: "Electrical and electronic apparatus, computers, software"
+  software:
+    classes: [9, 42]
+    description: "Computer software and related services"
+  energy:
+    classes: [7, 9, 11]
+    description: "Power generation, electrical apparatus, energy systems"
+  power_electronics:
+    classes: [7, 9]
+    description: "DC/DC converters, inverters, power supplies"
+  automotive:
+    classes: [7, 9, 12]
+    description: "Vehicles, automotive parts and accessories"
+  camping_rv:
+    classes: [7, 9, 11, 12]
+    description: "Camping equipment, RV/caravan accessories, mobile power"
+  clothing:
+    classes: [25, 35]
+    description: "Clothing, footwear, headgear"
+  household:
+    classes: [11, 21]
+    description: "Household appliances and utensils"
+  food_beverage:
+    classes: [29, 30, 32, 33]
+    description: "Food products and beverages"
+  retail:
+    classes: [35]
+    description: "Retail services, advertising, business management"
+  consulting:
+    classes: [35, 42]
+    description: "Business and technical consulting services"
+
+namedb_cli:
+  list_limit: 50
+  status_limit: 20
+  block_reason_default: other

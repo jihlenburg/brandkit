@@ -36,6 +36,7 @@ from typing import Optional, Iterator, Callable, Any, List, Dict
 from queue import Queue, Empty
 import logging
 
+from brandkit.settings import get_setting
 logger = logging.getLogger(__name__)
 
 
@@ -47,20 +48,59 @@ logger = logging.getLogger(__name__)
 class ParallelConfig:
     """Configuration for parallel checking."""
     # Domain checking
-    domain_workers: int = 10          # Concurrent domain name checks
-    domain_tld_parallel: bool = True  # Check TLDs in parallel within each name
+    domain_workers: Optional[int] = None          # Concurrent domain name checks
+    domain_tld_parallel: Optional[bool] = None    # Check TLDs in parallel within each name
 
     # Trademark checking
-    trademark_workers: int = 5        # Concurrent trademark checks (lower for rate limits)
-    trademark_rate_limit: float = 2.0 # Max requests per second
+    trademark_workers: Optional[int] = None       # Concurrent trademark checks (lower for rate limits)
+    trademark_rate_limit: Optional[float] = None  # Max requests per second
 
     # Retry settings
-    max_retries: int = 3
-    retry_base_delay: float = 1.0     # Base delay for exponential backoff
-    retry_max_delay: float = 30.0     # Max delay between retries
+    max_retries: Optional[int] = None
+    retry_base_delay: Optional[float] = None      # Base delay for exponential backoff
+    retry_max_delay: Optional[float] = None       # Max delay between retries
+    retry_exponential_base: Optional[float] = None
 
     # Timeouts
-    request_timeout: float = 10.0     # Per-request timeout
+    request_timeout: Optional[float] = None       # Per-request timeout
+
+    def __post_init__(self):
+        cfg = get_setting("parallel", {}) or {}
+        if self.domain_workers is None:
+            self.domain_workers = cfg.get("domain_workers")
+        if self.domain_tld_parallel is None:
+            self.domain_tld_parallel = cfg.get("domain_tld_parallel")
+        if self.trademark_workers is None:
+            self.trademark_workers = cfg.get("trademark_workers")
+        if self.trademark_rate_limit is None:
+            self.trademark_rate_limit = cfg.get("trademark_rate_limit")
+        if self.max_retries is None:
+            self.max_retries = cfg.get("max_retries")
+        if self.retry_base_delay is None:
+            self.retry_base_delay = cfg.get("retry_base_delay")
+        if self.retry_max_delay is None:
+            self.retry_max_delay = cfg.get("retry_max_delay")
+        if self.retry_exponential_base is None:
+            self.retry_exponential_base = cfg.get("retry_exponential_base")
+        if self.request_timeout is None:
+            self.request_timeout = cfg.get("request_timeout")
+
+        missing = [
+            name for name, value in (
+                ("domain_workers", self.domain_workers),
+                ("domain_tld_parallel", self.domain_tld_parallel),
+                ("trademark_workers", self.trademark_workers),
+                ("trademark_rate_limit", self.trademark_rate_limit),
+                ("max_retries", self.max_retries),
+                ("retry_base_delay", self.retry_base_delay),
+                ("retry_max_delay", self.retry_max_delay),
+                ("retry_exponential_base", self.retry_exponential_base),
+                ("request_timeout", self.request_timeout),
+            )
+            if value is None
+        ]
+        if missing:
+            raise ValueError(f"parallel settings missing in app.yaml: {', '.join(missing)}")
 
 
 # =============================================================================
@@ -149,10 +189,10 @@ class RetryHandler:
     """
 
     def __init__(self,
-                 max_retries: int = 3,
-                 base_delay: float = 1.0,
-                 max_delay: float = 30.0,
-                 exponential_base: float = 2.0):
+                 max_retries: Optional[int] = None,
+                 base_delay: Optional[float] = None,
+                 max_delay: Optional[float] = None,
+                 exponential_base: Optional[float] = None):
         """
         Initialize retry handler.
 
@@ -162,6 +202,18 @@ class RetryHandler:
             max_delay: Maximum delay between retries (seconds)
             exponential_base: Base for exponential backoff
         """
+        cfg = get_setting("parallel", {}) or {}
+        if max_retries is None:
+            max_retries = cfg.get("max_retries")
+        if base_delay is None:
+            base_delay = cfg.get("retry_base_delay")
+        if max_delay is None:
+            max_delay = cfg.get("retry_max_delay")
+        if exponential_base is None:
+            exponential_base = cfg.get("retry_exponential_base")
+        if max_retries is None or base_delay is None or max_delay is None or exponential_base is None:
+            raise ValueError("parallel retry settings must be set in app.yaml")
+
         self.max_retries = max_retries
         self.base_delay = base_delay
         self.max_delay = max_delay
@@ -235,7 +287,7 @@ class ParallelDomainChecker:
 
     def __init__(self,
                  base_checker,
-                 max_workers: int = 10,
+                 max_workers: Optional[int] = None,
                  rate_limiter: RateLimiter = None,
                  retry_handler: RetryHandler = None):
         """
@@ -248,6 +300,10 @@ class ParallelDomainChecker:
             retry_handler: Optional retry handler
         """
         self.base_checker = base_checker
+        if max_workers is None:
+            max_workers = get_setting("parallel.domain_workers")
+        if max_workers is None:
+            raise ValueError("parallel.domain_workers must be set in app.yaml")
         self.max_workers = max_workers
         self.rate_limiter = rate_limiter
         self.retry_handler = retry_handler or RetryHandler()
@@ -310,8 +366,8 @@ class ParallelTrademarkChecker:
 
     def __init__(self,
                  base_checker,
-                 max_workers: int = 5,
-                 rate_limit: float = 2.0,
+                 max_workers: Optional[int] = None,
+                 rate_limit: Optional[float] = None,
                  retry_handler: RetryHandler = None):
         """
         Initialize parallel trademark checker.
@@ -323,6 +379,12 @@ class ParallelTrademarkChecker:
             retry_handler: Optional retry handler
         """
         self.base_checker = base_checker
+        if max_workers is None:
+            max_workers = get_setting("parallel.trademark_workers")
+        if rate_limit is None:
+            rate_limit = get_setting("parallel.trademark_rate_limit")
+        if max_workers is None or rate_limit is None:
+            raise ValueError("parallel.trademark settings must be set in app.yaml")
         self.max_workers = max_workers
         self.rate_limiter = RateLimiter(rate_limit)
         self.retry_handler = retry_handler or RetryHandler()
@@ -418,8 +480,8 @@ class ParallelDiscoveryPipeline:
     def process(self,
                 names: List[str],
                 nice_classes=None,
-                min_domains: int = 1,
-                require_com: bool = False) -> Iterator[CheckResult]:
+                min_domains: Optional[int] = None,
+                require_com: Optional[bool] = None) -> Iterator[CheckResult]:
         """
         Process names through parallel pipeline.
 
@@ -436,6 +498,14 @@ class ParallelDiscoveryPipeline:
         Yields:
             CheckResult for each name that passes domain check
         """
+        pipeline_defaults = get_setting("parallel.pipeline_defaults", {}) or {}
+        if min_domains is None:
+            min_domains = pipeline_defaults.get("min_domains")
+        if require_com is None:
+            require_com = pipeline_defaults.get("require_com")
+        if min_domains is None or require_com is None:
+            raise ValueError("parallel.pipeline_defaults must be set in app.yaml")
+
         domain_executor = ThreadPoolExecutor(
             max_workers=self.config.domain_workers
         )
@@ -517,8 +587,8 @@ class ParallelDiscoveryPipeline:
     def process_batch(self,
                       names: List[str],
                       nice_classes=None,
-                      min_domains: int = 1,
-                      require_com: bool = False) -> List[CheckResult]:
+                      min_domains: Optional[int] = None,
+                      require_com: Optional[bool] = None) -> List[CheckResult]:
         """
         Process names and return all results as a list.
 

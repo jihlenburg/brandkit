@@ -21,6 +21,8 @@ import argparse
 import json
 from pathlib import Path
 
+from brandkit.generators.phonemes import load_rule_based_config
+
 
 class SoundQuality(Enum):
     """Klangfarbe - Sound character categories"""
@@ -77,139 +79,72 @@ class SemanticMorpheme:
 
 
 # =============================================================================
-# PHONETISCHE BAUSTEINE
+# CONFIGURATION
 # =============================================================================
 
-# Konsonanten mit Eigenschaften
-CONSONANTS = {
-    # Harte Konsonanten (energisch, stark)
-    'k': Phoneme('k', SoundQuality.HARD, False, 1.0),
-    't': Phoneme('t', SoundQuality.HARD, False, 1.2),
-    'p': Phoneme('p', SoundQuality.HARD, False, 0.9),
-    'g': Phoneme('g', SoundQuality.HARD, False, 0.8),
-    'd': Phoneme('d', SoundQuality.HARD, False, 1.0),
-    'b': Phoneme('b', SoundQuality.HARD, False, 0.9),
-
-    # Weiche Konsonanten (sanft, warm)
-    'm': Phoneme('m', SoundQuality.SOFT, False, 1.1),
-    'n': Phoneme('n', SoundQuality.SOFT, False, 1.3),
-    'l': Phoneme('l', SoundQuality.SOFT, False, 1.2),
-    'w': Phoneme('w', SoundQuality.SOFT, False, 0.7),
-    'j': Phoneme('j', SoundQuality.SOFT, False, 0.5),
-
-    # Scharfe Konsonanten (dynamisch)
-    's': Phoneme('s', SoundQuality.SHARP, False, 1.1),
-    'z': Phoneme('z', SoundQuality.SHARP, False, 0.6),
-    'x': Phoneme('x', SoundQuality.SHARP, False, 0.4),
-
-    # Fließende Konsonanten
-    'r': Phoneme('r', SoundQuality.FLOWING, False, 1.0),
-    'f': Phoneme('f', SoundQuality.FLOWING, False, 0.8),
-    'v': Phoneme('v', SoundQuality.FLOWING, False, 0.7),
-    'h': Phoneme('h', SoundQuality.FLOWING, False, 0.5),
-}
-
-# Vokale mit Eigenschaften
-VOWELS = {
-    'a': Phoneme('a', VowelQuality.OPEN, True, 1.3),
-    'o': Phoneme('o', VowelQuality.OPEN, True, 1.0),
-    'i': Phoneme('i', VowelQuality.CLOSED, True, 1.2),
-    'u': Phoneme('u', VowelQuality.CLOSED, True, 0.8),
-    'e': Phoneme('e', VowelQuality.NEUTRAL, True, 1.4),
-}
-
-# Diphthonge und Vokalverbindungen (für weicheren Klang)
-VOWEL_COMBINATIONS = ['ai', 'au', 'ei', 'eu', 'ou', 'oo', 'ee', 'ia', 'io', 'ea']
-
-# Konsonantencluster die gut klingen (DE+EN kompatibel)
-GOOD_CLUSTERS = {
-    'onset': ['tr', 'kr', 'pr', 'br', 'dr', 'gr', 'fr', 'fl', 'bl', 'gl', 'pl', 'kl', 'sl', 'sp', 'st', 'sk'],
-    'coda': ['nt', 'nd', 'nk', 'lt', 'ld', 'rt', 'rd', 'rk', 'st', 'sk', 'mp', 'lm', 'rm'],
-}
-
-# Problematische Kombinationen
-PROBLEMATIC_DE = ['th', 'ck', 'sh']  # Schwer für Deutsche oder anders ausgesprochen
-PROBLEMATIC_EN = ['ch', 'sch', 'pf', 'tsch']  # Schwer für Englischsprachige
-
-# Wörter die in DE oder EN negativ konnotiert sind
-BLACKLIST_WORDS = [
-    'mist', 'gift', 'bad', 'tot', 'kot', 'piss', 'dick', 'ass', 'fart', 'crap',
-    'nazi', 'pedo', 'rape', 'kill', 'die', 'dead', 'shit', 'fuck', 'damn',
-    'nova',  # "no va" = geht nicht (Spanisch, aber bekannt)
-    'aids', 'hiv', 'std',
-]
+_RULE_BASED_CFG = load_rule_based_config()
+if not _RULE_BASED_CFG:
+    raise ValueError("rule_based.yaml config missing or empty")
 
 
-# =============================================================================
-# SEMANTISCHE MORPHEME FÜR CAMPING/ENERGIE-KONTEXT
-# =============================================================================
+def _require(mapping: dict, key: str):
+    value = mapping.get(key)
+    if value is None:
+        raise ValueError(f"rule_based.yaml missing '{key}'")
+    return value
 
-SEMANTIC_MORPHEMES = [
-    # ENERGIE & TRANSFORMATION
-    SemanticMorpheme('volt', 'electrical unit', 'energy', 'latin', 1, True, True, True),
-    SemanticMorpheme('amp', 'current', 'energy', 'latin', 1, True, True, True),
-    SemanticMorpheme('flux', 'flow', 'energy', 'latin', 1, True, True, True),
-    SemanticMorpheme('dyn', 'power', 'energy', 'greek', 1, True, False, False),
-    SemanticMorpheme('erg', 'energy/work', 'energy', 'greek', 1, False, True, False),
-    SemanticMorpheme('trans', 'across/change', 'transformation', 'latin', 1, True, False, False),
-    SemanticMorpheme('morph', 'form/change', 'transformation', 'greek', 1, True, True, False),
-    SemanticMorpheme('vert', 'turn', 'transformation', 'latin', 1, False, True, False),
-    SemanticMorpheme('pulse', 'beat/push', 'energy', 'latin', 1, True, True, True),
-    SemanticMorpheme('spark', 'ignition', 'energy', 'english', 1, True, True, True),
-    SemanticMorpheme('flow', 'movement', 'energy', 'english', 1, True, True, True),
-    SemanticMorpheme('wave', 'oscillation', 'energy', 'english', 1, True, True, True),
 
-    # REISE & BEWEGUNG
-    SemanticMorpheme('via', 'way/path', 'travel', 'latin', 2, True, True, True),
-    SemanticMorpheme('trek', 'journey', 'travel', 'dutch', 1, True, True, True),
-    SemanticMorpheme('nav', 'navigation', 'travel', 'latin', 1, True, False, False),
-    SemanticMorpheme('voy', 'voyage', 'travel', 'french', 1, True, False, False),
-    SemanticMorpheme('road', 'path', 'travel', 'english', 1, True, True, True),
-    SemanticMorpheme('trail', 'path', 'travel', 'english', 1, True, True, True),
-    SemanticMorpheme('quest', 'search/journey', 'travel', 'latin', 1, True, True, True),
-    SemanticMorpheme('roam', 'wander', 'travel', 'english', 1, True, True, True),
-    SemanticMorpheme('nomad', 'wanderer', 'travel', 'greek', 2, True, True, True),
-    SemanticMorpheme('wander', 'travel', 'travel', 'german', 2, True, True, True),
+def _require_nested(mapping: dict, *keys: str):
+    current = mapping
+    for key in keys:
+        if not isinstance(current, dict) or key not in current:
+            raise ValueError(f"rule_based.yaml missing '{'.'.join(keys)}'")
+        current = current[key]
+    return current
 
-    # NATUR & OUTDOOR
-    SemanticMorpheme('terra', 'earth', 'nature', 'latin', 2, True, True, True),
-    SemanticMorpheme('sol', 'sun', 'nature', 'latin', 1, True, True, True),
-    SemanticMorpheme('lux', 'light', 'nature', 'latin', 1, True, True, True),
-    SemanticMorpheme('aura', 'air/atmosphere', 'nature', 'latin', 2, True, True, True),
-    SemanticMorpheme('aqua', 'water', 'nature', 'latin', 2, True, True, True),
-    SemanticMorpheme('silva', 'forest', 'nature', 'latin', 2, True, True, True),
-    SemanticMorpheme('mont', 'mountain', 'nature', 'latin', 1, True, False, False),
-    SemanticMorpheme('sky', 'heaven', 'nature', 'english', 1, True, True, True),
-    SemanticMorpheme('peak', 'summit', 'nature', 'english', 1, True, True, True),
-    SemanticMorpheme('wild', 'untamed', 'nature', 'english', 1, True, True, True),
-    SemanticMorpheme('aurora', 'dawn', 'nature', 'latin', 3, True, True, True),
-    SemanticMorpheme('zephyr', 'gentle wind', 'nature', 'greek', 2, True, True, True),
 
-    # TECHNIK & ZUVERLÄSSIGKEIT
-    SemanticMorpheme('core', 'center', 'tech', 'latin', 1, True, True, True),
-    SemanticMorpheme('max', 'maximum', 'tech', 'latin', 1, True, True, True),
-    SemanticMorpheme('pro', 'professional', 'tech', 'latin', 1, True, False, False),
-    SemanticMorpheme('neo', 'new', 'tech', 'greek', 2, True, False, False),
-    SemanticMorpheme('prime', 'first/best', 'tech', 'latin', 1, True, True, True),
-    SemanticMorpheme('apex', 'peak/top', 'tech', 'latin', 2, True, True, True),
-    SemanticMorpheme('link', 'connection', 'tech', 'english', 1, True, True, True),
-    SemanticMorpheme('sync', 'synchronize', 'tech', 'greek', 1, True, True, True),
-    SemanticMorpheme('hub', 'center', 'tech', 'english', 1, True, True, True),
+DEFAULTS = _require(_RULE_BASED_CFG, "defaults")
+SCORING = _require(_RULE_BASED_CFG, "scoring")
+PRONOUNCEABILITY = _require(_RULE_BASED_CFG, "pronounceability")
+PHONETICS = _require(_RULE_BASED_CFG, "phonetics")
+GENERATION_CFG = _require(_RULE_BASED_CFG, "generation")
+CLI_CFG = _require(_RULE_BASED_CFG, "cli")
 
-    # FANTASIE-SILBEN (wohlklingend, ohne Bedeutung)
-    SemanticMorpheme('ix', 'suffix (tech feel)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('ia', 'suffix (place)', 'fantasy', 'fantasy', 2, False, True, False),
-    SemanticMorpheme('on', 'suffix (tech)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('ex', 'suffix (dynamic)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('um', 'suffix (latin feel)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('us', 'suffix (latin)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('or', 'suffix (agent)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('er', 'suffix (agent)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('al', 'suffix (quality)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('ar', 'suffix (quality)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('an', 'suffix (belonging)', 'fantasy', 'fantasy', 1, False, True, False),
-    SemanticMorpheme('en', 'suffix (made of)', 'fantasy', 'fantasy', 1, False, True, False),
-]
+
+def _build_phonemes(entries: dict, quality_enum, is_vowel: bool) -> dict:
+    if not entries:
+        raise ValueError("phonetics entries missing in rule_based.yaml")
+    result = {}
+    for symbol, data in entries.items():
+        quality = data.get("quality")
+        weight = data.get("weight")
+        if quality is None or weight is None:
+            raise ValueError(f"phoneme '{symbol}' missing quality/weight in rule_based.yaml")
+        result[symbol] = Phoneme(
+            symbol,
+            quality_enum(quality),
+            is_vowel,
+            float(weight),
+        )
+    return result
+
+
+CONSONANTS = _build_phonemes(_require(PHONETICS, "consonants"), SoundQuality, False)
+VOWELS = _build_phonemes(_require(PHONETICS, "vowels"), VowelQuality, True)
+VOWEL_COMBINATIONS = _require(PHONETICS, "vowel_combinations")
+GOOD_CLUSTERS = _require(PHONETICS, "good_clusters")
+
+PROBLEMATIC_DE = _require(PRONOUNCEABILITY, "problematic_de")
+PROBLEMATIC_EN = _require(PRONOUNCEABILITY, "problematic_en")
+UNUSUAL_VOWELS_DE = _require(PRONOUNCEABILITY, "unusual_vowels_de")
+CONSONANT_CLUSTER_MAX = _require(PRONOUNCEABILITY, "consonant_cluster_max")
+CONSONANT_CHARS = _require(PRONOUNCEABILITY, "consonant_chars")
+VOWEL_CHARS = _require(PRONOUNCEABILITY, "vowel_chars")
+UMLAUT_CHARS = _require(PRONOUNCEABILITY, "umlaut_chars")
+
+BLACKLIST_WORDS = _require(_RULE_BASED_CFG, "blacklist_words")
+EXISTING_BRANDS = _require(_RULE_BASED_CFG, "existing_brands")
+SEMANTIC_MORPHEMES = [SemanticMorpheme(**m) for m in _require(_RULE_BASED_CFG, "semantic_morphemes")]
 
 
 # =============================================================================
@@ -219,10 +154,12 @@ SEMANTIC_MORPHEMES = [
 class SyllableGenerator:
     """Generiert wohlklingende Silben nach phonetischen Regeln"""
 
-    def __init__(self, target_hardness: float = 0.5):
+    def __init__(self, target_hardness: Optional[float] = None):
         """
         target_hardness: 0.0 = sehr weich, 1.0 = sehr hart
         """
+        if target_hardness is None:
+            target_hardness = _require_nested(DEFAULTS, "target_hardness")
         self.target_hardness = target_hardness
 
     def _select_consonant(self, prefer_hard: bool = None) -> str:
@@ -243,10 +180,12 @@ class SyllableGenerator:
     def _select_vowel(self, prefer_open: bool = None) -> str:
         """Wählt einen Vokal"""
         if prefer_open is None:
-            prefer_open = random.random() > 0.5
+            prefer_open_threshold = _require_nested(GENERATION_CFG, "prefer_open_threshold")
+            prefer_open = random.random() > prefer_open_threshold
 
         # Manchmal Diphthong verwenden für weicheren Klang
-        if random.random() < 0.15:
+        diphthong_prob = _require_nested(GENERATION_CFG, "diphthong_probability")
+        if random.random() < diphthong_prob:
             return random.choice(VOWEL_COMBINATIONS)
 
         if prefer_open:
@@ -264,10 +203,10 @@ class SyllableGenerator:
         Patterns: CV, CVC, VC, V, CCV, CCVC
         """
         if pattern is None:
-            pattern = random.choices(
-                ['CV', 'CVC', 'VC', 'CCV'],
-                weights=[0.4, 0.3, 0.15, 0.15]
-            )[0]
+            patterns_cfg = _require_nested(GENERATION_CFG, "syllable_patterns")
+            patterns = _require_nested(patterns_cfg, "patterns")
+            weights = _require_nested(patterns_cfg, "weights")
+            pattern = random.choices(patterns, weights=weights)[0]
 
         text = ""
         hardness_sum = 0
@@ -286,8 +225,9 @@ class SyllableGenerator:
         avg_hardness = hardness_sum / max(consonant_count, 1)
 
         # Berechne Helligkeit basierend auf Vokalen
-        brightness = 0.5
-        vowels_in_text = [c for c in text if c in VOWELS or c in 'aeiou']
+        brightness = _require_nested(GENERATION_CFG, "brightness_default")
+        cv_vowels = _require_nested(SCORING, "cv_alternation", "vowels")
+        vowels_in_text = [c for c in text if c in VOWELS or c in cv_vowels]
         if vowels_in_text:
             bright_vowels = sum(1 for v in vowels_in_text if v in 'ie')
             brightness = bright_vowels / len(vowels_in_text)
@@ -305,7 +245,8 @@ class SyllableGenerator:
         vowel = self._select_vowel()
 
         # Optional: Coda hinzufügen
-        if random.random() < 0.3:
+        coda_prob = _require_nested(GENERATION_CFG, "cluster_coda_probability")
+        if random.random() < coda_prob:
             coda = random.choice([c for c in CONSONANTS.keys()
                                  if CONSONANTS[c].quality != SoundQuality.HARD])
             text = onset + vowel + coda
@@ -314,7 +255,8 @@ class SyllableGenerator:
             text = onset + vowel
             pattern = "CCV"
 
-        return Syllable(text=text, pattern=pattern, hardness=0.4)
+        cluster_hardness = _require_nested(GENERATION_CFG, "cluster_hardness_default")
+        return Syllable(text=text, pattern=pattern, hardness=cluster_hardness)
 
 
 # =============================================================================
@@ -348,84 +290,91 @@ class NameScorer:
 
     def _load_existing_brands(self) -> set:
         """Lädt bekannte Markennamen zum Vergleich"""
-        # Einige bekannte Camping/RV/Tech-Marken
-        return {
-            'dometic', 'truma', 'fiamma', 'thule', 'webasto', 'victron',
-            'renogy', 'ecoflow', 'bluetti', 'jackery', 'goal zero',
-            'tesla', 'volta', 'ampere', 'watt', 'ohm',
-        }
+        return set(b.lower() for b in EXISTING_BRANDS)
 
     def _check_pronounceability_de(self, name: str) -> float:
         """Prüft Aussprechbarkeit für Deutsche"""
-        score = 1.0
+        pron_cfg = _require_nested(SCORING, "pronounceability")
+        score = _require_nested(pron_cfg, "base")
         name_lower = name.lower()
 
         # Problematische Cluster für Deutsche
+        de_cfg = _require_nested(pron_cfg, "de")
+        de_penalty = _require_nested(de_cfg, "problematic_penalty")
         for prob in PROBLEMATIC_DE:
             if prob in name_lower:
-                score -= 0.15
+                score += de_penalty
 
         # Sehr lange Konsonantencluster
-        if re.search(r'[bcdfghjklmnpqrstvwxz]{4,}', name_lower):
-            score -= 0.3
+        cluster_penalty = _require_nested(de_cfg, "cluster_penalty")
+        cluster_pattern = rf'[{CONSONANT_CHARS}]{{{CONSONANT_CLUSTER_MAX},}}'
+        if re.search(cluster_pattern, name_lower):
+            score += cluster_penalty
 
         # Doppelvokale die im Deutschen unüblich sind
-        unusual_vowels = ['oo', 'ee', 'aa']
-        for uv in unusual_vowels:
+        unusual_penalty = _require_nested(de_cfg, "unusual_vowel_penalty")
+        for uv in UNUSUAL_VOWELS_DE:
             if uv in name_lower:
-                score -= 0.05
+                score += unusual_penalty
 
         return max(0, score)
 
     def _check_pronounceability_en(self, name: str) -> float:
         """Prüft Aussprechbarkeit für Englischsprachige"""
-        score = 1.0
+        pron_cfg = _require_nested(SCORING, "pronounceability")
+        score = _require_nested(pron_cfg, "base")
         name_lower = name.lower()
 
         # Problematische Cluster für Englischsprachige
+        en_cfg = _require_nested(pron_cfg, "en")
+        en_penalty = _require_nested(en_cfg, "problematic_penalty")
         for prob in PROBLEMATIC_EN:
             if prob in name_lower:
-                score -= 0.2
+                score += en_penalty
 
         # Deutsche Umlaute (sollten nicht vorkommen, aber sicher ist sicher)
-        if any(c in name_lower for c in 'äöüß'):
-            score -= 0.4
+        umlaut_penalty = _require_nested(en_cfg, "umlaut_penalty")
+        if any(c in name_lower for c in UMLAUT_CHARS):
+            score += umlaut_penalty
 
         return max(0, score)
 
     def _check_memorability(self, name: str) -> float:
         """Bewertet Einprägsamkeit"""
-        score = 1.0
+        mem_cfg = _require_nested(SCORING, "memorability")
+        score = _require_nested(mem_cfg, "base")
 
         # Optimale Länge: 4-7 Zeichen (STRENGER)
         length = len(name)
+        length_cfg = _require_nested(SCORING, "length")
         if length < 3:
-            score -= 0.4
+            score += _require_nested(length_cfg, "penalty_lt3")
         elif length < 4:
-            score -= 0.1
+            score += _require_nested(length_cfg, "penalty_lt4")
         elif length <= 6:
-            score += 0.15  # Sweet spot: 4-6 Zeichen
+            score += _require_nested(length_cfg, "bonus_4_6")
         elif length == 7:
-            score += 0.05
+            score += _require_nested(length_cfg, "bonus_7")
         elif length == 8:
-            score -= 0.1
+            score += _require_nested(length_cfg, "penalty_8")
         elif length == 9:
-            score -= 0.25
+            score += _require_nested(length_cfg, "penalty_9")
         elif length >= 10:
-            score -= 0.4 + 0.1 * (length - 10)  # Starke Strafe für Wortmonster
+            score += _require_nested(length_cfg, "penalty_ge10_base") + _require_nested(length_cfg, "penalty_ge10_per_char") * (length - 10)
 
         # Silbenzahl (2 optimal, 3 okay)
         syllable_count = self._count_syllables(name)
+        syll_cfg = _require_nested(SCORING, "syllables")
         if syllable_count == 2:
-            score += 0.15
+            score += _require_nested(syll_cfg, "bonus_2")
         elif syllable_count == 3:
-            score -= 0.05  # Leichte Strafe statt Bonus
+            score += _require_nested(syll_cfg, "penalty_3")
         elif syllable_count >= 4:
-            score -= 0.3  # Starke Strafe für 4+ Silben
+            score += _require_nested(syll_cfg, "penalty_ge4")
 
         # Wiederholende Elemente erhöhen Einprägsamkeit
         if self._has_repetition(name):
-            score += 0.1
+            score += _require_nested(mem_cfg, "repetition_bonus")
 
         return min(1.0, max(0, score))
 
@@ -433,7 +382,7 @@ class NameScorer:
         """Zählt ungefähre Silbenzahl"""
         name_lower = name.lower()
         # Vereinfachte Zählung: Vokale zählen, aufeinanderfolgende als eine
-        vowels = 'aeiouäöü'
+        vowels = VOWEL_CHARS
         count = 0
         prev_was_vowel = False
 
@@ -448,12 +397,15 @@ class NameScorer:
     def _has_repetition(self, name: str) -> bool:
         """Prüft auf einprägsame Wiederholungen (wie Coca-Cola)"""
         name_lower = name.lower()
+        repetition_cfg = _require_nested(SCORING, "repetition")
+        min_length = _require_nested(repetition_cfg, "min_length")
+        vowels = _require_nested(repetition_cfg, "vowels")
 
         # Alliteration
-        if len(name_lower) >= 4:
+        if len(name_lower) >= min_length:
             first_consonant = None
             for c in name_lower:
-                if c not in 'aeiou':
+                if c not in vowels:
                     if first_consonant is None:
                         first_consonant = c
                     elif c == first_consonant:
@@ -461,7 +413,7 @@ class NameScorer:
                     break
 
         # Silbenwiederholung
-        if len(name_lower) >= 4:
+        if len(name_lower) >= min_length:
             half = len(name_lower) // 2
             if name_lower[:half] == name_lower[half:half*2]:
                 return True
@@ -470,12 +422,13 @@ class NameScorer:
 
     def _check_euphony(self, name: str) -> float:
         """Bewertet Wohlklang"""
-        score = 0.7  # Baseline
+        euph_cfg = _require_nested(SCORING, "euphony")
+        score = _require_nested(euph_cfg, "base")
         name_lower = name.lower()
 
         # Gute Konsonant-Vokal-Abwechslung
         cv_alternation = self._calculate_cv_alternation(name_lower)
-        score += cv_alternation * 0.2
+        score += cv_alternation * _require_nested(euph_cfg, "cv_alternation_weight")
 
         # Weiche Konsonanten für angenehmeren Klang
         soft_consonants = sum(1 for c in name_lower
@@ -484,23 +437,27 @@ class NameScorer:
         total_consonants = sum(1 for c in name_lower if c in CONSONANTS)
         if total_consonants > 0:
             soft_ratio = soft_consonants / total_consonants
-            score += soft_ratio * 0.1
+            score += soft_ratio * _require_nested(euph_cfg, "soft_consonant_weight")
 
         # Offene Vokale klingen voller
-        open_vowels = sum(1 for c in name_lower if c in 'ao')
-        total_vowels = sum(1 for c in name_lower if c in 'aeiou')
+        open_vowel_chars = _require_nested(euph_cfg, "open_vowels")
+        vowel_chars = _require_nested(euph_cfg, "vowel_chars")
+        open_vowels = sum(1 for c in name_lower if c in open_vowel_chars)
+        total_vowels = sum(1 for c in name_lower if c in vowel_chars)
         if total_vowels > 0:
             open_ratio = open_vowels / total_vowels
-            score += open_ratio * 0.05
+            score += open_ratio * _require_nested(euph_cfg, "open_vowel_weight")
 
         return min(1.0, score)
 
     def _calculate_cv_alternation(self, name: str) -> float:
         """Berechnet wie gut Konsonanten und Vokale abwechseln"""
+        cv_cfg = _require_nested(SCORING, "cv_alternation")
+        short_name_score = _require_nested(cv_cfg, "short_name_score")
+        vowels = _require_nested(cv_cfg, "vowels")
         if len(name) < 2:
-            return 0.5
+            return short_name_score
 
-        vowels = 'aeiouäöü'
         alternations = 0
 
         for i in range(1, len(name)):
@@ -513,58 +470,60 @@ class NameScorer:
 
     def _check_rhythm(self, name: str) -> float:
         """Bewertet rhythmische Qualität"""
+        rhythm_cfg = _require_nested(SCORING, "rhythm")
         syllables = self._count_syllables(name)
         length = len(name)
 
         # 2 Silben = optimal
         if syllables == 2:
-            return 0.95
+            return _require_nested(rhythm_cfg, "two_syllables")
         elif syllables == 1:
-            return 0.75
+            return _require_nested(rhythm_cfg, "one_syllable")
         elif syllables == 3:
             # 3 Silben nur gut wenn Name kurz genug
-            if length <= 7:
-                return 0.8
-            else:
-                return 0.6
+            max_short = _require_nested(rhythm_cfg, "max_short_length")
+            if length <= max_short:
+                return _require_nested(rhythm_cfg, "three_syllables_short")
+            return _require_nested(rhythm_cfg, "three_syllables_long")
         elif syllables == 4:
-            return 0.4  # Viel zu lang
-        else:
-            return 0.2  # 5+ Silben = inakzeptabel
+            return _require_nested(rhythm_cfg, "four_syllables")
+        return _require_nested(rhythm_cfg, "five_plus")
 
     def _check_semantic_fit(self, name: str, morphemes_used: list) -> tuple[float, list]:
         """Bewertet semantische Passung zum Camping/Energie-Kontext"""
-        score = 0.5
+        sem_cfg = _require_nested(SCORING, "semantic_fit")
+        score = _require_nested(sem_cfg, "base")
+        category_weights = _require_nested(sem_cfg, "category_weights")
         associations = []
 
         for morpheme in morphemes_used:
             if isinstance(morpheme, SemanticMorpheme):
-                if morpheme.category in ['energy', 'transformation', 'travel', 'nature']:
-                    score += 0.15
-                    associations.append(f"{morpheme.text}: {morpheme.meaning}")
-                elif morpheme.category == 'tech':
-                    score += 0.1
+                if morpheme.category in category_weights:
+                    score += category_weights[morpheme.category]
                     associations.append(f"{morpheme.text}: {morpheme.meaning}")
 
         return min(1.0, score), associations
 
     def _check_uniqueness(self, name: str) -> float:
         """Prüft ob der Name einzigartig ist"""
+        uniq_cfg = _require_nested(SCORING, "uniqueness")
         name_lower = name.lower()
 
         # Exakte Übereinstimmung mit bekannter Marke
         if name_lower in self.existing_brands:
-            return 0.0
+            return _require_nested(uniq_cfg, "exact_match_score")
 
         # Ähnlichkeit zu bekannten Marken (einfacher Check)
         for brand in self.existing_brands:
             if name_lower in brand or brand in name_lower:
-                return 0.3
+                return _require_nested(uniq_cfg, "substring_score")
             # Levenshtein wäre besser, aber für Einfachheit:
-            if len(set(name_lower) & set(brand)) / max(len(name_lower), len(brand)) > 0.8:
-                return 0.5
+            overlap_threshold = _require_nested(uniq_cfg, "overlap_threshold")
+            overlap_score = _require_nested(uniq_cfg, "overlap_score")
+            if len(set(name_lower) & set(brand)) / max(len(name_lower), len(brand)) > overlap_threshold:
+                return overlap_score
 
-        return 1.0
+        return _require_nested(uniq_cfg, "default_score")
 
     def _check_blacklist(self, name: str) -> list:
         """Prüft auf problematische Wörter"""
@@ -583,6 +542,14 @@ class NameScorer:
             morphemes_used = []
 
         issues = self._check_blacklist(name)
+        # Cross-linguistic pronounceability gate (EN/DE)
+        try:
+            from brandkit.generators.phonemes import is_pronounceable
+            ok, reason = is_pronounceable(name, markets='en_de')
+            if not ok:
+                issues.append(f"pronounceability:{reason}")
+        except Exception:
+            pass
 
         pronounce_de = self._check_pronounceability_de(name)
         pronounce_en = self._check_pronounceability_en(name)
@@ -593,19 +560,20 @@ class NameScorer:
         uniqueness = self._check_uniqueness(name)
 
         # Gewichtete Gesamtbewertung (Memorability & Rhythm wichtiger!)
+        weights = _require_nested(SCORING, "weights")
         total = (
-            pronounce_de * 0.12 +
-            pronounce_en * 0.12 +
-            memorability * 0.30 +  # WICHTIG: Kurze Namen bevorzugen
-            euphony * 0.15 +
-            rhythm * 0.18 +        # WICHTIG: 2 Silben bevorzugen
-            semantic_fit * 0.05 +  # Weniger wichtig
-            uniqueness * 0.08
+            pronounce_de * _require_nested(weights, "pronounceability_de") +
+            pronounce_en * _require_nested(weights, "pronounceability_en") +
+            memorability * _require_nested(weights, "memorability") +
+            euphony * _require_nested(weights, "euphony") +
+            rhythm * _require_nested(weights, "rhythm") +
+            semantic_fit * _require_nested(weights, "semantic_fit") +
+            uniqueness * _require_nested(weights, "uniqueness")
         )
 
         # Malus für Blacklist-Treffer
         if issues:
-            total *= 0.1
+            total *= _require_nested(SCORING, "blacklist_penalty_multiplier")
 
         return NameScore(
             name=name,
@@ -630,8 +598,12 @@ class BrandNameGenerator:
     """Hauptklasse für die Markennamen-Generierung"""
 
     def __init__(self,
-                 target_hardness: float = 0.5,
-                 prefer_semantic: bool = True):
+                 target_hardness: Optional[float] = None,
+                 prefer_semantic: Optional[bool] = None):
+        if target_hardness is None:
+            target_hardness = _require_nested(DEFAULTS, "target_hardness")
+        if prefer_semantic is None:
+            prefer_semantic = _require_nested(DEFAULTS, "prefer_semantic")
         self.syllable_gen = SyllableGenerator(target_hardness)
         self.scorer = NameScorer()
         self.prefer_semantic = prefer_semantic
@@ -651,24 +623,25 @@ class BrandNameGenerator:
     def generate_semantic_name(self, categories: list = None) -> tuple[str, list]:
         """Generiert Namen basierend auf semantischen Morphemen"""
         if categories is None:
-            categories = ['energy', 'travel', 'nature', 'tech']
+            categories = _require_nested(GENERATION_CFG, "categories_default")
 
         morphemes_used = []
 
         # Strategie wählen (prefix_suffix bevorzugt = kürzere Namen)
-        strategy = random.choices(
-            ['prefix_suffix', 'double_morpheme', 'morpheme_fantasy', 'standalone_modified'],
-            weights=[0.45, 0.10, 0.25, 0.20]  # double_morpheme selten (erzeugt lange Namen)
-        )[0]
+        strategy_weights = _require_nested(GENERATION_CFG, "semantic_strategy_weights")
+        strategies = list(strategy_weights.keys())
+        weights = [strategy_weights[s] for s in strategies]
+        strategy = random.choices(strategies, weights=weights)[0]
 
         if strategy == 'prefix_suffix':
             # Präfix + Suffix (z.B. "Voltix", "Trekora")
+            fantasy_category = _require_nested(GENERATION_CFG, "fantasy_category")
             prefix_pool = [m for m in self._get_prefix_morphemes()
-                         if m.category in categories or m.category == 'fantasy']
+                         if m.category in categories or m.category == fantasy_category]
             suffix_pool = self._get_suffix_morphemes()
 
             prefix = random.choice(prefix_pool)
-            suffix = random.choice([s for s in suffix_pool if s.category == 'fantasy'])
+            suffix = random.choice([s for s in suffix_pool if s.category == fantasy_category])
 
             name = prefix.text.capitalize() + suffix.text
             morphemes_used = [prefix, suffix]
@@ -676,10 +649,13 @@ class BrandNameGenerator:
         elif strategy == 'double_morpheme':
             # Zwei bedeutungstragende Morpheme (z.B. "Solflux", "Volterra")
             # NUR kurze Morpheme verwenden (max 4 Zeichen pro Teil)
+            double_cfg = _require_nested(GENERATION_CFG, "semantic_double_morpheme")
+            max_first_len = _require_nested(double_cfg, "max_first_length")
+            max_second_len = _require_nested(double_cfg, "max_second_length")
             first_pool = [m for m in self._get_prefix_morphemes()
-                         if m.category in categories and len(m.text) <= 4]
+                         if m.category in categories and len(m.text) <= max_first_len]
             second_pool = [m for m in self._get_suffix_morphemes()
-                          if m.category in categories and len(m.text) <= 3]
+                          if m.category in categories and len(m.text) <= max_second_len]
 
             if not first_pool or not second_pool:
                 # Fallback zu prefix_suffix
@@ -692,13 +668,15 @@ class BrandNameGenerator:
             name = self._smooth_join(first.text, second.text)
 
             # Wenn Name zu lang, nochmal versuchen
-            if len(name) > 8:
+            max_name_len = _require_nested(double_cfg, "max_name_length")
+            if len(name) > max_name_len:
                 return self.generate_semantic_name(categories)
 
             morphemes_used = [first, second]
 
         elif strategy == 'morpheme_fantasy':
             # Morphem + Fantasy-Silbe
+            fantasy_category = _require_nested(GENERATION_CFG, "fantasy_category")
             morpheme = random.choice([m for m in SEMANTIC_MORPHEMES
                                      if m.category in categories])
             fantasy_syl = self.syllable_gen.generate_syllable()
@@ -717,16 +695,9 @@ class BrandNameGenerator:
             if standalone:
                 base = random.choice(standalone)
                 # Leichte Modifikation
-                modifications = [
-                    lambda x: x + 'a',
-                    lambda x: x + 'o',
-                    lambda x: x + 'i',
-                    lambda x: x[0].upper() + x[1:] + 'ex',
-                    lambda x: x[0].upper() + x[1:] + 'on',
-                    lambda x: 'e' + x,
-                ]
+                modifications = _require_nested(GENERATION_CFG, "standalone_modifications")
                 mod = random.choice(modifications)
-                name = mod(base.text).capitalize()
+                name = self._apply_modification(base.text, mod)
                 morphemes_used = [base]
             else:
                 # Fallback
@@ -737,7 +708,7 @@ class BrandNameGenerator:
     def _smooth_join(self, first: str, second: str) -> str:
         """Verbindet zwei Morpheme fließend"""
         # Wenn erstes mit Vokal endet und zweites mit Vokal beginnt
-        vowels = 'aeiou'
+        vowels = _require_nested(SCORING, "repetition", "vowels")
         if first[-1] in vowels and second[0] in vowels:
             # Einen Vokal weglassen
             return first[:-1].capitalize() + second
@@ -745,23 +716,46 @@ class BrandNameGenerator:
         # Wenn erstes mit Konsonant endet und zweites mit Konsonant beginnt
         if first[-1] not in vowels and second[0] not in vowels:
             # Bindevokal einfügen
-            connector = random.choice(['a', 'i', 'o'])
+            connectors = _require_nested(GENERATION_CFG, "join_connectors")
+            connector = random.choice(connectors)
             return first.capitalize() + connector + second
 
         return first.capitalize() + second
 
+    def _apply_modification(self, text: str, mod: dict) -> str:
+        mod_type = mod.get("type")
+        value = mod.get("value", "")
+        if not mod_type:
+            raise ValueError("standalone_modifications entries must include type")
+        if mod_type == "suffix":
+            result = text + value
+        elif mod_type == "suffix_capitalize":
+            result = text.capitalize() + value
+        elif mod_type == "prefix":
+            result = value + text
+        else:
+            raise ValueError(f"Unknown modification type: {mod_type}")
+        return result.capitalize()
+
     def generate_phonetic_name(self, syllable_count: int = None) -> tuple[str, list]:
         """Generiert rein phonetisch basierten Namen"""
         if syllable_count is None:
-            syllable_count = random.choices([2, 3], weights=[0.6, 0.4])[0]
+            phonetic_cfg = _require_nested(GENERATION_CFG, "phonetic")
+            syllable_weights = _require_nested(phonetic_cfg, "syllable_count_weights")
+            counts = _require_nested(syllable_weights, "counts")
+            weights = _require_nested(syllable_weights, "weights")
+            syllable_count = random.choices(counts, weights=weights)[0]
 
         syllables = []
 
         # Erste Silbe: oft mit Cluster für markanten Anfang
-        if random.random() < 0.4:
+        phonetic_cfg = _require_nested(GENERATION_CFG, "phonetic")
+        cluster_start_probability = _require_nested(phonetic_cfg, "cluster_start_probability")
+        first_pattern = _require_nested(phonetic_cfg, "first_syllable_pattern")
+        if random.random() < cluster_start_probability:
             syllables.append(self.syllable_gen.generate_cluster_syllable())
         else:
-            syllables.append(self.syllable_gen.generate_syllable('CV'))
+            syllables.append(self.syllable_gen.generate_syllable(first_pattern))
 
         # Mittlere Silben
         for _ in range(syllable_count - 2):
@@ -769,9 +763,11 @@ class BrandNameGenerator:
 
         # Letzte Silbe: oft offen (endet auf Vokal) für weichen Ausklang
         if syllable_count > 1:
-            last_syl = self.syllable_gen.generate_syllable(
-                random.choice(['CV', 'CV', 'CVC'])
-            )
+            last_patterns = _require_nested(phonetic_cfg, "last_syllable_patterns")
+            patterns = _require_nested(last_patterns, "patterns")
+            weights = _require_nested(last_patterns, "weights")
+            last_pattern = random.choices(patterns, weights=weights)[0]
+            last_syl = self.syllable_gen.generate_syllable(last_pattern)
             syllables.append(last_syl)
 
         name = ''.join(s.text for s in syllables).capitalize()
@@ -779,27 +775,36 @@ class BrandNameGenerator:
 
     def generate_hybrid_name(self) -> tuple[str, list]:
         """Kombiniert semantische und phonetische Elemente"""
-        if random.random() < 0.5:
+        hybrid_cfg = _require_nested(GENERATION_CFG, "hybrid")
+        suffix_probability = _require_nested(hybrid_cfg, "phonetic_suffix_probability")
+        if random.random() < suffix_probability:
             # Phonetisch + Suffix
-            phonetic, _ = self.generate_phonetic_name(syllable_count=2)
+            syllable_count = _require_nested(hybrid_cfg, "phonetic_syllable_count")
+            phonetic, _ = self.generate_phonetic_name(syllable_count=syllable_count)
+            suffix_category = _require_nested(hybrid_cfg, "suffix_category")
             suffix = random.choice([m for m in SEMANTIC_MORPHEMES
-                                   if m.category == 'fantasy' and m.works_as_suffix])
+                                   if m.category == suffix_category and m.works_as_suffix])
             name = phonetic[:-1] + suffix.text  # Letzten Buchstaben ersetzen
             return name.capitalize(), [suffix]
         else:
             # Präfix + Phonetisch
+            prefix_syllables = _require_nested(hybrid_cfg, "prefix_syllables")
             prefix = random.choice([m for m in SEMANTIC_MORPHEMES
-                                   if m.works_as_prefix and m.syllables == 1])
-            phonetic_syl = self.syllable_gen.generate_syllable('CV')
+                                   if m.works_as_prefix and m.syllables == prefix_syllables])
+            phonetic_pattern = _require_nested(hybrid_cfg, "phonetic_pattern")
+            phonetic_syl = self.syllable_gen.generate_syllable(phonetic_pattern)
             name = prefix.text + phonetic_syl.text
             return name.capitalize(), [prefix]
 
     def generate_name(self) -> tuple[str, list]:
         """Generiert einen Namen mit gemischter Strategie"""
-        strategy = random.choices(
-            ['semantic', 'phonetic', 'hybrid'],
-            weights=[0.5, 0.25, 0.25] if self.prefer_semantic else [0.25, 0.5, 0.25]
-        )[0]
+        if self.prefer_semantic:
+            weights_cfg = _require_nested(GENERATION_CFG, "prefer_semantic_strategy_weights")
+        else:
+            weights_cfg = _require_nested(GENERATION_CFG, "no_semantic_strategy_weights")
+        strategies = list(weights_cfg.keys())
+        weights = [weights_cfg[s] for s in strategies]
+        strategy = random.choices(strategies, weights=weights)[0]
 
         if strategy == 'semantic':
             return self.generate_semantic_name()
@@ -809,18 +814,26 @@ class BrandNameGenerator:
             return self.generate_hybrid_name()
 
     def generate_batch(self,
-                       count: int = 50,
-                       min_score: float = 0.6,
+                       count: Optional[int] = None,
+                       min_score: Optional[float] = None,
                        categories: list = None) -> list[NameScore]:
         """Generiert eine Batch von Namen und filtert nach Score"""
+        if categories is None:
+            categories = _require_nested(GENERATION_CFG, "categories_default")
+        if count is None:
+            count = _require_nested(GENERATION_CFG, "batch_count")
+        if min_score is None:
+            min_score = _require_nested(DEFAULTS, "min_score")
         results = []
         attempts = 0
-        max_attempts = count * 10  # Prevent infinite loops
+        max_attempts_multiplier = _require_nested(GENERATION_CFG, "max_attempts_multiplier")
+        max_attempts = count * max_attempts_multiplier
 
         while len(results) < count and attempts < max_attempts:
             attempts += 1
 
-            if categories and random.random() < 0.7:
+            semantic_bias_probability = _require_nested(GENERATION_CFG, "semantic_bias_probability")
+            if categories and random.random() < semantic_bias_probability:
                 name, morphemes = self.generate_semantic_name(categories)
             else:
                 name, morphemes = self.generate_name()
@@ -830,7 +843,8 @@ class BrandNameGenerator:
                 continue
 
             # Harter Längenfilter: Max 9 Zeichen
-            if len(name) > 9:
+            max_name_length = _require_nested(GENERATION_CFG, "max_name_length")
+            if len(name) > max_name_length:
                 continue
 
             score = self.scorer.score_name(name, morphemes)
@@ -862,30 +876,30 @@ Examples:
     parser.add_argument(
         '-n', '--count',
         type=int,
-        default=30,
-        help='Number of names to generate (default: 30)'
+        default=_require_nested(CLI_CFG, "default_count"),
+        help='Number of names to generate'
     )
 
     parser.add_argument(
         '-m', '--min-score',
         type=float,
-        default=0.65,
-        help='Minimum score threshold (0-1, default: 0.65)'
+        default=_require_nested(CLI_CFG, "default_min_score"),
+        help='Minimum score threshold (0-1)'
     )
 
     parser.add_argument(
         '-c', '--categories',
         nargs='+',
-        choices=['energy', 'travel', 'nature', 'tech', 'transformation'],
-        default=['energy', 'travel', 'nature'],
+        choices=_require_nested(CLI_CFG, "available_categories"),
+        default=_require_nested(CLI_CFG, "default_categories"),
         help='Semantic categories to focus on'
     )
 
     parser.add_argument(
         '--hardness',
         type=float,
-        default=0.4,
-        help='Sound hardness (0=soft, 1=hard, default: 0.4)'
+        default=_require_nested(CLI_CFG, "default_hardness"),
+        help='Sound hardness (0=soft, 1=hard)'
     )
 
     parser.add_argument(
@@ -896,9 +910,9 @@ Examples:
 
     parser.add_argument(
         '-f', '--format',
-        choices=['text', 'json', 'csv'],
-        default='text',
-        help='Output format (default: text)'
+        choices=_require_nested(CLI_CFG, "formats"),
+        default=_require_nested(CLI_CFG, "default_format"),
+        help='Output format'
     )
 
     parser.add_argument(

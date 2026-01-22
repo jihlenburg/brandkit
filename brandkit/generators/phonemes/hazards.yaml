@@ -48,6 +48,72 @@ words:
     severity: medium
     note: "Sounds vulgar to English speakers"
 
+  # English market hazards (sexual terms)
+  sex:
+    language: english
+    meaning: "sexual term"
+    severity: critical
+
+  orgy:
+    language: english
+    meaning: "sexual term"
+    severity: critical
+
+  orgasm:
+    language: english
+    meaning: "sexual term"
+    severity: critical
+
+  porn:
+    language: english
+    meaning: "pornography"
+    severity: critical
+
+  penis:
+    language: english
+    meaning: "penis"
+    severity: critical
+
+  vagina:
+    language: english
+    meaning: "vagina"
+    severity: critical
+
+  vulva:
+    language: english
+    meaning: "vulva"
+    severity: critical
+
+  clit:
+    language: english
+    meaning: "clitoris (slang)"
+    severity: critical
+
+  cum:
+    language: english
+    meaning: "semen (slang)"
+    severity: critical
+
+  semen:
+    language: english
+    meaning: "semen"
+    severity: critical
+
+  spunk:
+    language: english
+    meaning: "semen (slang, UK)"
+    severity: critical
+
+  whore:
+    language: english
+    meaning: "sex worker (vulgar)"
+    severity: critical
+
+  slut:
+    language: english
+    meaning: "derogatory term"
+    severity: critical
+
   # Spanish market hazards
   nova:
     language: spanish
@@ -724,6 +790,16 @@ phonetic_patterns:
     regex: "t[iy]t"
     sounds_like: "tit"
     severity: medium
+
+  sex_sound:
+    regex: "s[e3]x"
+    sounds_like: "sex"
+    severity: high
+
+  penis_sound:
+    regex: "p[ei]n[iy]s"
+    sounds_like: "penis"
+    severity: high
 
   fart_sound:
     regex: "f[aä]rt"

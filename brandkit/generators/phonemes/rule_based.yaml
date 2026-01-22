@@ -1,0 +1,303 @@
+# Rule-based generator configuration (DE/EN focus)
+
+defaults:
+  target_hardness: 0.5
+  prefer_semantic: true
+  max_name_length: 9
+  max_attempts_multiplier: 10
+  min_score: 0.6
+
+scoring:
+  weights:
+    pronounceability_de: 0.12
+    pronounceability_en: 0.12
+    memorability: 0.30
+    euphony: 0.15
+    rhythm: 0.18
+    semantic_fit: 0.05
+    uniqueness: 0.08
+  length:
+    bonus_4_6: 0.15
+    bonus_7: 0.05
+    penalty_lt3: -0.4
+    penalty_lt4: -0.1
+    penalty_8: -0.1
+    penalty_9: -0.25
+    penalty_ge10_base: -0.4
+    penalty_ge10_per_char: -0.1
+  syllables:
+    bonus_2: 0.15
+    penalty_3: -0.05
+    penalty_ge4: -0.3
+  rhythm:
+    two_syllables: 0.95
+    one_syllable: 0.75
+    three_syllables_short: 0.8
+    three_syllables_long: 0.6
+    four_syllables: 0.4
+    five_plus: 0.2
+    max_short_length: 7
+  euphony:
+    base: 0.7
+    cv_alternation_weight: 0.2
+    soft_consonant_weight: 0.1
+    open_vowel_weight: 0.05
+    open_vowels: "ao"
+    vowel_chars: "aeiou"
+  pronounceability:
+    base: 1.0
+    de:
+      problematic_penalty: -0.15
+      cluster_penalty: -0.3
+      unusual_vowel_penalty: -0.05
+    en:
+      problematic_penalty: -0.2
+      umlaut_penalty: -0.4
+  memorability:
+    base: 1.0
+    repetition_bonus: 0.1
+  cv_alternation:
+    short_name_score: 0.5
+    vowels: "aeiouäöü"
+  semantic_fit:
+    base: 0.5
+    category_weights:
+      energy: 0.15
+      transformation: 0.15
+      travel: 0.15
+      nature: 0.15
+      tech: 0.1
+  uniqueness:
+    exact_match_score: 0.0
+    substring_score: 0.3
+    overlap_threshold: 0.8
+    overlap_score: 0.5
+    default_score: 1.0
+  blacklist_penalty_multiplier: 0.1
+  repetition:
+    min_length: 4
+    vowels: "aeiou"
+
+pronounceability:
+  problematic_de: [th, ck, sh]
+  problematic_en: [ch, sch, pf, tsch]
+  unusual_vowels_de: [oo, ee, aa]
+  consonant_cluster_max: 4
+  consonant_chars: "bcdfghjklmnpqrstvwxz"
+  vowel_chars: "aeiouäöü"
+  umlaut_chars: "äöüß"
+
+phonetics:
+  consonants:
+    k: {quality: hard, weight: 1.0}
+    t: {quality: hard, weight: 1.2}
+    p: {quality: hard, weight: 0.9}
+    g: {quality: hard, weight: 0.8}
+    d: {quality: hard, weight: 1.0}
+    b: {quality: hard, weight: 0.9}
+    m: {quality: soft, weight: 1.1}
+    n: {quality: soft, weight: 1.3}
+    l: {quality: soft, weight: 1.2}
+    w: {quality: soft, weight: 0.7}
+    j: {quality: soft, weight: 0.5}
+    s: {quality: sharp, weight: 1.1}
+    z: {quality: sharp, weight: 0.6}
+    x: {quality: sharp, weight: 0.4}
+    r: {quality: flowing, weight: 1.0}
+    f: {quality: flowing, weight: 0.8}
+    v: {quality: flowing, weight: 0.7}
+    h: {quality: flowing, weight: 0.5}
+  vowels:
+    a: {quality: open, weight: 1.3}
+    o: {quality: open, weight: 1.0}
+    i: {quality: closed, weight: 1.2}
+    u: {quality: closed, weight: 0.8}
+    e: {quality: neutral, weight: 1.4}
+  vowel_combinations: [ai, au, ei, eu, ou, oo, ee, ia, io, ea]
+  good_clusters:
+    onset: [tr, kr, pr, br, dr, gr, fr, fl, bl, gl, pl, kl, sl, sp, st, sk]
+    coda: [nt, nd, nk, lt, ld, rt, rd, rk, st, sk, mp, lm, rm]
+
+blacklist_words:
+  - mist
+  - gift
+  - bad
+  - tot
+  - kot
+  - piss
+  - dick
+  - ass
+  - fart
+  - crap
+  - nazi
+  - pedo
+  - rape
+  - kill
+  - die
+  - dead
+  - shit
+  - fuck
+  - damn
+  - nova
+  - aids
+  - hiv
+  - std
+
+semantic_morphemes:
+  - {text: volt, meaning: "electrical unit", category: energy, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: amp, meaning: "current", category: energy, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: flux, meaning: "flow", category: energy, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: dyn, meaning: "power", category: energy, origin: greek, syllables: 1, works_as_prefix: true, works_as_suffix: false, works_standalone: false}
+  - {text: erg, meaning: "energy/work", category: energy, origin: greek, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: trans, meaning: "across/change", category: transformation, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: false, works_standalone: false}
+  - {text: morph, meaning: "form/change", category: transformation, origin: greek, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: false}
+  - {text: vert, meaning: "turn", category: transformation, origin: latin, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: pulse, meaning: "beat/push", category: energy, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: spark, meaning: "ignition", category: energy, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: flow, meaning: "movement", category: energy, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: wave, meaning: "oscillation", category: energy, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: via, meaning: "way/path", category: travel, origin: latin, syllables: 2, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: trek, meaning: "journey", category: travel, origin: dutch, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: nav, meaning: "navigation", category: travel, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: false, works_standalone: false}
+  - {text: voy, meaning: "voyage", category: travel, origin: french, syllables: 1, works_as_prefix: true, works_as_suffix: false, works_standalone: false}
+  - {text: road, meaning: "path", category: travel, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: trail, meaning: "path", category: travel, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: quest, meaning: "search/journey", category: travel, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: roam, meaning: "wander", category: travel, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: nomad, meaning: "wanderer", category: travel, origin: greek, syllables: 2, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: wander, meaning: "travel", category: travel, origin: german, syllables: 2, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: terra, meaning: "earth", category: nature, origin: latin, syllables: 2, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: sol, meaning: "sun", category: nature, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: lux, meaning: "light", category: nature, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: aura, meaning: "air/atmosphere", category: nature, origin: latin, syllables: 2, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: aqua, meaning: "water", category: nature, origin: latin, syllables: 2, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: silva, meaning: "forest", category: nature, origin: latin, syllables: 2, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: mont, meaning: "mountain", category: nature, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: false, works_standalone: false}
+  - {text: sky, meaning: "heaven", category: nature, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: peak, meaning: "summit", category: nature, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: wild, meaning: "untamed", category: nature, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: aurora, meaning: "dawn", category: nature, origin: latin, syllables: 3, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: zephyr, meaning: "gentle wind", category: nature, origin: greek, syllables: 2, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: core, meaning: "center", category: tech, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: max, meaning: "maximum", category: tech, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: pro, meaning: "professional", category: tech, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: false, works_standalone: false}
+  - {text: neo, meaning: "new", category: tech, origin: greek, syllables: 2, works_as_prefix: true, works_as_suffix: false, works_standalone: false}
+  - {text: prime, meaning: "first/best", category: tech, origin: latin, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: apex, meaning: "peak/top", category: tech, origin: latin, syllables: 2, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: link, meaning: "connection", category: tech, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: sync, meaning: "synchronize", category: tech, origin: greek, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: hub, meaning: "center", category: tech, origin: english, syllables: 1, works_as_prefix: true, works_as_suffix: true, works_standalone: true}
+  - {text: ix, meaning: "suffix (tech feel)", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: ex, meaning: "suffix (tech feel)", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: on, meaning: "suffix (tech feel)", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: el, meaning: "soft ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: ar, meaning: "strong ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: is, meaning: "smooth ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: or, meaning: "solid ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: er, meaning: "agent ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: an, meaning: "short ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: os, meaning: "open ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: um, meaning: "rounded ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: ir, meaning: "light ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: ul, meaning: "soft ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: et, meaning: "crisp ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: yx, meaning: "rare ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: eo, meaning: "open ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: ea, meaning: "open ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+  - {text: ium, meaning: "classical ending", category: fantasy, origin: fantasy, syllables: 1, works_as_prefix: false, works_as_suffix: true, works_standalone: false}
+
+# Additional generator settings
+existing_brands:
+  - dometic
+  - truma
+  - fiamma
+  - thule
+  - webasto
+  - victron
+  - renogy
+  - ecoflow
+  - bluetti
+  - jackery
+  - goalzero
+  - tesla
+  - volta
+  - ampere
+  - watt
+  - ohm
+
+generation:
+  categories_default: [energy, travel, nature, tech]
+  fantasy_category: fantasy
+  semantic_bias_probability: 0.7
+  max_name_length: 9
+  max_attempts_multiplier: 10
+  batch_count: 50
+  brightness_default: 0.5
+  cluster_hardness_default: 0.4
+  prefer_open_threshold: 0.5
+  diphthong_probability: 0.15
+  syllable_patterns:
+    patterns: [CV, CVC, VC, V, CCV, CCVC, CVCV, VCV, VCVC]
+    weights: [0.26, 0.22, 0.10, 0.06, 0.12, 0.06, 0.08, 0.06, 0.04]
+  cluster_coda_probability: 0.3
+  prefer_semantic_strategy_weights:
+    semantic: 0.5
+    phonetic: 0.25
+    hybrid: 0.25
+  no_semantic_strategy_weights:
+    semantic: 0.25
+    phonetic: 0.5
+    hybrid: 0.25
+  semantic_strategy_weights:
+    prefix_suffix: 0.45
+    double_morpheme: 0.10
+    morpheme_fantasy: 0.25
+    standalone_modified: 0.20
+  semantic_double_morpheme:
+    max_first_length: 4
+    max_second_length: 3
+    max_name_length: 8
+  standalone_modifications:
+    - {type: suffix, value: "a"}
+    - {type: suffix, value: "o"}
+    - {type: suffix, value: "i"}
+    - {type: suffix, value: "eo"}
+    - {type: suffix, value: "ea"}
+    - {type: suffix, value: "ix"}
+    - {type: suffix, value: "yx"}
+    - {type: suffix, value: "ium"}
+    - {type: suffix, value: "ul"}
+    - {type: suffix, value: "ir"}
+    - {type: suffix, value: "en"}
+    - {type: suffix, value: "et"}
+    - {type: suffix, value: "os"}
+    - {type: suffix, value: "um"}
+    - {type: suffix_capitalize, value: "ex"}
+    - {type: suffix_capitalize, value: "on"}
+    - {type: suffix_capitalize, value: "ix"}
+    - {type: prefix, value: "e"}
+  join_connectors: [a, i, o, e, u]
+  phonetic:
+    syllable_count_weights:
+      counts: [2, 3]
+      weights: [0.6, 0.4]
+    cluster_start_probability: 0.4
+    first_syllable_pattern: CV
+    last_syllable_patterns:
+      patterns: [CV, CVC, V, VC, CVCV]
+      weights: [2, 1, 1, 1, 0.5]
+  hybrid:
+    phonetic_suffix_probability: 0.5
+    phonetic_syllable_count: 2
+    suffix_category: fantasy
+    prefix_syllables: 1
+    phonetic_pattern: CV
+
+cli:
+  default_count: 30
+  default_min_score: 0.65
+  default_categories: [energy, travel, nature]
+  available_categories: [energy, travel, nature, tech, transformation]
+  default_hardness: 0.4
+  default_format: text
+  formats: [text, json, csv]

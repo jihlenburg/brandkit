@@ -246,6 +246,24 @@ junctions:
 # Scoring Parameters
 # =============================================================================
 scoring:
+  basic:
+    base_score: 0.6
+    length:
+      too_short_penalty: -0.2
+      too_long_penalty: -0.15
+      ideal_bonus: 0.1
+    double_vowel_chars: "aeiou"
+    double_vowel_penalty: -0.15
+    strong_start:
+      chars: "kptbdgvrstlm"
+      bonus: 0.05
+    good_endings:
+      chars: "aeiox"
+      sequences: [us, is, on, an, ar, or, er, ix, ex]
+      bonus: 0.05
+    combine_weights:
+      basic: 0.4
+      phonaesthetic: 0.6
   # Length preferences
   length:
     ideal_min: 5
@@ -363,6 +381,7 @@ scoring:
 # English and German are "trochaic" languages - stress on first syllable preferred.
 
 rhythm:
+  default_score: 0.5
   # Stress pattern preferences (1.0 = ideal, 0.0 = poor)
   # Pattern notation: S = stressed, U = unstressed
   stress_patterns:
@@ -918,6 +937,14 @@ archetypes:
 #   - Klink (2000): Frontness/backness effects on perception
 
 phonaesthetic_quality:
+  base_scores:
+    consonant: 0.5
+    vowel: 0.5
+    fluency: 0.5
+    naturalness: 0.5
+    cluster_quality: 0.6
+    ending_quality: 0.5
+    memorability: 0.5
   # === CONSONANT QUALITY ===
   # David Crystal's research: beautiful words favor l, m, s, n
   # But plosives (k,t,p,b,d,g) correlate with brand profitability
@@ -971,6 +998,7 @@ phonaesthetic_quality:
   # === PROCESSING FLUENCY ===
   # Research shows easier-to-process names are more liked
   fluency:
+    vowel_chars: "aeiou"
     # Optimal consonant-vowel ratio (CV balance)
     cv_ratio:
       ideal_min: 0.8  # consonants / vowels
@@ -1017,6 +1045,8 @@ phonaesthetic_quality:
     speed:
       preferred: [z, v, s, r, i, e]
       description: "Quick, dynamic sounds"
+  category_fit_weight: 0.1
+  category_fit_scale: 2.0
 
   # === PHONOTACTIC NATURALNESS ===
   # How natural the sound combinations feel
@@ -1059,6 +1089,7 @@ phonaesthetic_quality:
 
     # 3x same consonant is awkward
     triple_consonant_penalty: -0.08
+    consonant_chars: "bcdfghjklmnpqrstvwxyz"
 
   # === ENDING QUALITY ===
   # Good endings enhance memorability, bad ones detract
@@ -1078,6 +1109,30 @@ phonaesthetic_quality:
       - wrd   # unnatural
     bad_penalty: -0.06
 
+  # === MEMORABILITY ===
+  memorability:
+    length:
+      optimal_min: 4
+      optimal_max: 7
+      very_short_max: 3
+      acceptable_max: 9
+      bonus_optimal: 0.15
+      bonus_very_short: 0.05
+      bonus_acceptable: 0.08
+      penalty_too_long: -0.05
+    syllables:
+      optimal_min: 2
+      optimal_max: 3
+      bonus_optimal: 0.12
+      bonus_single: 0.05
+      bonus_four: 0.03
+      penalty_too_many: -0.05
+    strong_initials: "bcdgkptvf"
+    strong_initial_bonus: 0.08
+    alliteration_bonus: 0.06
+    vowel_chars: "aeiou"
+    assonance_bonus: 0.05
+
   # === THRESHOLDS ===
   # Empirically calibrated using 248 validated brand names:
   #   - 134 excellent brands (Interbrand Top 100, award winners)
@@ -1090,11 +1145,95 @@ phonaesthetic_quality:
   # Cross-validation accuracy: 56.8% (limited predictive power)
   #
   # Thresholds represent phonetic pleasantness percentiles, not quality predictions.
+  # Tightened slightly to emphasize distinctiveness in crowded EN/DE markets.
   thresholds:
-    excellent: 0.585  # Top 25% phonetic pleasantness (global p75)
-    good: 0.570       # Top 50% phonetic pleasantness (global p50)
-    acceptable: 0.550 # Top 75% phonetic pleasantness
-    poor: 0.520       # Bottom 25% - may have phonetic issues
+    excellent: 0.595  # Higher bar for "excellent" to improve distinctiveness
+    good: 0.580
+    acceptable: 0.560
+    poor: 0.535
+
+# =============================================================================
+# Trademark Risk Policy (US/EU)
+# =============================================================================
+# Centralized policy for phonetic collision risk. Used for:
+# - Class overlap escalation
+# - Similarity thresholds
+# - Blocking levels
+phonetic_similarity:
+  cache_maxsize: 10000
+  soundex_scores:
+    exact: 1.0
+    first3: 0.75
+    first2: 0.5
+    first1: 0.25
+  metaphone_scores:
+    exact: 1.0
+    first3: 0.8
+    first2: 0.6
+    first1: 0.3
+
+trademark_risk:
+  # Similarity weights for combined phonetic score
+  similarity_weights:
+    soundex: 0.30
+    metaphone: 0.35
+    cologne: 0.20
+    levenshtein: 0.15
+  # Similarity thresholds (0.0 - 1.0)
+  phonetic_thresholds:
+    critical: 0.90
+    high: 0.82
+    medium: 0.70
+
+  # Risk levels that block availability
+  blocking_levels: ["CRITICAL", "HIGH"]
+
+  # How class overlap affects risk
+  class_overlap:
+    elevate_from: "MEDIUM"
+    elevate_to: "HIGH"
+    assume_overlap_if_unknown: true
+
+  # Trademark status → base risk level
+  status_risk_map:
+    LIVE: "HIGH"
+    REGISTERED: "HIGH"
+    ACTIVE: "HIGH"
+    "LIVE/REGISTERED": "HIGH"
+    REGISTRATION: "HIGH"
+    PENDING: "MEDIUM"
+    "PENDING REGISTRATION": "MEDIUM"
+    FILED: "MEDIUM"
+    PUBLISHED: "MEDIUM"
+    "UNDER EXAMINATION": "MEDIUM"
+    "OPPOSITION PENDING": "MEDIUM"
+    DEAD: "LOW"
+    ABANDONED: "LOW"
+    CANCELLED: "LOW"
+    EXPIRED: "LOW"
+    WITHDRAWN: "LOW"
+    REFUSED: "LOW"
+    UNKNOWN: "UNKNOWN"
+
+# =============================================================================
+# Trademark Query Variants
+# =============================================================================
+trademark_queries:
+  enabled: true
+  include_original: true
+  max_variants: 3
+  min_length: 4
+  # Variants to generate (apply in order until max_variants reached)
+  variants:
+    - vowel_stripped    # remove vowels after first letter
+    - consonant_skeleton # keep only consonants
+    - dedupe_letters    # collapse double letters
+
+# =============================================================================
+# Quality Filter Defaults
+# =============================================================================
+quality_filter:
+  similarity_threshold: 0.82
 
 # =============================================================================
 # MARKET-SPECIFIC PHONAESTHETIC WEIGHTS

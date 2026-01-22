@@ -22,6 +22,7 @@ from typing import Optional
 import http.client
 import ssl
 
+from settings import get_setting, resolve_path
 
 @dataclass
 class TrademarkMatch:
@@ -110,8 +111,6 @@ class RapidAPIChecker:
         result = checker.check("Voltix")
     """
 
-    API_HOST = "trademark-lookup-api.p.rapidapi.com"
-
     def __init__(self,
                  api_key: Optional[str] = None,
                  cache_dir: Optional[str] = None):
@@ -122,13 +121,35 @@ class RapidAPIChecker:
             api_key: RapidAPI key (or set RAPIDAPI_KEY env var)
             cache_dir: Directory to cache results
         """
+        cfg = get_setting("trademark.rapidapi", {}) or {}
         self.api_key = api_key or os.environ.get('RAPIDAPI_KEY')
+        self.api_host = cfg.get("api_host")
+        self.request_timeout_seconds = cfg.get("request_timeout_seconds")
+        self.cache_ttl_seconds = cfg.get("cache_ttl_seconds")
+        self.max_results = cfg.get("max_results")
+        self.search_page = cfg.get("search", {}).get("page")
+        self.search_count = cfg.get("search", {}).get("count")
+        self.search_path_template = cfg.get("search", {}).get("path_template")
+        self.cache_hash_length = cfg.get("cache_hash_length")
+
+        if not self.api_host:
+            raise ValueError("trademark.rapidapi.api_host must be set in app.yaml")
+        if self.request_timeout_seconds is None:
+            raise ValueError("trademark.rapidapi.request_timeout_seconds must be set in app.yaml")
+        if self.cache_ttl_seconds is None:
+            raise ValueError("trademark.rapidapi.cache_ttl_seconds must be set in app.yaml")
+        if self.max_results is None:
+            raise ValueError("trademark.rapidapi.max_results must be set in app.yaml")
+        if self.cache_hash_length is None:
+            raise ValueError("trademark.rapidapi.cache_hash_length must be set in app.yaml")
+        if self.search_page is None or self.search_count is None or not self.search_path_template:
+            raise ValueError("trademark.rapidapi.search settings must be set in app.yaml")
 
         # Setup cache
         if cache_dir:
-            self.cache_dir = Path(cache_dir)
+            self.cache_dir = resolve_path(cache_dir)
         else:
-            self.cache_dir = Path.home() / ".cache" / "rapidapi_trademark"
+            self.cache_dir = resolve_path(cfg.get("cache_dir"))
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     @property
@@ -138,7 +159,7 @@ class RapidAPIChecker:
 
     def _get_cache_path(self, query: str) -> Path:
         """Get cache file path for a query"""
-        query_hash = hashlib.md5(query.lower().encode()).hexdigest()[:12]
+        query_hash = hashlib.md5(query.lower().encode()).hexdigest()[:self.cache_hash_length]
         return self.cache_dir / f"{query_hash}.json"
 
     def _load_from_cache(self, query: str) -> Optional[TrademarkResult]:
@@ -149,11 +170,14 @@ class RapidAPIChecker:
 
         try:
             data = json.loads(cache_path.read_text())
-            # Check if cache is fresh (7 days for trademark data)
-            if time.time() - data.get('timestamp', 0) > 604800:
+            if time.time() - data.get('timestamp', 0) > self.cache_ttl_seconds:
                 return None
 
-            matches = [TrademarkMatch(**m) for m in data.get('matches', [])]
+            matches = []
+            for m in data.get('matches', []):
+                if 'nice_classes' not in m:
+                    m['nice_classes'] = []
+                matches.append(TrademarkMatch(**m))
             return TrademarkResult(
                 query=data['query'],
                 found=data['found'],
@@ -181,6 +205,7 @@ class RapidAPIChecker:
                     'owner': m.owner,
                     'filing_date': m.filing_date,
                     'source': m.source,
+                    'nice_classes': m.nice_classes,
                 }
                 for m in result.matches
             ],
@@ -199,8 +224,9 @@ class RapidAPIChecker:
 
         try:
             conn = http.client.HTTPSConnection(
-                self.API_HOST,
-                context=ssl.create_default_context()
+                self.api_host,
+                context=ssl.create_default_context(),
+                timeout=self.request_timeout_seconds
             )
 
             # URL encode the query
@@ -208,14 +234,18 @@ class RapidAPIChecker:
 
             headers = {
                 'X-RapidAPI-Key': self.api_key,
-                'X-RapidAPI-Host': self.API_HOST,
+                'X-RapidAPI-Host': self.api_host,
                 'Accept': 'application/json'
             }
 
             # Search endpoint: /{name}/namesearch/{page}/{count}
             conn.request(
                 "GET",
-                f"/{encoded_query}/namesearch/1/10",
+                self.search_path_template.format(
+                    query=encoded_query,
+                    page=self.search_page,
+                    count=self.search_count,
+                ),
                 headers=headers
             )
 
@@ -271,7 +301,7 @@ class RapidAPIChecker:
                 # Single result
                 items = [data]
 
-        for item in items[:20]:  # Limit to 20 results
+        for item in items[:int(self.max_results)]:
             # Extract name - API uses markIdentification
             name = (item.get('markIdentification') or
                    item.get('wordmark') or
@@ -444,7 +474,10 @@ if __name__ == '__main__':
 
         if result.matches:
             print("\nTop matches:")
-            for m in result.matches[:5]:
+            top_matches = get_setting("trademark.cli_top_matches")
+            if top_matches is None:
+                raise ValueError("trademark.cli_top_matches must be set in app.yaml")
+            for m in result.matches[:top_matches]:
                 status_icon = "R" if "REGISTERED" in m.status.upper() else "P"
                 print(f"  [{status_icon}] {m.name} - {m.status}")
                 if m.owner:

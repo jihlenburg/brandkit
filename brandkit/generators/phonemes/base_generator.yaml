@@ -1,0 +1,244 @@
+# Base generator tuning config (non-phoneme settings)
+
+hazard:
+  severity_rank:
+    low: 0
+    medium: 1
+    high: 2
+    critical: 3
+  severity_default: medium
+  safe_max_rank: 1
+  sound_similarity:
+    vowel_chars: "aeiou"
+  syllable:
+    vowels: "aeiouy"
+    boundary_lookahead: 2
+    severity_upgrade:
+      low: medium
+      medium: high
+      high: critical
+      critical: critical
+    prominent_severity: high
+    prominent_note: "Hazard at word-initial or word-final position"
+    prominent_hazards:
+      - fuk
+      - fuc
+      - shyt
+      - cnt
+      - dik
+      - cok
+      - kok
+      - kum
+      - ass
+      - pis
+      - tit
+      - fart
+      - poop
+      - kak
+      - scheis
+      - arsch
+
+syllable_analyzer:
+  vowels: "aeiouy"
+  consonants: "bcdfghjklmnpqrstvwxz"
+  silent_e_min_count: 2
+  stress:
+    two_syllable_weak_suffixes:
+      - tion
+      - sion
+      - ic
+      - ique
+    three_syllable_penultimate_suffixes:
+      - ius
+      - ium
+      - ial
+      - ian
+  weight:
+    superheavy_min: 2
+    heavy_min: 1
+
+phonaesthetics:
+  archetype_scoring:
+    neutral_score: 0.5
+    onset_bonus: 0.15
+    onset_penalty: -0.15
+    consonant_bonus_per: 0.05
+    consonant_bonus_cap: 0.2
+    consonant_penalty_per: 0.05
+    consonant_penalty_cap: 0.2
+    vowel_bonus_per: 0.03
+    vowel_bonus_cap: 0.15
+
+memorability:
+  hazard_penalties:
+    clear: 0.0
+    critical: -0.5
+    high: -0.3
+    medium: -0.1
+    low: 0.0
+  archetype_default: 0.5
+  weights:
+    pronounceability: 0.25
+    length: 0.15
+    distinctiveness: 0.15
+    rhythm: 0.10
+    visual: 0.10
+    archetype_fit: 0.15
+    hazard_penalty: 0.10
+  pronounceability:
+    difficult_clusters:
+      - tsch
+      - dsch
+      - szcz
+      - cks
+      - phr
+      - thr
+    cluster_penalty: -0.15
+    double_vowel_penalty: -0.4
+    triple_consonant_penalty: -0.2
+    vowel_chars: "aeiou"
+    consonant_chars: "bcdfghjklmnpqrstvwxyz"
+  length:
+    ideal_min: 5
+    ideal_max: 7
+    good_min: 4
+    good_max: 8
+    ok_min: 3
+    ok_max: 9
+    scores:
+      ideal: 1.0
+      good: 0.8
+      ok: 0.6
+      too_long: 0.4
+  distinctiveness:
+    base_score: 0.5
+    unique_char_weight: 0.3
+    interesting_onsets:
+      - kr
+      - tr
+      - st
+      - br
+      - pr
+      - gl
+      - fl
+      - sp
+    interesting_onset_bonus: 0.1
+    memorable_endings:
+      - ix
+      - ex
+      - on
+      - ar
+      - or
+      - a
+      - ia
+    memorable_ending_bonus: 0.1
+    max_score: 1.0
+  rhythm:
+    syllable_scores:
+      "1": 0.7
+      "2": 1.0
+      "3": 1.0
+      "4": 0.6
+      default: 0.4
+    trochaic_bonus: 0.1
+    max_score: 1.0
+  visual:
+    base_score: 1.0
+    ascenders: "bdfhklt"
+    descenders: "gjpqy"
+    balanced_bonus: 0.1
+    ascender_heavy_threshold: 3
+    descender_heavy_threshold: 2
+    heavy_penalty: -0.1
+    distinctive_letters: "xkvz"
+    distinctive_bonus_per: 0.05
+    max_score: 1.0
+
+cultural_generator:
+  default_count: 20
+  default_min_length: 4
+  default_max_length: 9
+  max_attempts_multiplier: 20
+  min_memorability_score: 0.5
+  hazard_block_levels:
+    - high
+    - critical
+  defaults:
+    suffixes:
+      - a
+      - o
+      - er
+      - en
+    prefixes:
+      - ""
+      - ""
+      - ""
+    consonants: "bcdfghjklmnpqrstvwxyz"
+    vowels: "aeiou"
+  connector:
+    vowels: "aeiou"
+    vowel_vowel:
+      - n
+      - r
+      - l
+      - s
+      - x
+      - t
+      - m
+    consonant_consonant:
+      - a
+      - i
+      - o
+      - e
+      - u
+
+culture_blender:
+  default_count: 20
+  max_attempts_multiplier: 20
+  min_memorability_score: 0.5
+  hazard_block_levels:
+    - high
+    - critical
+  length:
+    min: 4
+    max: 9
+  truncate_root:
+    min_length: 5
+    cut_min: 3
+    cut_max: 5
+  connector:
+    vowels: "aeiou"
+    vowel_vowel:
+      - n
+      - r
+      - l
+      - s
+      - x
+      - t
+    consonant_consonant:
+      - a
+      - i
+      - o
+      - e
+      - u
+  morphology:
+    apply_probability: 0.2
+    operations:
+      - mutate
+      - metathesis
+      - none
+    mutate_intensity: 0.2
+
+competitive_differentiator:
+  onset_lengths:
+    - 2
+    - 3
+  ending_lengths:
+    - 2
+    - 3
+  weights:
+    onset: 0.3
+    ending: 0.2
+    overlap: 0.3
+    substring: 0.4
+  default_threshold: 0.5

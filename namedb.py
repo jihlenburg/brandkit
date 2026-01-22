@@ -20,6 +20,8 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Union
 from enum import Enum
 
+from settings import get_setting, resolve_path
+
 
 class NameStatus(Enum):
     """Status of a brand name in the workflow"""
@@ -183,7 +185,10 @@ class BrandNameDB:
 
     def __init__(self, db_path: str = None):
         if db_path is None:
-            db_path = Path(__file__).parent / "data" / "brandnames.db"
+            db_path = get_setting("paths.data_db")
+            if not db_path:
+                raise ValueError("paths.data_db must be set in app.yaml")
+            db_path = resolve_path(db_path)
 
         self.db_path = Path(db_path)
         self._init_db()
@@ -299,7 +304,10 @@ class BrandNameDB:
                     match_classes TEXT,
                     match_status TEXT,
                     similarity_score REAL,
+                    is_exact INTEGER,
                     found_at TEXT NOT NULL,
+                    risk_level TEXT,
+                    phonetic_similarity REAL,
                     FOREIGN KEY (name_id) REFERENCES names(id) ON DELETE CASCADE
                 )
             """)
@@ -331,6 +339,9 @@ class BrandNameDB:
             ("score_fluency", "REAL"),
             ("score_rhythm", "REAL"),
             ("score_naturalness", "REAL"),
+            ("score_cluster_quality", "REAL"),
+            ("score_ending_quality", "REAL"),
+            ("score_memorability", "REAL"),
             ("quality_tier", "TEXT"),
             ("validated_at", "TEXT"),
             ("eu_conflict", "INTEGER"),
@@ -346,6 +357,21 @@ class BrandNameDB:
                     conn.execute(f"ALTER TABLE names ADD COLUMN {col_name} {col_type}")
                 except sqlite3.OperationalError:
                     pass  # Column already exists
+
+        # Trademark matches table migrations
+        cursor = conn.execute("PRAGMA table_info(trademark_matches)")
+        tm_cols = {row[1] for row in cursor.fetchall()}
+        tm_new_columns = [
+            ("is_exact", "INTEGER"),
+            ("risk_level", "TEXT"),
+            ("phonetic_similarity", "REAL"),
+        ]
+        for col_name, col_type in tm_new_columns:
+            if col_name not in tm_cols:
+                try:
+                    conn.execute(f"ALTER TABLE trademark_matches ADD COLUMN {col_name} {col_type}")
+                except sqlite3.OperationalError:
+                    pass
 
         conn.commit()
 
@@ -1572,6 +1598,12 @@ Examples:
     )
 
     subparsers = parser.add_subparsers(dest='command')
+    cli_defaults = get_setting("namedb_cli", {}) or {}
+    list_limit_default = cli_defaults.get("list_limit")
+    status_limit_default = cli_defaults.get("status_limit")
+    block_reason_default = cli_defaults.get("block_reason_default")
+    if list_limit_default is None or status_limit_default is None or block_reason_default is None:
+        raise ValueError("namedb_cli defaults must be set in app.yaml")
 
     # Add
     p = subparsers.add_parser('add', help='Add a new name')
@@ -1594,7 +1626,8 @@ Examples:
     # Block
     p = subparsers.add_parser('block', help='Block a name')
     p.add_argument('name', help='Brand name')
-    p.add_argument('--reason', '-r', choices=[r.value for r in BlockReason], default='other')
+    p.add_argument('--reason', '-r', choices=[r.value for r in BlockReason],
+                   default=block_reason_default)
     p.add_argument('--notes', '-n', help='Notes')
 
     # Unblock
@@ -1604,7 +1637,7 @@ Examples:
     # List
     p = subparsers.add_parser('list', help='List names')
     p.add_argument('--status', '-s', choices=[s.value for s in NameStatus], help='Filter by status')
-    p.add_argument('--limit', '-l', type=int, default=50, help='Limit results')
+    p.add_argument('--limit', '-l', type=int, default=list_limit_default, help='Limit results')
 
     # Search
     p = subparsers.add_parser('search', help='Search names')
@@ -1628,7 +1661,7 @@ Examples:
 
     # Candidates
     p = subparsers.add_parser('candidates', help='Show candidates and shortlist')
-    p.add_argument('--limit', '-l', type=int, default=20)
+    p.add_argument('--limit', '-l', type=int, default=status_limit_default)
 
     args = parser.parse_args()
 
@@ -1721,7 +1754,7 @@ Examples:
             print(f"EUIPO: {brand.euipo_matches} matches")
             print(f"EUIPO URL: {brand.euipo_url}")
         if brand.block_reason:
-            print(f"Block reason: {brand.block_reason.value}")
+            print(f"Block reason: {brand.block_reason}")
             if brand.block_notes:
                 print(f"Block notes: {brand.block_notes}")
 

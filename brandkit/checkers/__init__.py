@@ -46,6 +46,8 @@ from similarity_checker import (
     normalized_similarity,
     KNOWN_BRANDS,
 )
+from brandkit.trademark_queries import generate_query_variants
+from brandkit.settings import get_setting
 
 
 class TrademarkChecker:
@@ -88,13 +90,14 @@ class TrademarkChecker:
     def has_uspto(self) -> bool:
         return self._rapidapi is not None
 
-    def check(self, name: str, nice_classes: list = None) -> dict:
+    def check(self, name: str, nice_classes: list = None, variant_queries: bool = None) -> dict:
         """
         Check trademark availability in both EU and US.
 
         Args:
             name: Brand name to check
             nice_classes: Nice classification codes (e.g., [9, 12])
+            variant_queries: If True, use query variants for broader phonetic coverage
 
         Returns:
             Dictionary with 'euipo' and 'uspto' results
@@ -106,9 +109,45 @@ class TrademarkChecker:
             'is_available': True,
         }
 
+        def merge_results(base_name: str, results_list: list):
+            matches = []
+            seen = set()
+            exact = 0
+            similar = 0
+            for res in results_list:
+                for m in res.matches or []:
+                    key = (
+                        getattr(m, "name", None),
+                        getattr(m, "application_number", None) or getattr(m, "serial_number", None),
+                        tuple(getattr(m, "nice_classes", []) or []),
+                    )
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    matches.append(m)
+            for m in matches:
+                if getattr(m, "name", "").lower() == base_name.lower():
+                    exact += 1
+                else:
+                    similar += 1
+            return matches, exact, similar
+
+        if variant_queries is None:
+            variant_queries = get_setting("trademark.variant_queries_default")
+        if variant_queries is None:
+            raise ValueError("trademark.variant_queries_default must be set in app.yaml")
+
+        queries = generate_query_variants(name) if variant_queries else [name]
+
         if self._euipo:
             try:
-                result['euipo'] = self._euipo.check(name, nice_classes=nice_classes)
+                eu_results = [self._euipo.check(q, nice_classes=nice_classes) for q in queries]
+                matches, exact, similar = merge_results(name, eu_results)
+                result['euipo'] = eu_results[0]
+                result['euipo'].matches = matches
+                result['euipo'].exact_matches = exact
+                result['euipo'].similar_matches = similar
+                result['euipo'].found = len(matches) > 0
                 if result['euipo'].found:
                     result['is_available'] = False
             except Exception as e:
@@ -116,7 +155,13 @@ class TrademarkChecker:
 
         if self._rapidapi:
             try:
-                result['uspto'] = self._rapidapi.check(name, nice_classes=nice_classes)
+                us_results = [self._rapidapi.check(q, nice_classes=nice_classes) for q in queries]
+                matches, exact, similar = merge_results(name, us_results)
+                result['uspto'] = us_results[0]
+                result['uspto'].matches = matches
+                result['uspto'].exact_matches = exact
+                result['uspto'].similar_matches = similar
+                result['uspto'].found = len(matches) > 0
                 if result['uspto'].found:
                     result['is_available'] = False
             except Exception as e:

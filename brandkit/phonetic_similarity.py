@@ -22,7 +22,25 @@ Reference:
 
 import re
 from functools import lru_cache
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, Any
+
+from brandkit.generators.phonemes import load_strategies
+
+_STRATEGIES = load_strategies()
+_PHONETIC_CFG = _STRATEGIES.raw.get("phonetic_similarity", {}) or {}
+if not _PHONETIC_CFG:
+    raise ValueError("Missing phonetic_similarity config in strategies.yaml")
+
+_CACHE_MAXSIZE = _PHONETIC_CFG.get("cache_maxsize")
+if _CACHE_MAXSIZE is None:
+    raise ValueError("phonetic_similarity.cache_maxsize must be set in strategies.yaml")
+
+
+def _require_phonetic_cfg(section: str, key: str) -> float:
+    cfg = _PHONETIC_CFG.get(section, {}) or {}
+    if key not in cfg:
+        raise ValueError(f"phonetic_similarity.{section}.{key} must be set in strategies.yaml")
+    return cfg[key]
 
 
 # =============================================================================
@@ -108,13 +126,13 @@ def soundex_similarity(name1: str, name2: str) -> float:
     s2 = soundex(name2)
 
     if s1 == s2:
-        return 1.0
+        return float(_require_phonetic_cfg("soundex_scores", "exact"))
     elif s1[:3] == s2[:3]:
-        return 0.75
+        return float(_require_phonetic_cfg("soundex_scores", "first3"))
     elif s1[:2] == s2[:2]:
-        return 0.5
+        return float(_require_phonetic_cfg("soundex_scores", "first2"))
     elif s1[0] == s2[0]:
-        return 0.25
+        return float(_require_phonetic_cfg("soundex_scores", "first1"))
     else:
         return 0.0
 
@@ -123,7 +141,7 @@ def soundex_similarity(name1: str, name2: str) -> float:
 # Double Metaphone (More Sophisticated)
 # =============================================================================
 
-@lru_cache(maxsize=10000)
+@lru_cache(maxsize=int(_CACHE_MAXSIZE))
 def double_metaphone(name: str) -> Tuple[str, str]:
     """
     Compute Double Metaphone encoding.
@@ -376,22 +394,110 @@ def metaphone_similarity(name1: str, name2: str) -> float:
         for code2 in (m2_prim, m2_sec):
             if code1 and code2:
                 if code1 == code2:
-                    matches.append(1.0)
+                    matches.append(float(_require_phonetic_cfg("metaphone_scores", "exact")))
                 elif code1[:3] == code2[:3]:
-                    matches.append(0.8)
+                    matches.append(float(_require_phonetic_cfg("metaphone_scores", "first3")))
                 elif code1[:2] == code2[:2]:
-                    matches.append(0.6)
+                    matches.append(float(_require_phonetic_cfg("metaphone_scores", "first2")))
                 elif code1[0] == code2[0]:
-                    matches.append(0.3)
+                    matches.append(float(_require_phonetic_cfg("metaphone_scores", "first1")))
 
     return max(matches) if matches else 0.0
+
+
+# =============================================================================
+# Cologne Phonetics (German)
+# =============================================================================
+
+@lru_cache(maxsize=int(_CACHE_MAXSIZE))
+def cologne_phonetics(name: str) -> str:
+    """
+    Compute Cologne Phonetics code (German phonetic algorithm).
+
+    Returns a numeric string.
+    """
+    if not name:
+        return ""
+    name = re.sub(r'[^A-Za-z]', '', name.upper())
+    if not name:
+        return ""
+
+    name = (name.replace("SCH", "S")
+                .replace("CH", "C")
+                .replace("PH", "F")
+                .replace("Ä", "A")
+                .replace("Ö", "O")
+                .replace("Ü", "U")
+                .replace("ß", "SS"))
+
+    codes = []
+    prev = ""
+
+    def code_for(char, next_char=""):
+        if char in "AEIOUY":
+            return "0"
+        if char == "H":
+            return ""
+        if char in "B":
+            return "1"
+        if char in "P":
+            return "3" if next_char != "H" else "1"
+        if char in "D" or char in "T":
+            return "2" if next_char not in ("S", "C", "Z") else "8"
+        if char in "F" or char in "V" or char in "W":
+            return "3"
+        if char in "G" or char in "K" or char in "Q":
+            return "4"
+        if char == "C":
+            if next_char in ("A", "H", "K", "L", "O", "Q", "R", "U", "X"):
+                return "4"
+            return "8"
+        if char == "X":
+            return "48"
+        if char == "L":
+            return "5"
+        if char in "M" or char in "N":
+            return "6"
+        if char == "R":
+            return "7"
+        if char in "S" or char == "Z":
+            return "8"
+        return ""
+
+    for i, ch in enumerate(name):
+        nxt = name[i + 1] if i + 1 < len(name) else ""
+        code = code_for(ch, nxt)
+        if not code:
+            continue
+        for c in code:
+            if c == prev:
+                continue
+            codes.append(c)
+            prev = c
+
+    if codes and codes[0] == "0":
+        first = "0"
+        rest = [c for c in codes[1:] if c != "0"]
+        return first + "".join(rest)
+    return "".join(c for c in codes if c != "0")
+
+
+def cologne_similarity(name1: str, name2: str) -> float:
+    """Similarity based on Cologne Phonetics."""
+    c1 = cologne_phonetics(name1)
+    c2 = cologne_phonetics(name2)
+    if not c1 and not c2:
+        return 1.0
+    if not c1 or not c2:
+        return 0.0
+    return normalized_levenshtein(c1, c2)
 
 
 # =============================================================================
 # Levenshtein Distance
 # =============================================================================
 
-@lru_cache(maxsize=10000)
+@lru_cache(maxsize=int(_CACHE_MAXSIZE))
 def levenshtein_distance(s1: str, s2: str) -> int:
     """
     Compute Levenshtein edit distance between two strings.
@@ -469,20 +575,35 @@ def compute_phonetic_similarity(name1: str, name2: str) -> float:
         name2: Second brand name (trademark)
 
     Returns:
-        Combined similarity score (0.0 to 1.0)
-        - > 0.8: HIGH risk - likely confusion
-        - > 0.6: MEDIUM risk - possible confusion
-        - > 0.4: LOW risk - some similarity
-        - <= 0.4: MINIMAL risk
+        Combined similarity score (0.0 to 1.0).
+        Risk thresholds are configured in strategies.yaml.
     """
-    # Individual scores
-    sndx = soundex_similarity(name1, name2)
-    meta = metaphone_similarity(name1, name2)
-    lev = normalized_levenshtein(name1, name2)
+    policy = get_trademark_policy()
+    weights = policy.get("similarity_weights", {})
+    if not weights:
+        raise ValueError("Missing trademark_risk.similarity_weights in strategies.yaml")
 
-    # Weight phonetic algorithms more heavily than visual
-    # Soundex: 35%, Metaphone: 40%, Levenshtein: 25%
-    combined = (sndx * 0.35) + (meta * 0.40) + (lev * 0.25)
+    sndx_w = float(weights.get("soundex", 0.0))
+    meta_w = float(weights.get("metaphone", 0.0))
+    cologne_w = float(weights.get("cologne", 0.0))
+    lev_w = float(weights.get("levenshtein", 0.0))
+
+    total_w = sndx_w + meta_w + cologne_w + lev_w
+    if total_w <= 0:
+        raise ValueError("Invalid similarity_weights: sum must be > 0")
+
+    # Individual scores
+    sndx = soundex_similarity(name1, name2) if sndx_w > 0 else 0.0
+    meta = metaphone_similarity(name1, name2) if meta_w > 0 else 0.0
+    coln = cologne_similarity(name1, name2) if cologne_w > 0 else 0.0
+    lev = normalized_levenshtein(name1, name2) if lev_w > 0 else 0.0
+
+    combined = (
+        (sndx * sndx_w) +
+        (meta * meta_w) +
+        (coln * cologne_w) +
+        (lev * lev_w)
+    ) / total_w
 
     # Boost if exact case-insensitive match
     if name1.lower() == name2.lower():
@@ -495,35 +616,20 @@ def compute_phonetic_similarity(name1: str, name2: str) -> float:
 # Risk Level Calculation
 # =============================================================================
 
-# Status to risk level mapping based on IP law principles
-STATUS_RISK_MAP = {
-    # Active/registered marks - highest risk
-    'LIVE': 'HIGH',
-    'REGISTERED': 'HIGH',
-    'ACTIVE': 'HIGH',
-    'LIVE/REGISTERED': 'HIGH',
-    'REGISTRATION': 'HIGH',
+def _load_trademark_risk_config() -> Dict[str, Any]:
+    """Load trademark risk policy from strategies.yaml."""
+    from brandkit.generators.phonemes import load_strategies
 
-    # Pending applications - medium risk (could still register)
-    'PENDING': 'MEDIUM',
-    'PENDING REGISTRATION': 'MEDIUM',
-    'FILED': 'MEDIUM',
-    'PUBLISHED': 'MEDIUM',
-    'UNDER EXAMINATION': 'MEDIUM',
-    'OPPOSITION PENDING': 'MEDIUM',
+    strategies = load_strategies()
+    cfg = strategies.raw.get("trademark_risk", {})
+    if not cfg:
+        raise ValueError("Missing trademark_risk config in strategies.yaml")
+    return cfg
 
-    # Abandoned/dead marks - lower risk but not zero
-    'DEAD': 'LOW',
-    'ABANDONED': 'LOW',
-    'CANCELLED': 'LOW',
-    'EXPIRED': 'LOW',
-    'WITHDRAWN': 'LOW',
-    'REFUSED': 'LOW',
 
-    # Unknown status
-    None: 'UNKNOWN',
-    '': 'UNKNOWN',
-}
+def get_trademark_policy() -> Dict[str, Any]:
+    """Public accessor for trademark risk policy."""
+    return _load_trademark_risk_config()
 
 
 def calculate_risk_level(match_status: str,
@@ -531,48 +637,73 @@ def calculate_risk_level(match_status: str,
                         phonetic_similarity: float = None,
                         classes_overlap: bool = False) -> str:
     """
-    Calculate risk level for a trademark conflict.
-
-    Based on IP law principles:
-    - LIVE/REGISTERED marks in same class = highest risk
-    - PENDING applications = still risky, could register
-    - DEAD marks = lower risk but can inform search
-    - Phonetic similarity amplifies risk
-    - Class overlap is critical
-
-    Args:
-        match_status: Trademark status (LIVE, PENDING, DEAD, etc.)
-        is_exact: True if exact name match
-        phonetic_similarity: Phonetic similarity score (0-1)
-        classes_overlap: True if Nice classes overlap
-
-    Returns:
-        Risk level: 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW', or 'UNKNOWN'
+    Calculate risk level for a trademark conflict using YAML policy.
     """
+    cfg = _load_trademark_risk_config()
+    status_map = cfg.get("status_risk_map", {})
+    thresholds = cfg.get("phonetic_thresholds", {})
+    class_overlap_cfg = cfg.get("class_overlap", {})
+
+    critical_thr = thresholds.get("critical")
+    high_thr = thresholds.get("high")
+
     # Normalize status
-    status_upper = (match_status or '').upper().strip()
-    base_risk = STATUS_RISK_MAP.get(status_upper, 'UNKNOWN')
+    status_upper = (match_status or "UNKNOWN").upper().strip()
+    base_risk = status_map.get(status_upper, status_map.get("UNKNOWN", "UNKNOWN"))
 
     # Exact matches are always critical if mark is active
     if is_exact and base_risk == 'HIGH':
         return 'CRITICAL'
 
     # High phonetic similarity + active mark = critical
-    if phonetic_similarity and phonetic_similarity > 0.8 and base_risk == 'HIGH':
-        return 'CRITICAL'
+    if phonetic_similarity is not None and critical_thr is not None:
+        if phonetic_similarity >= critical_thr and base_risk == 'HIGH':
+            return 'CRITICAL'
+
+    if phonetic_similarity is not None and high_thr is not None:
+        if phonetic_similarity >= high_thr and base_risk == 'HIGH':
+            return 'CRITICAL'
 
     # Class overlap elevates risk
-    if classes_overlap and base_risk == 'MEDIUM':
-        return 'HIGH'
+    elevate_from = class_overlap_cfg.get("elevate_from")
+    elevate_to = class_overlap_cfg.get("elevate_to")
+    if classes_overlap and elevate_from and elevate_to and base_risk == elevate_from:
+        return elevate_to
 
     # Very high phonetic similarity elevates even pending/dead marks
-    if phonetic_similarity and phonetic_similarity > 0.9:
-        if base_risk == 'LOW':
-            return 'MEDIUM'
-        elif base_risk == 'MEDIUM':
-            return 'HIGH'
+    if phonetic_similarity is not None and critical_thr is not None:
+        if phonetic_similarity >= critical_thr:
+            if base_risk == 'LOW':
+                return 'MEDIUM'
+            if base_risk == 'MEDIUM':
+                return 'HIGH'
 
     return base_risk
+
+
+def assess_trademark_risk(match_status: str,
+                          is_exact: bool,
+                          phonetic_similarity: float,
+                          classes_overlap: bool) -> str:
+    """Higher-level risk assessment using YAML policy."""
+    cfg = _load_trademark_risk_config()
+    thresholds = cfg.get("phonetic_thresholds", {})
+    critical_thr = thresholds.get("critical")
+    high_thr = thresholds.get("high")
+
+    if phonetic_similarity is not None and critical_thr is not None:
+        if phonetic_similarity >= critical_thr:
+            return "CRITICAL"
+    if phonetic_similarity is not None and high_thr is not None:
+        if phonetic_similarity >= high_thr:
+            return "HIGH"
+
+    return calculate_risk_level(
+        match_status=match_status,
+        is_exact=is_exact,
+        phonetic_similarity=phonetic_similarity,
+        classes_overlap=classes_overlap,
+    )
 
 
 # =============================================================================

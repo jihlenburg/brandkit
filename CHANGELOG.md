@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- [Codex] Base generator tuning in `brandkit/generators/phonemes/base_generator.yaml` (memorability, hazards, blending, competitive differentiation).
+- [Codex] Phonetic similarity tuning in `strategies.yaml` (cache size and Soundex/Metaphone partial match scores).
+- [Codex] Configurable defaults for generation mix/blend cultures, similarity top-matches, and RapidAPI max results in `app.yaml`.
+- [Claude] Comprehensive test suite (127 tests):
+  - `test_discovery_pipeline.py` - RateLimiter, RetryHandler, parallel checkers, E2E pipeline
+  - `test_hazard_checker.py` - German/English hazards, syllable-aware detection, severity levels
+  - `test_similarity_checker.py` - Soundex, Metaphone, Cologne Phonetics, SimilarityMatch
+  - `test_phonetics_en_de.py` - German normalization, G2P, market-specific pronounceability
+  - `test_network_timeout.py` - DNS/socket timeouts, retry behavior, connection errors
+- [Claude] Multi-agent collaboration rules in CLAUDE.md for Claude/Codex cooperation
+- [Claude] AGENTS.md symlink to CLAUDE.md for cross-agent instruction sharing
+- Test suite for DB schema/migrations and cache behavior:
+  - Verifies trademark match risk fields in schema and reads/writes
+  - Ensures EUIPO cache separation by Nice classes
+  - Preserves RapidAPI Nice class data through cache for filtering
+  - Validates domain cache keys by TLD set
+- Post-generation quality filter with EN/DE pronounceability gating, hazard screening,
+  known-brand similarity checks, and diversity constraints (`brandkit/quality.py`)
+- Variant-query mode for trademark checks (EUIPO/RapidAPI) to broaden phonetic coverage
+- Cologne Phonetics (German) in phonetic similarity scoring
+- CLI command `tm-risk` to report blocking (HIGH/CRITICAL) trademark matches
 - Phonetic similarity scoring module (`brandkit/phonetic_similarity.py`):
   - Soundex algorithm (USPTO standard)
   - Double Metaphone for pronunciation-based matching
@@ -92,6 +113,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cross-validation of threshold accuracy
 
 ### Changed
+- [Codex] Cultural generation, memorability, hazard gating, blending, and competitive differentiation now read from YAML (no hard-coded thresholds).
+- [Codex] Phonetic similarity cache sizing and partial-match scoring now YAML-driven.
+- [Codex] “all” method list, blend default cultures, similarity top-match limit, and RapidAPI max-results are config-driven.
+- [Codex] Domain/EUIPO/RapidAPI checker cache hash length and timeouts are now YAML-required.
+- [Codex] Discovery UI result feed length now configurable via app.yaml.
+- [Codex] Tightened diversity constraints and penalties to reduce repetitive prefixes/suffixes.
+- [Codex] Moved cache directories to repo-local `data/cache` paths to avoid permission errors.
+- [Codex] Tightened quality gate thresholds and expanded rule-based syllable/ending variety to reduce homogeneity.
 - Database schema cleaned up - removed 7 legacy columns:
   - Removed: `score`, `score_de`, `score_en`, `score_euphony`, `euipo_checked`, `euipo_matches`, `euipo_url`
   - Added: `score_cluster_quality`, `score_ending_quality` (previously calculated but not stored)
@@ -107,8 +136,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI completely refactored for cleaner code and better UX
 - Database path fixed to use `data/brandnames.db`
 - Output formatting improved with table display
+- `discover` now defaults to `--method all` (instead of `blend`)
+- CLI now saves the actual per-name method when available (e.g., greek/nordic),
+  not just the CLI `--method` value
+- Rule-based/LLM generation now explicitly stamp a `method` value for DB accuracy
+- Cultural generators now hard-gate EN/DE pronounceability during generation
+- Trademark checks now treat high phonetic similarity as blocking (US/EU risk policy)
+- Trademark risk assessment now considers class overlap when assigning risk levels
+- Trademark collision thresholds and status risk mapping now load from `strategies.yaml`
+- Quality filter similarity threshold now loads from `strategies.yaml`
 
 ### Fixed
+- [Codex] Corrected invalid f-string escape in `brandkit/parallel.py`.
+- [Codex] Fixed indentation error in `brandkit/cli.py` that broke CLI execution.
+- [Codex] Expanded English sexual/profanity hazards and phonetic patterns to block names like “Orgesex” and “Pinis”.
+- [Codex] Blocked existing DB entries flagged for sexual/profanity hazards.
+- Trademark match storage schema now includes `is_exact`, `risk_level`, and `phonetic_similarity`
+  - Migrations add missing columns for existing databases
+- EUIPO cache now keys by Nice classes and environment to avoid stale class-filtered results
+- RapidAPI cache now persists Nice classes so class filtering remains correct on cache hits
+- Domain cache now keys by TLD set to prevent cross-TLD reuse
+- Added explicit request timeouts for EUIPO/RapidAPI connections
+- Domain checker restores global socket timeout after DNS checks
 - `list` command crash when block_reason contains custom pronounceability strings
 - `reset` command now uses correct database path (`data/brandnames.db`)
 - YAML boolean parsing bug: unquoted `on` in suffix lists was parsed as `True`
@@ -116,6 +165,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quality threshold miscalibration: old threshold (0.605) was unreachable
   - 0% of generated names passed "excellent" threshold
   - Recalibrated using empirical brand name corpus
+
+### TODO
+- Silence pytest-asyncio deprecation warning by setting `asyncio_default_fixture_loop_scope` in `pyproject.toml`
+- Add tests for network timeout handling and retry behavior in trademark/domain checkers
+- Add end-to-end tests for the discovery pipeline with mocked external APIs
 
 ## [0.1.0] - 2026-01-20
 

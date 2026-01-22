@@ -23,22 +23,33 @@ if str(_parent) not in sys.path:
     sys.path.insert(0, str(_parent))
 
 from brandkit import __version__
+from brandkit.settings import get_setting
 
 # =============================================================================
 # Constants
 # =============================================================================
 
-GENERATION_METHODS = [
-    'rule_based', 'llm',
-    'greek', 'turkic', 'nordic', 'japanese', 'latin', 'celtic', 'celestial',
-    'animals', 'mythology', 'landmarks',
-    'blend', 'all'
-]
+GENERATION_METHODS = get_setting("cli.generation_methods")
+INDUSTRIES = get_setting("cli.industries")
+NAME_VALIDATION = get_setting("cli.name_validation") or {}
+CLI_DEFAULTS = get_setting("cli.defaults") or {}
+CLI_COMMAND_DEFAULTS = get_setting("cli.command_defaults") or {}
 
-INDUSTRIES = [
-    'tech', 'automotive', 'pharma', 'luxury', 'food_beverage',
-    'finance', 'energy', 'outdoor', 'wellness', 'gaming', 'ecommerce'
-]
+if not GENERATION_METHODS or not INDUSTRIES:
+    raise ValueError("cli.generation_methods and cli.industries must be set in app.yaml")
+
+DEFAULT_COUNT = CLI_DEFAULTS.get("count")
+DEFAULT_METHOD = CLI_DEFAULTS.get("method")
+if DEFAULT_COUNT is None or DEFAULT_METHOD is None:
+    raise ValueError("cli.defaults.count and cli.defaults.method must be set in app.yaml")
+
+LIST_LIMIT_DEFAULT = CLI_COMMAND_DEFAULTS.get("list_limit")
+TM_RISK_LIMIT_DEFAULT = CLI_COMMAND_DEFAULTS.get("tm_risk_limit")
+SAVE_STATUS_DEFAULT = CLI_COMMAND_DEFAULTS.get("save_status")
+DISCOVER_DEFAULTS = CLI_COMMAND_DEFAULTS.get("discover") or {}
+
+if LIST_LIMIT_DEFAULT is None or TM_RISK_LIMIT_DEFAULT is None or SAVE_STATUS_DEFAULT is None:
+    raise ValueError("cli.command_defaults must include list_limit, tm_risk_limit, save_status")
 
 # =============================================================================
 # Utilities
@@ -87,13 +98,19 @@ def validate_name(name: str) -> tuple[bool, str]:
 
     name = name.strip()
 
-    if len(name) < 2:
-        return False, "Name must be at least 2 characters"
+    min_length = NAME_VALIDATION.get("min_length")
+    max_length = NAME_VALIDATION.get("max_length")
+    regex = NAME_VALIDATION.get("regex")
+    if min_length is None or max_length is None or not regex:
+        raise ValueError("cli.name_validation must be set in app.yaml")
 
-    if len(name) > 30:
-        return False, "Name must be at most 30 characters"
+    if len(name) < min_length:
+        return False, f"Name must be at least {min_length} characters"
 
-    if not re.match(r'^[a-zA-Z][a-zA-Z0-9]*$', name):
+    if len(name) > max_length:
+        return False, f"Name must be at most {max_length} characters"
+
+    if not re.match(regex, name):
         return False, "Name must start with a letter and contain only letters/numbers"
 
     return True, name
@@ -112,6 +129,13 @@ def get_name_score(name) -> float:
         if hasattr(name, attr):
             return getattr(name, attr)
     return 0.5
+
+
+def get_name_method(name, fallback: str = None) -> str:
+    """Extract generation method from various name types."""
+    if hasattr(name, 'method') and getattr(name, 'method'):
+        return getattr(name, 'method')
+    return fallback
 
 
 # =============================================================================
@@ -172,7 +196,7 @@ def cmd_generate(args, out: Output):
         saved = 0
         for name in names:
             try:
-                kit.save(name, status='candidate', method=args.method)
+                kit.save(name, status='candidate', method=get_name_method(name, args.method))
                 saved += 1
             except Exception:
                 pass
@@ -253,6 +277,12 @@ def cmd_check(args, out: Output):
             out.print(f"  EU Error: {tm['euipo_error']}")
         if tm.get('uspto_error'):
             out.print(f"  US Error: {tm['uspto_error']}")
+        # Phonetic collision risk summary
+        risk = result.get('trademark_risk')
+        if risk:
+            out.print("  Phonetic risk:")
+            out.print(f"    critical/high: {risk.get('blocking_matches', 0)}")
+            out.print(f"    medium:        {risk.get('medium_matches', 0)}")
 
     # Summary
     out.print(f"\n{'=' * 50}")
@@ -477,6 +507,62 @@ def cmd_tm_conflicts(args, out: Output):
 
     return 0
 
+
+def cmd_tm_risk(args, out: Output):
+    """Show high/critical risk trademark matches."""
+    from brandkit import get_db
+
+    db = get_db()
+
+    if args.name:
+        matches = db.get_trademark_matches(args.name)
+        if not matches:
+            out.print(f"No trademark matches stored for '{args.name}'")
+            return 0
+
+        blocking = [m for m in matches if m.get('risk_level') in ('CRITICAL', 'HIGH')]
+        if not blocking:
+            out.print(f"No blocking (HIGH/CRITICAL) matches for '{args.name}'")
+            return 0
+
+        out.print(f"\nBlocking trademark matches for '{args.name}':\n")
+        for m in blocking[:args.limit]:
+            classes = ', '.join(str(c) for c in m['match_classes']) if m['match_classes'] else 'N/A'
+            out.print(f"  [{m['region']}] {m['match_name']} ({m['risk_level']})")
+            out.print(f"      Similarity: {m['phonetic_similarity']}")
+            out.print(f"      Classes: {classes}")
+            if m.get('match_status'):
+                out.print(f"      Status: {m['match_status']}")
+            out.print("")
+        return 0
+
+    matches = db.get_high_risk_matches(limit=args.limit * 10)
+    if not matches:
+        out.print("No high/critical risk matches stored.")
+        return 0
+
+    summary = {}
+    for m in matches:
+        name = m['name']
+        entry = summary.setdefault(name, {
+            'count': 0,
+            'top_match': None,
+            'top_similarity': 0.0,
+        })
+        entry['count'] += 1
+        sim = m.get('phonetic_similarity') or 0.0
+        if sim >= entry['top_similarity']:
+            entry['top_similarity'] = sim
+            entry['top_match'] = m['match_name']
+
+    rows = []
+    for name, info in sorted(summary.items(), key=lambda x: (-x[1]['count'], -x[1]['top_similarity'])):
+        rows.append([name, str(info['count']), f"{info['top_similarity']:.2f}", info['top_match'] or '-'])
+
+    out.table(['Name', 'Blocking', 'Top Sim', 'Top Match'], rows[:args.limit], [20, 10, 8, 30])
+    out.print(f"\nTotal names with blocking matches: {len(summary)}")
+
+    return 0
 
 def cmd_export(args, out: Output):
     """Export database to JSON or Excel."""
@@ -951,7 +1037,7 @@ def _discover_accumulate(args, out: Output, kit, sim_checker, domain_checker, pr
                     for name, score, quality, domains in viable:
                         name_str = get_name_str(name)
                         try:
-                            kit.save(name, status='candidate', method=args.method)
+                            kit.save(name, status='candidate', method=get_name_method(name, args.method))
                             total_saved += 1
                             all_viable.append((name_str, score, quality, domains))
                         except Exception:
@@ -1323,7 +1409,7 @@ def cmd_discover(args, out: Output):
                     for name, score, quality, domains in viable:
                         name_str = get_name_str(name)
                         try:
-                            kit.save(name, status='candidate', method=args.method)
+                            kit.save(name, status='candidate', method=get_name_method(name, args.method))
                             total_saved += 1
                             round_viable += 1
                             all_viable.append((name_str, score, quality, domains))
@@ -1410,8 +1496,9 @@ Examples:
 
     # --- generate ---
     p = subparsers.add_parser('generate', aliases=['gen', 'g'], help='Generate brand names')
-    p.add_argument('-n', '--count', type=int, default=10, help='Number of names (default: 10)')
-    p.add_argument('--method', '-m', choices=GENERATION_METHODS, default='rule_based',
+    p.add_argument('-n', '--count', type=int, default=DEFAULT_COUNT,
+                   help=f'Number of names (default: {DEFAULT_COUNT})')
+    p.add_argument('--method', '-m', choices=GENERATION_METHODS, default=DEFAULT_METHOD,
                    help='Generation method')
     p.add_argument('--industry', '-i', choices=INDUSTRIES, help='Generate for specific industry')
     p.add_argument('--archetype', '-a', help='Brand archetype (power, elegance, speed, etc.)')
@@ -1447,7 +1534,8 @@ Examples:
     p.add_argument('--quality', choices=['excellent', 'good', 'acceptable', 'poor'])
     p.add_argument('--available', '-a', action='store_true', help='Show only available names')
     p.add_argument('--conflicts', action='store_true', help='Show only names with conflicts')
-    p.add_argument('--limit', type=int, default=50, help='Max results (default: 50)')
+    p.add_argument('--limit', type=int, default=LIST_LIMIT_DEFAULT,
+                   help=f'Max results (default: {LIST_LIMIT_DEFAULT})')
     p.add_argument('--json', '-j', action='store_true', help='Output as JSON')
 
     # --- export ---
@@ -1458,11 +1546,20 @@ Examples:
     p = subparsers.add_parser('tm-conflicts', aliases=['tmc'], help='Show trademark conflicts for review')
     p.add_argument('name', nargs='?', help='Show conflicts for specific name')
     p.add_argument('--region', '-r', choices=['US', 'EU'], help='Filter by region')
+    p.set_defaults(func=cmd_tm_conflicts)
+
+    # --- tm-risk ---
+    p = subparsers.add_parser('tm-risk', help='Show high/critical trademark risk matches')
+    p.add_argument('name', nargs='?', help='Show risk matches for specific name')
+    p.add_argument('--limit', type=int, default=TM_RISK_LIMIT_DEFAULT,
+                   help=f'Limit results (default: {TM_RISK_LIMIT_DEFAULT})')
+    p.set_defaults(func=cmd_tm_risk)
 
     # --- save ---
     p = subparsers.add_parser('save', help='Save a name to database')
     p.add_argument('name', help='Brand name to save')
-    p.add_argument('--status', default='candidate', help='Initial status (default: candidate)')
+    p.add_argument('--status', default=SAVE_STATUS_DEFAULT,
+                   help=f'Initial status (default: {SAVE_STATUS_DEFAULT})')
     p.add_argument('--method', help='Generation method used')
 
     # --- block ---
@@ -1481,18 +1578,34 @@ Examples:
     p = subparsers.add_parser('discover', aliases=['disc', 'd'], help='Automated discovery pipeline')
     p.add_argument('-n', '--count', type=int, default=None,
                    help='Names per batch (default: auto based on target, or 100)')
-    p.add_argument('--method', '-m', choices=GENERATION_METHODS, default='blend',
-                   help='Generation method (default: blend)')
-    p.add_argument('--profile', '-p', default='camping_rv', help='Nice class profile')
+    discover_method_default = DISCOVER_DEFAULTS.get("method", DEFAULT_METHOD)
+    discover_profile_default = DISCOVER_DEFAULTS.get("profile")
+    discover_min_quality_default = DISCOVER_DEFAULTS.get("min_quality")
+    discover_max_rounds_default = DISCOVER_DEFAULTS.get("max_rounds")
+    discover_top_default = DISCOVER_DEFAULTS.get("top")
+    discover_max_concurrent_default = DISCOVER_DEFAULTS.get("max_concurrent")
+    discover_markets_default = DISCOVER_DEFAULTS.get("markets")
+    if (discover_profile_default is None or discover_min_quality_default is None or
+            discover_max_rounds_default is None or discover_top_default is None or
+            discover_max_concurrent_default is None or discover_markets_default is None):
+        raise ValueError("cli.command_defaults.discover must include profile, min_quality, max_rounds, top, max_concurrent, markets")
+
+    p.add_argument('--method', '-m', choices=GENERATION_METHODS, default=discover_method_default,
+                   help=f'Generation method (default: {discover_method_default})')
+    p.add_argument('--profile', '-p', default=discover_profile_default, help='Nice class profile')
     p.add_argument('--target', type=int, help='Target number of valid names (loops until reached)')
     p.add_argument('--min-quality', '-q', choices=['excellent', 'good', 'acceptable', 'poor'],
-                   default='acceptable', help='Minimum quality threshold (default: acceptable)')
-    p.add_argument('--max-rounds', type=int, default=50, help='Max generation rounds (default: 50)')
-    p.add_argument('--top', '-t', type=int, default=30, help='Top candidates per batch (default: 30)')
+                   default=discover_min_quality_default,
+                   help=f'Minimum quality threshold (default: {discover_min_quality_default})')
+    p.add_argument('--max-rounds', type=int, default=discover_max_rounds_default,
+                   help=f'Max generation rounds (default: {discover_max_rounds_default})')
+    p.add_argument('--top', '-t', type=int, default=discover_top_default,
+                   help=f'Top candidates per batch (default: {discover_top_default})')
     p.add_argument('--parallel', action='store_true', help='Enable parallel domain/trademark checking')
-    p.add_argument('--max-concurrent', type=int, default=10, help='Max concurrent checks (default: 10)')
-    p.add_argument('--markets', choices=['en', 'de', 'en_de'], default='en_de',
-                   help='Target market(s) for similarity/pronounceability (default: en_de)')
+    p.add_argument('--max-concurrent', type=int, default=discover_max_concurrent_default,
+                   help=f'Max concurrent checks (default: {discover_max_concurrent_default})')
+    p.add_argument('--markets', choices=['en', 'de', 'en_de'], default=discover_markets_default,
+                   help=f'Target market(s) for similarity/pronounceability (default: {discover_markets_default})')
     p.add_argument('--profiling', action='store_true', help='Enable profiling to identify bottlenecks')
     p.add_argument('--profile-output', help='Save profiling data to JSON file')
 
@@ -1538,6 +1651,7 @@ Examples:
         'list': cmd_list,
         'export': cmd_export,
         'tm-conflicts': cmd_tm_conflicts,
+        'tm-risk': cmd_tm_risk,
         'save': cmd_save,
         'block': cmd_block,
         'profiles': cmd_profiles,

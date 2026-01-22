@@ -100,6 +100,18 @@ def load_culture_config(culture: str) -> Dict:
     return _load_yaml(f'{culture}.yaml')
 
 
+def load_base_generator_config() -> Dict:
+    """Load base generator settings (non-phoneme defaults)."""
+    return _load_yaml('base_generator.yaml')
+
+
+def _require_cfg(cfg: Dict[str, Any], key: str, context: str):
+    value = cfg.get(key)
+    if value is None:
+        raise ValueError(f"{context}.{key} must be set in base_generator.yaml")
+    return value
+
+
 # =============================================================================
 # Hazard Checker
 # =============================================================================
@@ -116,6 +128,14 @@ class HazardChecker:
 
     def __init__(self):
         self._hazards = load_hazards()
+        self._cfg = load_base_generator_config().get('hazard', {}) or {}
+        rank_map = self._cfg.get('severity_rank')
+        if not rank_map:
+            raise ValueError("base_generator.hazard.severity_rank must be set in base_generator.yaml")
+        self._severity_rank_map = {k: int(v) for k, v in rank_map.items()}
+        self._severity_default = _require_cfg(self._cfg, 'severity_default', 'base_generator.hazard')
+        self._safe_max_rank = _require_cfg(self._cfg, 'safe_max_rank', 'base_generator.hazard')
+        self._severity_map = {v: k for k, v in self._severity_rank_map.items()}
         self._compile_patterns()
         self._compile_en_de_patterns()
 
@@ -265,26 +285,28 @@ class HazardChecker:
             self._severity_rank(i.get('severity', 'low'))
             for i in issues
         )
-        severity_map = {0: 'low', 1: 'medium', 2: 'high', 3: 'critical'}
+        severity_map = self._severity_map
 
         return HazardResult(
-            is_safe=max_severity < 2,  # Safe if below 'high'
-            severity=severity_map.get(max_severity, 'medium'),
+            is_safe=max_severity <= int(self._safe_max_rank),
+            severity=severity_map.get(max_severity, self._severity_default),
             issues=issues
         )
 
     def _severity_rank(self, severity: str) -> int:
         """Convert severity string to numeric rank."""
-        return {'low': 0, 'medium': 1, 'high': 2, 'critical': 3}.get(severity, 1)
+        return self._severity_rank_map.get(severity, self._severity_rank_map.get(self._severity_default, 1))
 
     def _sounds_similar(self, name: str, hazard: str) -> bool:
         """Check if name sounds similar to hazard (basic phonetic matching)."""
         # Simple Soundex-like comparison
         def simplify(s):
             # Remove vowels except first, collapse doubles
+            sound_cfg = self._cfg.get('sound_similarity', {}) or {}
+            vowel_chars = _require_cfg(sound_cfg, 'vowel_chars', 'base_generator.hazard.sound_similarity')
             result = s[0] if s else ''
             for c in s[1:]:
-                if c not in 'aeiou' and c != result[-1]:
+                if c not in vowel_chars and c != result[-1]:
                     result += c
             return result
 
@@ -302,7 +324,10 @@ class HazardChecker:
         Returns list of hazard issues found.
         """
         issues = []
-        vowels = 'aeiouy'
+        syllable_cfg = self._cfg.get('syllable', {}) or {}
+        vowels = _require_cfg(syllable_cfg, 'vowels', 'base_generator.hazard.syllable')
+        boundary_lookahead = int(_require_cfg(syllable_cfg, 'boundary_lookahead', 'base_generator.hazard.syllable'))
+        severity_upgrade = _require_cfg(syllable_cfg, 'severity_upgrade', 'base_generator.hazard.syllable')
 
         # Find syllable boundaries (approximate)
         # Syllable boundaries typically occur before consonant clusters or after vowels
@@ -313,7 +338,7 @@ class HazardChecker:
             # New syllable starts after a vowel followed by a consonant
             if prev_vowel and not is_vowel and i > 0:
                 # Check if there's a vowel after this consonant (onset of new syllable)
-                for j in range(i + 1, min(i + 3, len(name))):
+                for j in range(i + 1, min(i + 1 + boundary_lookahead, len(name))):
                     if name[j] in vowels:
                         syllable_starts.append(i)
                         break
@@ -337,12 +362,6 @@ class HazardChecker:
                 # Syllable-aligned hazard is more severe
                 base_severity = data.get('severity', 'medium')
                 # Upgrade severity for syllable alignment
-                severity_upgrade = {
-                    'low': 'medium',
-                    'medium': 'high',
-                    'high': 'critical',
-                    'critical': 'critical'
-                }
                 issues.append({
                     'type': 'syllable_hazard',
                     'syllable': syl,
@@ -370,16 +389,17 @@ class HazardChecker:
 
         # Check word-initial and word-final positions (most prominent)
         # These positions receive natural stress and attention
-        prominent_hazards = ['fuk', 'fuc', 'shyt', 'cnt', 'dik', 'cok', 'kok', 'kum',
-                            'ass', 'pis', 'tit', 'fart', 'poop', 'kak', 'scheis', 'arsch']
+        prominent_hazards = _require_cfg(syllable_cfg, 'prominent_hazards', 'base_generator.hazard.syllable')
+        prominent_severity = _require_cfg(syllable_cfg, 'prominent_severity', 'base_generator.hazard.syllable')
+        prominent_note = _require_cfg(syllable_cfg, 'prominent_note', 'base_generator.hazard.syllable')
         for hazard in prominent_hazards:
             if name.startswith(hazard) or name.endswith(hazard):
                 issues.append({
                     'type': 'prominent_position',
                     'hazard': hazard,
                     'position': 'start' if name.startswith(hazard) else 'end',
-                    'severity': 'high',
-                    'note': 'Hazard at word-initial or word-final position'
+                    'severity': prominent_severity,
+                    'note': prominent_note
                 })
 
         return issues
@@ -394,8 +414,19 @@ class SyllableAnalyzer:
     Analyzes syllable structure, stress patterns, and rhythm.
     """
 
-    VOWELS = set('aeiouy')
-    CONSONANTS = set('bcdfghjklmnpqrstvwxz')
+    def __init__(self):
+        cfg = load_base_generator_config().get('syllable_analyzer', {}) or {}
+        vowels = cfg.get('vowels')
+        consonants = cfg.get('consonants')
+        if not vowels or not consonants:
+            raise ValueError("base_generator.syllable_analyzer.vowels/consonants must be set in base_generator.yaml")
+        self._vowels = set(vowels)
+        self._consonants = set(consonants)
+        self._silent_e_min = cfg.get('silent_e_min_count')
+        if self._silent_e_min is None:
+            raise ValueError("base_generator.syllable_analyzer.silent_e_min_count must be set in base_generator.yaml")
+        self._stress_cfg = cfg.get('stress', {}) or {}
+        self._weight_cfg = cfg.get('weight', {}) or {}
 
     def analyze(self, name: str) -> SyllableInfo:
         """
@@ -422,13 +453,13 @@ class SyllableAnalyzer:
         prev_vowel = False
 
         for char in word:
-            is_vowel = char in self.VOWELS
+            is_vowel = char in self._vowels
             if is_vowel and not prev_vowel:
                 count += 1
             prev_vowel = is_vowel
 
         # Handle silent e
-        if word.endswith('e') and count > 1:
+        if word.endswith('e') and count >= int(self._silent_e_min):
             count -= 1
 
         return max(1, count)
@@ -447,14 +478,16 @@ class SyllableAnalyzer:
             # Most 2-syllable words are trochaic (STRONG-weak)
             # Exceptions: words ending in -tion, -sion, -ic
             word_lower = word.lower()
-            if any(word_lower.endswith(s) for s in ['tion', 'sion', 'ic', 'ique']):
+            two_syllable = _require_cfg(self._stress_cfg, 'two_syllable_weak_suffixes', 'base_generator.syllable_analyzer.stress')
+            if any(word_lower.endswith(s) for s in two_syllable):
                 return "weak-STRONG"
             return "STRONG-weak"
 
         if syllable_count == 3:
             word_lower = word.lower()
             # Latin-style words often have penultimate stress
-            if any(word_lower.endswith(s) for s in ['ius', 'ium', 'ial', 'ian']):
+            three_syllable = _require_cfg(self._stress_cfg, 'three_syllable_penultimate_suffixes', 'base_generator.syllable_analyzer.stress')
+            if any(word_lower.endswith(s) for s in three_syllable):
                 return "weak-STRONG-weak"
             return "STRONG-weak-weak"
 
@@ -475,14 +508,16 @@ class SyllableAnalyzer:
         # Count final consonant cluster
         final_consonants = 0
         for char in reversed(word_lower):
-            if char in self.CONSONANTS:
+            if char in self._consonants:
                 final_consonants += 1
             else:
                 break
 
-        if final_consonants >= 2:
+        superheavy_min = int(_require_cfg(self._weight_cfg, 'superheavy_min', 'base_generator.syllable_analyzer.weight'))
+        heavy_min = int(_require_cfg(self._weight_cfg, 'heavy_min', 'base_generator.syllable_analyzer.weight'))
+        if final_consonants >= superheavy_min:
             return 'superheavy'
-        elif final_consonants == 1:
+        elif final_consonants >= heavy_min:
             return 'heavy'
         else:
             return 'light'
@@ -515,6 +550,8 @@ class PhonaestheticsEngine:
 
     def __init__(self):
         self._config = load_phonaesthemes()
+        base_cfg = load_base_generator_config().get('phonaesthetics', {}) or {}
+        self._score_cfg = base_cfg.get('archetype_scoring', {}) or {}
 
     def get_sounds_for_archetype(self, archetype: str) -> Dict[str, List[str]]:
         """Get preferred sounds for a given brand archetype."""
@@ -544,33 +581,39 @@ class PhonaestheticsEngine:
         """
         sounds = self.get_sounds_for_archetype(archetype)
         if not sounds['preferred_consonants']:
-            return 0.5  # Neutral if archetype not found
+            return float(_require_cfg(self._score_cfg, 'neutral_score', 'base_generator.phonaesthetics.archetype_scoring'))
 
         name_lower = name.lower()
-        score = 0.5  # Start neutral
+        score = float(_require_cfg(self._score_cfg, 'neutral_score', 'base_generator.phonaesthetics.archetype_scoring'))
 
         # Check onset (beginning)
         for onset in sounds['preferred_onsets']:
             if name_lower.startswith(onset):
-                score += 0.15
+                score += float(_require_cfg(self._score_cfg, 'onset_bonus', 'base_generator.phonaesthetics.archetype_scoring'))
                 break
 
         for onset in sounds['avoid_onsets']:
             if name_lower.startswith(onset):
-                score -= 0.15
+                score += float(_require_cfg(self._score_cfg, 'onset_penalty', 'base_generator.phonaesthetics.archetype_scoring'))
                 break
 
         # Check consonants
         preferred_count = sum(1 for c in name_lower if c in sounds['preferred_consonants'])
         avoid_count = sum(1 for c in name_lower if c in sounds.get('avoid_consonants', []))
 
-        score += min(preferred_count * 0.05, 0.2)
-        score -= min(avoid_count * 0.05, 0.2)
+        consonant_bonus_per = float(_require_cfg(self._score_cfg, 'consonant_bonus_per', 'base_generator.phonaesthetics.archetype_scoring'))
+        consonant_bonus_cap = float(_require_cfg(self._score_cfg, 'consonant_bonus_cap', 'base_generator.phonaesthetics.archetype_scoring'))
+        consonant_penalty_per = float(_require_cfg(self._score_cfg, 'consonant_penalty_per', 'base_generator.phonaesthetics.archetype_scoring'))
+        consonant_penalty_cap = float(_require_cfg(self._score_cfg, 'consonant_penalty_cap', 'base_generator.phonaesthetics.archetype_scoring'))
+        score += min(preferred_count * consonant_bonus_per, consonant_bonus_cap)
+        score -= min(avoid_count * consonant_penalty_per, consonant_penalty_cap)
 
         # Check vowels
         preferred_vowels = set(sounds['preferred_vowels'])
         vowel_match = sum(1 for c in name_lower if c in preferred_vowels)
-        score += min(vowel_match * 0.03, 0.15)
+        vowel_bonus_per = float(_require_cfg(self._score_cfg, 'vowel_bonus_per', 'base_generator.phonaesthetics.archetype_scoring'))
+        vowel_bonus_cap = float(_require_cfg(self._score_cfg, 'vowel_bonus_cap', 'base_generator.phonaesthetics.archetype_scoring'))
+        score += min(vowel_match * vowel_bonus_per, vowel_bonus_cap)
 
         return min(max(score, 0.0), 1.0)
 
@@ -672,6 +715,9 @@ class MemorabilityScorer:
         self._hazard_checker = HazardChecker()
         self._syllable_analyzer = SyllableAnalyzer()
         self._phonaesthetics = PhonaestheticsEngine()
+        self._cfg = load_base_generator_config().get('memorability', {}) or {}
+        if not self._cfg:
+            raise ValueError("base_generator.memorability must be set in base_generator.yaml")
 
     def score(self, name: str, archetype: str = None, industry: str = None) -> Dict[str, float]:
         """
@@ -698,33 +744,21 @@ class MemorabilityScorer:
 
         # Hazard penalty
         hazard_result = self._hazard_checker.check(name)
-        if hazard_result.severity == 'critical':
-            scores['hazard_penalty'] = -0.5
-        elif hazard_result.severity == 'high':
-            scores['hazard_penalty'] = -0.3
-        elif hazard_result.severity == 'medium':
-            scores['hazard_penalty'] = -0.1
-        else:
-            scores['hazard_penalty'] = 0.0
+        hazard_penalties = _require_cfg(self._cfg, 'hazard_penalties', 'base_generator.memorability')
+        if hazard_result.severity not in hazard_penalties:
+            raise ValueError("base_generator.memorability.hazard_penalties must include all severities")
+        scores['hazard_penalty'] = float(hazard_penalties[hazard_result.severity])
 
         # Archetype fit
         if archetype:
             scores['archetype_fit'] = self._phonaesthetics.score_for_archetype(name, archetype)
         else:
-            scores['archetype_fit'] = 0.5
+            scores['archetype_fit'] = float(_require_cfg(self._cfg, 'archetype_default', 'base_generator.memorability'))
 
         # Calculate overall
-        weights = {
-            'pronounceability': 0.25,
-            'length': 0.15,
-            'distinctiveness': 0.15,
-            'rhythm': 0.10,
-            'visual': 0.10,
-            'archetype_fit': 0.15,
-            'hazard_penalty': 0.10
-        }
+        weights = _require_cfg(self._cfg, 'weights', 'base_generator.memorability')
 
-        overall = sum(scores[k] * weights.get(k, 0.1) for k in scores if k != 'hazard_penalty')
+        overall = sum(scores[k] * weights.get(k, 0.0) for k in scores if k != 'hazard_penalty')
         overall += scores['hazard_penalty']
         scores['overall'] = min(max(overall, 0.0), 1.0)
 
@@ -736,104 +770,129 @@ class MemorabilityScorer:
         name_lower = name.lower()
 
         # Penalty for difficult clusters
-        difficult = ['tsch', 'dsch', 'szcz', 'cks', 'phr', 'thr']
+        pronounce_cfg = _require_cfg(self._cfg, 'pronounceability', 'base_generator.memorability')
+        difficult = _require_cfg(pronounce_cfg, 'difficult_clusters', 'base_generator.memorability.pronounceability')
+        cluster_penalty = float(_require_cfg(pronounce_cfg, 'cluster_penalty', 'base_generator.memorability.pronounceability'))
         for d in difficult:
             if d in name_lower:
-                score -= 0.15
+                score += cluster_penalty
 
         # Penalty for double vowels
-        for v in 'aeiou':
+        vowel_chars = _require_cfg(pronounce_cfg, 'vowel_chars', 'base_generator.memorability.pronounceability')
+        double_vowel_penalty = float(_require_cfg(pronounce_cfg, 'double_vowel_penalty', 'base_generator.memorability.pronounceability'))
+        for v in vowel_chars:
             if v + v in name_lower:
-                score -= 0.4
+                score += double_vowel_penalty
 
         # Penalty for triple consonants
-        consonants = 'bcdfghjklmnpqrstvwxyz'
+        consonants = _require_cfg(pronounce_cfg, 'consonant_chars', 'base_generator.memorability.pronounceability')
+        triple_penalty = float(_require_cfg(pronounce_cfg, 'triple_consonant_penalty', 'base_generator.memorability.pronounceability'))
         for i in range(len(name_lower) - 2):
             if all(c in consonants for c in name_lower[i:i+3]):
-                score -= 0.2
+                score += triple_penalty
                 break
 
         return max(score, 0.0)
 
     def _score_length(self, name: str) -> float:
         """Score name length (ideal is 5-7 characters)."""
+        length_cfg = _require_cfg(self._cfg, 'length', 'base_generator.memorability')
+        scores_cfg = _require_cfg(length_cfg, 'scores', 'base_generator.memorability.length')
         length = len(name)
-        if 5 <= length <= 7:
-            return 1.0
-        elif 4 <= length <= 8:
-            return 0.8
-        elif 3 <= length <= 9:
-            return 0.6
-        else:
-            return 0.4
+        ideal_min = int(_require_cfg(length_cfg, 'ideal_min', 'base_generator.memorability.length'))
+        ideal_max = int(_require_cfg(length_cfg, 'ideal_max', 'base_generator.memorability.length'))
+        good_min = int(_require_cfg(length_cfg, 'good_min', 'base_generator.memorability.length'))
+        good_max = int(_require_cfg(length_cfg, 'good_max', 'base_generator.memorability.length'))
+        ok_min = int(_require_cfg(length_cfg, 'ok_min', 'base_generator.memorability.length'))
+        ok_max = int(_require_cfg(length_cfg, 'ok_max', 'base_generator.memorability.length'))
+
+        if ideal_min <= length <= ideal_max:
+            return float(_require_cfg(scores_cfg, 'ideal', 'base_generator.memorability.length.scores'))
+        if good_min <= length <= good_max:
+            return float(_require_cfg(scores_cfg, 'good', 'base_generator.memorability.length.scores'))
+        if ok_min <= length <= ok_max:
+            return float(_require_cfg(scores_cfg, 'ok', 'base_generator.memorability.length.scores'))
+        return float(_require_cfg(scores_cfg, 'too_long', 'base_generator.memorability.length.scores'))
 
     def _score_distinctiveness(self, name: str) -> float:
         """Score uniqueness/distinctiveness of sound patterns."""
-        score = 0.5
+        distinct_cfg = _require_cfg(self._cfg, 'distinctiveness', 'base_generator.memorability')
+        score = float(_require_cfg(distinct_cfg, 'base_score', 'base_generator.memorability.distinctiveness'))
         name_lower = name.lower()
 
         # Bonus for unique letter combinations
         unique_chars = len(set(name_lower))
         char_ratio = unique_chars / len(name_lower) if name_lower else 0
-        score += char_ratio * 0.3
+        score += char_ratio * float(_require_cfg(distinct_cfg, 'unique_char_weight', 'base_generator.memorability.distinctiveness'))
 
         # Bonus for interesting onsets
-        interesting_onsets = ['kr', 'tr', 'st', 'br', 'pr', 'gl', 'fl', 'sp']
+        interesting_onsets = _require_cfg(distinct_cfg, 'interesting_onsets', 'base_generator.memorability.distinctiveness')
+        onset_bonus = float(_require_cfg(distinct_cfg, 'interesting_onset_bonus', 'base_generator.memorability.distinctiveness'))
         for onset in interesting_onsets:
             if name_lower.startswith(onset):
-                score += 0.1
+                score += onset_bonus
                 break
 
         # Bonus for memorable endings
-        memorable_endings = ['ix', 'ex', 'on', 'ar', 'or', 'a', 'ia']
+        memorable_endings = _require_cfg(distinct_cfg, 'memorable_endings', 'base_generator.memorability.distinctiveness')
+        ending_bonus = float(_require_cfg(distinct_cfg, 'memorable_ending_bonus', 'base_generator.memorability.distinctiveness'))
         for ending in memorable_endings:
             if name_lower.endswith(ending):
-                score += 0.1
+                score += ending_bonus
                 break
 
-        return min(score, 1.0)
+        return min(score, float(_require_cfg(distinct_cfg, 'max_score', 'base_generator.memorability.distinctiveness')))
 
     def _score_rhythm(self, name: str) -> float:
         """Score rhythmic quality."""
         info = self._syllable_analyzer.analyze(name)
 
         # 2-3 syllables is ideal
-        if info.count in [2, 3]:
-            score = 1.0
+        rhythm_cfg = _require_cfg(self._cfg, 'rhythm', 'base_generator.memorability')
+        syllable_scores = _require_cfg(rhythm_cfg, 'syllable_scores', 'base_generator.memorability.rhythm')
+        if info.count in (2, 3):
+            score = float(_require_cfg(syllable_scores, str(info.count), 'base_generator.memorability.rhythm.syllable_scores'))
         elif info.count == 1:
-            score = 0.7
+            score = float(_require_cfg(syllable_scores, '1', 'base_generator.memorability.rhythm.syllable_scores'))
         elif info.count == 4:
-            score = 0.6
+            score = float(_require_cfg(syllable_scores, '4', 'base_generator.memorability.rhythm.syllable_scores'))
         else:
-            score = 0.4
+            score = float(_require_cfg(syllable_scores, 'default', 'base_generator.memorability.rhythm.syllable_scores'))
 
         # Bonus for trochaic rhythm (most natural in English/German)
         if info.rhythm_type == 'trochaic':
-            score += 0.1
+            score += float(_require_cfg(rhythm_cfg, 'trochaic_bonus', 'base_generator.memorability.rhythm'))
 
-        return min(score, 1.0)
+        return min(score, float(_require_cfg(rhythm_cfg, 'max_score', 'base_generator.memorability.rhythm')))
 
     def _score_visual(self, name: str) -> float:
         """Score visual balance of the written name."""
-        score = 1.0
+        visual_cfg = _require_cfg(self._cfg, 'visual', 'base_generator.memorability')
+        score = float(_require_cfg(visual_cfg, 'base_score', 'base_generator.memorability.visual'))
 
         # Count ascenders (b, d, f, h, k, l, t) and descenders (g, j, p, q, y)
-        ascenders = sum(1 for c in name.lower() if c in 'bdfhklt')
-        descenders = sum(1 for c in name.lower() if c in 'gjpqy')
+        ascenders_chars = _require_cfg(visual_cfg, 'ascenders', 'base_generator.memorability.visual')
+        descenders_chars = _require_cfg(visual_cfg, 'descenders', 'base_generator.memorability.visual')
+        ascenders = sum(1 for c in name.lower() if c in ascenders_chars)
+        descenders = sum(1 for c in name.lower() if c in descenders_chars)
 
         # Balanced is good
         if ascenders > 0 and descenders > 0:
-            score += 0.1
+            score += float(_require_cfg(visual_cfg, 'balanced_bonus', 'base_generator.memorability.visual'))
 
         # Too many of either is visually heavy
-        if ascenders > 3 or descenders > 2:
-            score -= 0.1
+        ascender_heavy = int(_require_cfg(visual_cfg, 'ascender_heavy_threshold', 'base_generator.memorability.visual'))
+        descender_heavy = int(_require_cfg(visual_cfg, 'descender_heavy_threshold', 'base_generator.memorability.visual'))
+        if ascenders > ascender_heavy or descenders > descender_heavy:
+            score += float(_require_cfg(visual_cfg, 'heavy_penalty', 'base_generator.memorability.visual'))
 
         # X, K, V are visually distinctive
-        distinctive = sum(1 for c in name.lower() if c in 'xkvz')
-        score += distinctive * 0.05
+        distinctive_letters = _require_cfg(visual_cfg, 'distinctive_letters', 'base_generator.memorability.visual')
+        distinctive_bonus = float(_require_cfg(visual_cfg, 'distinctive_bonus_per', 'base_generator.memorability.visual'))
+        distinctive = sum(1 for c in name.lower() if c in distinctive_letters)
+        score += distinctive * distinctive_bonus
 
-        return min(max(score, 0.0), 1.0)
+        return min(max(score, 0.0), float(_require_cfg(visual_cfg, 'max_score', 'base_generator.memorability.visual')))
 
 
 # =============================================================================
@@ -859,6 +918,14 @@ class CulturalGenerator(ABC):
         self._entropy = EntropyEngine()
 
         self.culture = culture
+        self._base_cfg = load_base_generator_config()
+        self._gen_cfg = self._base_cfg.get('cultural_generator', {}) or {}
+        if not self._gen_cfg:
+            raise ValueError("base_generator.cultural_generator must be set in base_generator.yaml")
+        self._defaults_cfg = self._gen_cfg.get('defaults', {}) or {}
+        self._connector_cfg = self._gen_cfg.get('connector', {}) or {}
+        if not self._connector_cfg.get('vowel_vowel') or not self._connector_cfg.get('consonant_consonant'):
+            raise ValueError("base_generator.cultural_generator.connector lists must be set in base_generator.yaml")
         self._config = load_culture_config(culture)
         self._hazard_checker = HazardChecker()
         self._syllable_analyzer = SyllableAnalyzer()
@@ -881,14 +948,15 @@ class CulturalGenerator(ABC):
         return all_roots
 
     def generate(self,
-                 count: int = 20,
+                 count: int = None,
                  categories: List[str] = None,
                  archetype: str = None,
                  industry: str = None,
-                 min_length: int = 4,
-                 max_length: int = 9,
+                 min_length: int = None,
+                 max_length: int = None,
                  check_hazards: bool = True,
-                 markets: List[str] = None) -> List[GeneratedName]:
+                 markets: List[str] = None,
+                 phonetic_markets: str = "en_de") -> List[GeneratedName]:
         """
         Generate brand names.
 
@@ -916,6 +984,15 @@ class CulturalGenerator(ABC):
         list[GeneratedName]
             Generated names sorted by score
         """
+        if count is None:
+            count = _require_cfg(self._gen_cfg, 'default_count', 'base_generator.cultural_generator')
+        if min_length is None:
+            min_length = _require_cfg(self._gen_cfg, 'default_min_length', 'base_generator.cultural_generator')
+        if max_length is None:
+            max_length = _require_cfg(self._gen_cfg, 'default_max_length', 'base_generator.cultural_generator')
+        if count is None or min_length is None or max_length is None:
+            raise ValueError("base_generator.cultural_generator defaults must be set in base_generator.yaml")
+
         # Get industry preferences if specified
         if industry:
             profile = self._industry_manager.get_profile(industry)
@@ -928,7 +1005,8 @@ class CulturalGenerator(ABC):
 
         names = []
         attempts = 0
-        max_attempts = count * 20
+        max_attempts_multiplier = _require_cfg(self._gen_cfg, 'max_attempts_multiplier', 'base_generator.cultural_generator')
+        max_attempts = count * int(max_attempts_multiplier)
         seen = set()
 
         while len(names) < count and attempts < max_attempts:
@@ -950,17 +1028,28 @@ class CulturalGenerator(ABC):
                 continue
             seen.add(name_str.lower())
 
+            # Pronounceability (EN/DE hard gate)
+            try:
+                from .phonemes import is_pronounceable
+                ok, _ = is_pronounceable(name_str, markets=phonetic_markets)
+                if not ok:
+                    continue
+            except Exception:
+                pass
+
             # Hazard check
             hazards = []
             if check_hazards:
                 hazard_result = self._hazard_checker.check(name_str, markets)
-                if hazard_result.severity in ['high', 'critical']:
+                hazard_block_levels = set(_require_cfg(self._gen_cfg, 'hazard_block_levels', 'base_generator.cultural_generator'))
+                if hazard_result.severity in hazard_block_levels:
                     continue
                 hazards = hazard_result.issues
 
             # Score
             scores = self._memorability.score(name_str, archetype, industry)
-            if scores['overall'] < 0.5:
+            min_mem = _require_cfg(self._gen_cfg, 'min_memorability_score', 'base_generator.cultural_generator')
+            if scores['overall'] < float(min_mem):
                 continue
 
             # Syllable analysis
@@ -1018,7 +1107,8 @@ class CulturalGenerator(ABC):
             items = suffixes.get(stype, [])
             # Filter out non-string values (YAML may parse 'on' as boolean True)
             pool.extend(s for s in items if isinstance(s, str))
-        return pool if pool else ['a', 'o', 'er', 'en']
+        default_suffixes = _require_cfg(self._defaults_cfg, 'suffixes', 'base_generator.cultural_generator.defaults')
+        return pool if pool else list(default_suffixes)
 
     def _get_prefixes(self) -> List[str]:
         """Get prefix pool."""
@@ -1026,30 +1116,33 @@ class CulturalGenerator(ABC):
         pool = []
         for ptype, plist in prefixes.items():
             pool.extend(plist)
-        return pool if pool else ['', '', '']
+        default_prefixes = _require_cfg(self._defaults_cfg, 'prefixes', 'base_generator.cultural_generator.defaults')
+        return pool if pool else list(default_prefixes)
 
     def _get_consonants(self, ctype: str = 'all') -> List[str]:
         """Get consonants from phonetics config."""
         phonetics = self._config.get('phonetics', {})
         consonants = phonetics.get('consonants', {})
-        return list(consonants.get(ctype, consonants.get('all', list('bcdfghjklmnpqrstvwxyz'))))
+        default_consonants = _require_cfg(self._defaults_cfg, 'consonants', 'base_generator.cultural_generator.defaults')
+        return list(consonants.get(ctype, consonants.get('all', list(default_consonants))))
 
     def _get_vowels(self, vtype: str = 'all') -> List[str]:
         """Get vowels from phonetics config."""
         phonetics = self._config.get('phonetics', {})
         vowels = phonetics.get('vowels', {})
-        return list(vowels.get(vtype, vowels.get('all', list('aeiou'))))
+        default_vowels = _require_cfg(self._defaults_cfg, 'vowels', 'base_generator.cultural_generator.defaults')
+        return list(vowels.get(vtype, vowels.get('all', list(default_vowels))))
 
     def _get_connector(self, root_end: str, suffix_start: str) -> str:
         """Get appropriate connector between root and suffix."""
-        vowels = 'aeiou'
+        vowels = _require_cfg(self._connector_cfg, 'vowels', 'base_generator.cultural_generator.connector')
         is_root_vowel = root_end in vowels
         is_suffix_vowel = suffix_start in vowels
 
         if is_root_vowel and is_suffix_vowel:
-            return self._rng.choice(['n', 'r', 'l', 's', 'x', 't', 'm'])
+            return self._rng.choice(_require_cfg(self._connector_cfg, 'vowel_vowel', 'base_generator.cultural_generator.connector'))
         elif not is_root_vowel and not is_suffix_vowel:
-            return self._rng.choice(['a', 'i', 'o', 'e', 'u'])
+            return self._rng.choice(_require_cfg(self._connector_cfg, 'consonant_consonant', 'base_generator.cultural_generator.connector'))
         return ''
 
 
@@ -1069,17 +1162,28 @@ class CultureBlender:
         self._memorability = MemorabilityScorer()
         self._rng = get_rng()
         self._entropy = EntropyEngine()
+        self._cfg = load_base_generator_config().get('culture_blender', {}) or {}
+        if not self._cfg:
+            raise ValueError("base_generator.culture_blender must be set in base_generator.yaml")
+        connector_cfg = self._cfg.get('connector', {}) or {}
+        if not connector_cfg.get('vowel_vowel') or not connector_cfg.get('consonant_consonant'):
+            raise ValueError("base_generator.culture_blender.connector lists must be set in base_generator.yaml")
 
     def blend(self,
-              count: int = 20,
+              count: int = None,
               archetype: str = None,
               check_hazards: bool = True) -> List[GeneratedName]:
         """
         Generate blended names from multiple cultures.
         """
+        if count is None:
+            count = _require_cfg(self._cfg, 'default_count', 'base_generator.culture_blender')
+        if count is None:
+            raise ValueError("base_generator.culture_blender.default_count must be set in base_generator.yaml")
         names = []
         attempts = 0
-        max_attempts = count * 20
+        max_attempts_multiplier = _require_cfg(self._cfg, 'max_attempts_multiplier', 'base_generator.culture_blender')
+        max_attempts = count * int(max_attempts_multiplier)
         seen = set()
 
         while len(names) < count and attempts < max_attempts:
@@ -1116,31 +1220,40 @@ class CultureBlender:
             suffix = self._rng.choice(all_suffixes)
 
             # Truncate root at variable point for more variance
-            if len(root) > 5:
-                cut_point = self._rng.randint(3, min(5, len(root)))
+            truncate_cfg = _require_cfg(self._cfg, 'truncate_root', 'base_generator.culture_blender')
+            trunc_min_len = int(_require_cfg(truncate_cfg, 'min_length', 'base_generator.culture_blender.truncate_root'))
+            if len(root) > trunc_min_len:
+                cut_min = int(_require_cfg(truncate_cfg, 'cut_min', 'base_generator.culture_blender.truncate_root'))
+                cut_max = int(_require_cfg(truncate_cfg, 'cut_max', 'base_generator.culture_blender.truncate_root'))
+                cut_point = self._rng.randint(cut_min, min(cut_max, len(root)))
                 root = root[:cut_point]
 
             # Build name with optional morphological operations
-            vowels = 'aeiou'
+            connector_cfg = _require_cfg(self._cfg, 'connector', 'base_generator.culture_blender')
+            vowels = _require_cfg(connector_cfg, 'vowels', 'base_generator.culture_blender.connector')
             if root[-1] in vowels and suffix[0] in vowels:
-                connector = self._rng.choice(['n', 'r', 'l', 's', 'x', 't'])
+                connector = self._rng.choice(_require_cfg(connector_cfg, 'vowel_vowel', 'base_generator.culture_blender.connector'))
             elif root[-1] not in vowels and suffix[0] not in vowels:
-                connector = self._rng.choice(['a', 'i', 'o', 'e', 'u'])
+                connector = self._rng.choice(_require_cfg(connector_cfg, 'consonant_consonant', 'base_generator.culture_blender.connector'))
             else:
                 connector = ''
 
             name_str = root + connector + suffix
 
             # Apply random morphological operation (20% chance)
-            if self._rng.random() < 0.2:
-                op = self._rng.choice(['mutate', 'metathesis', 'none'])
+            morph_cfg = _require_cfg(self._cfg, 'morphology', 'base_generator.culture_blender')
+            if self._rng.random() < float(_require_cfg(morph_cfg, 'apply_probability', 'base_generator.culture_blender.morphology')):
+                op = self._rng.choice(_require_cfg(morph_cfg, 'operations', 'base_generator.culture_blender.morphology'))
                 if op == 'mutate':
-                    name_str = self._entropy.mutate(name_str, intensity=0.2)
+                    name_str = self._entropy.mutate(name_str, intensity=float(_require_cfg(morph_cfg, 'mutate_intensity', 'base_generator.culture_blender.morphology')))
                 elif op == 'metathesis':
                     name_str = self._entropy.morphology.metathesis(name_str)
 
             # Checks
-            if len(name_str) < 4 or len(name_str) > 9:
+            length_cfg = _require_cfg(self._cfg, 'length', 'base_generator.culture_blender')
+            min_len = int(_require_cfg(length_cfg, 'min', 'base_generator.culture_blender.length'))
+            max_len = int(_require_cfg(length_cfg, 'max', 'base_generator.culture_blender.length'))
+            if len(name_str) < min_len or len(name_str) > max_len:
                 continue
 
             if name_str.lower() in seen:
@@ -1149,11 +1262,13 @@ class CultureBlender:
 
             if check_hazards:
                 hazard_result = self._hazard_checker.check(name_str)
-                if hazard_result.severity in ['high', 'critical']:
+                hazard_block_levels = set(_require_cfg(self._cfg, 'hazard_block_levels', 'base_generator.culture_blender'))
+                if hazard_result.severity in hazard_block_levels:
                     continue
 
             scores = self._memorability.score(name_str, archetype)
-            if scores['overall'] < 0.5:
+            min_mem = _require_cfg(self._cfg, 'min_memorability_score', 'base_generator.culture_blender')
+            if scores['overall'] < float(min_mem):
                 continue
 
             names.append(GeneratedName(
@@ -1181,6 +1296,9 @@ class CompetitiveDifferentiator:
 
     def __init__(self, competitors: List[str] = None):
         self.competitors = [c.lower() for c in (competitors or [])]
+        self._cfg = load_base_generator_config().get('competitive_differentiator', {}) or {}
+        if not self._cfg:
+            raise ValueError("base_generator.competitive_differentiator must be set in base_generator.yaml")
         self._build_competitor_patterns()
 
     def _build_competitor_patterns(self):
@@ -1189,23 +1307,23 @@ class CompetitiveDifferentiator:
         self.competitor_endings = set()
         self.competitor_sounds = set()
 
+        onset_lengths = _require_cfg(self._cfg, 'onset_lengths', 'base_generator.competitive_differentiator')
+        ending_lengths = _require_cfg(self._cfg, 'ending_lengths', 'base_generator.competitive_differentiator')
         for comp in self.competitors:
-            # Capture first 2-3 chars
-            if len(comp) >= 2:
-                self.competitor_onsets.add(comp[:2])
-            if len(comp) >= 3:
-                self.competitor_onsets.add(comp[:3])
+            # Capture first N chars
+            for length in onset_lengths:
+                if len(comp) >= int(length):
+                    self.competitor_onsets.add(comp[:int(length)])
 
-            # Capture last 2-3 chars
-            if len(comp) >= 2:
-                self.competitor_endings.add(comp[-2:])
-            if len(comp) >= 3:
-                self.competitor_endings.add(comp[-3:])
+            # Capture last N chars
+            for length in ending_lengths:
+                if len(comp) >= int(length):
+                    self.competitor_endings.add(comp[-int(length):])
 
             # Add all characters
             self.competitor_sounds.update(comp)
 
-    def is_distinct(self, name: str, threshold: float = 0.5) -> bool:
+    def is_distinct(self, name: str, threshold: float = None) -> bool:
         """
         Check if name is sufficiently distinct from competitors.
 
@@ -1214,30 +1332,38 @@ class CompetitiveDifferentiator:
         if not self.competitors:
             return True
 
+        if threshold is None:
+            threshold = _require_cfg(self._cfg, 'default_threshold', 'base_generator.competitive_differentiator')
+
         name_lower = name.lower()
         similarity_score = 0.0
+        weights = _require_cfg(self._cfg, 'weights', 'base_generator.competitive_differentiator')
+        onset_weight = float(_require_cfg(weights, 'onset', 'base_generator.competitive_differentiator.weights'))
+        ending_weight = float(_require_cfg(weights, 'ending', 'base_generator.competitive_differentiator.weights'))
+        overlap_weight = float(_require_cfg(weights, 'overlap', 'base_generator.competitive_differentiator.weights'))
+        substring_weight = float(_require_cfg(weights, 'substring', 'base_generator.competitive_differentiator.weights'))
 
         # Check onset similarity
         for onset in self.competitor_onsets:
             if name_lower.startswith(onset):
-                similarity_score += 0.3
+                similarity_score += onset_weight
                 break
 
         # Check ending similarity
         for ending in self.competitor_endings:
             if name_lower.endswith(ending):
-                similarity_score += 0.2
+                similarity_score += ending_weight
                 break
 
         # Check overall character overlap
         name_chars = set(name_lower)
         overlap = len(name_chars & self.competitor_sounds) / len(name_chars) if name_chars else 0
-        similarity_score += overlap * 0.3
+        similarity_score += overlap * overlap_weight
 
         # Check direct substring matches
         for comp in self.competitors:
             if comp in name_lower or name_lower in comp:
-                similarity_score += 0.4
+                similarity_score += substring_weight
                 break
 
         return similarity_score < threshold
@@ -1271,5 +1397,6 @@ __all__ = [
     'load_phonaesthemes',
     'load_hazards',
     'load_industries',
+    'load_base_generator_config',
     'load_culture_config',
 ]

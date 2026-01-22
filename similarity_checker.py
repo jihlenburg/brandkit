@@ -11,56 +11,23 @@ from dataclasses import dataclass
 from typing import Optional
 import re
 
+from settings import get_setting
 
-# Known brands that we should avoid sounding similar to
-KNOWN_BRANDS = {
-    # Camping/RV
-    'dometic', 'truma', 'fiamma', 'thule', 'webasto', 'campingaz',
-    'coleman', 'outwell', 'vango', 'karcher', 'waeco', 'mobicool',
+def _load_known_brands() -> set[str]:
+    brands = get_setting("similarity_checker.known_brands")
+    if not brands:
+        raise ValueError("similarity_checker.known_brands must be set in app.yaml")
+    return set(b.lower() for b in brands)
 
-    # Energy/Power
-    'victron', 'renogy', 'ecoflow', 'bluetti', 'jackery', 'goalzero',
-    'anker', 'duracell', 'energizer', 'varta', 'bosch', 'makita',
-    'dewalt', 'milwaukee', 'ryobi', 'festool', 'metabo', 'hilti',
 
-    # Tech Giants
-    'tesla', 'apple', 'samsung', 'sony', 'panasonic', 'philips',
-    'siemens', 'miele', 'braun', 'dyson', 'bose', 'harman',
-
-    # Automotive
-    'volkswagen', 'mercedes', 'bmw', 'audi', 'porsche', 'volvo',
-    'ford', 'toyota', 'honda', 'mazda', 'nissan', 'hyundai',
-
-    # Well-known consumer brands
-    'amazon', 'google', 'microsoft', 'facebook', 'netflix', 'spotify',
-    'nike', 'adidas', 'puma', 'reebok', 'asics', 'fila',
-    'coca', 'pepsi', 'nestle', 'kraft', 'heinz', 'unilever',
-
-    # Potentially confusing with our domain
-    'voltron', 'volton', 'voltex', 'voltaic', 'voltage',
-    'solaris', 'solar', 'solarex', 'sunpower', 'sunrun',
-    'flux', 'fluxus', 'flexon', 'fluxx',
-    'trek', 'trekking', 'tracker',
-    'windex', 'windows', 'windstream',
-    'ampex', 'ampere', 'amplitude',
-    'luxor', 'luxus', 'luxury',
-    'nomad', 'nomadic',
-    'aurora', 'aura', 'aurum',
-    'terra', 'terrain', 'terran',
-    'aqua', 'aquafina', 'aquaman',
-    'apex', 'apexel',
-    'core', 'corel',
-    'prime', 'primus', 'primo',
-    'max', 'maxi', 'maxim',
-    'neo', 'neon',
-    'pulse', 'pulsar',
-    'spark', 'sparky',
-    'wave', 'waveform',
-    'flow', 'flowtec',
-    'link', 'lynx',
-    'sync', 'synco',
-    'hub', 'hubspot',
-}
+KNOWN_BRANDS = _load_known_brands()
+DEFAULT_THRESHOLD = get_setting("similarity_checker.default_threshold")
+PROBLEMATIC_THRESHOLD = get_setting("similarity_checker.problematic_threshold")
+DEFAULT_MARKETS = get_setting("similarity_checker.default_markets")
+TOP_MATCHES = get_setting("similarity_checker.top_matches")
+if (DEFAULT_THRESHOLD is None or PROBLEMATIC_THRESHOLD is None or
+        DEFAULT_MARKETS is None or TOP_MATCHES is None):
+    raise ValueError("similarity_checker defaults must be set in app.yaml")
 
 
 def cologne_phonetics(name: str) -> str:
@@ -409,7 +376,7 @@ class SimilarityMatch:
         return (self.soundex_match or
                 self.metaphone_match or
                 self.cologne_match or
-                self.text_similarity > 0.7)
+                self.text_similarity > PROBLEMATIC_THRESHOLD)
 
     @property
     def phonetic_match_count(self) -> int:
@@ -441,7 +408,7 @@ class SimilarityChecker:
             print(f"Too similar to: {result.similar_brands}")
     """
 
-    def __init__(self, additional_brands: set = None, markets: str = 'en_de'):
+    def __init__(self, additional_brands: set = None, markets: Optional[str] = None):
         """
         Initialize with known brands.
 
@@ -451,7 +418,7 @@ class SimilarityChecker:
                      Affects which phonetic algorithms are emphasized.
         """
         self.known_brands = KNOWN_BRANDS.copy()
-        self.markets = markets
+        self.markets = markets or DEFAULT_MARKETS
         if additional_brands:
             self.known_brands.update(b.lower() for b in additional_brands)
 
@@ -460,7 +427,7 @@ class SimilarityChecker:
         self._metaphone_cache = {b: metaphone(b) for b in self.known_brands}
         self._cologne_cache = {b: cologne_phonetics(b) for b in self.known_brands}
 
-    def check(self, name: str, threshold: float = 0.6,
+    def check(self, name: str, threshold: Optional[float] = None,
               markets: str = None) -> SimilarityResult:
         """
         Check a name for similarity to known brands.
@@ -476,6 +443,8 @@ class SimilarityChecker:
             SimilarityResult with matches found
         """
         markets = markets or self.markets
+        if threshold is None:
+            threshold = DEFAULT_THRESHOLD
         name_lower = name.lower()
         name_soundex = soundex(name)
         name_metaphone = metaphone(name)
@@ -531,7 +500,7 @@ class SimilarityChecker:
 
         return SimilarityResult(
             name=name,
-            similar_brands=matches[:5],  # Top 5 matches
+            similar_brands=matches[:int(TOP_MATCHES)],
             is_safe=is_safe,
             highest_similarity=highest_sim
         )
@@ -572,8 +541,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Check brand name similarity')
     parser.add_argument('names', nargs='+', help='Names to check')
-    parser.add_argument('--threshold', type=float, default=0.6, help='Similarity threshold')
-    parser.add_argument('--markets', choices=['en', 'de', 'en_de'], default='en_de',
+    parser.add_argument('--threshold', type=float, default=DEFAULT_THRESHOLD, help='Similarity threshold')
+    parser.add_argument('--markets', choices=['en', 'de', 'en_de'], default=DEFAULT_MARKETS,
                         help='Target market(s): en, de, or en_de (default)')
 
     args = parser.parse_args()

@@ -294,6 +294,7 @@ brands/
 │   │       ├── phonaesthemes.yaml  # Sound symbolism
 │   │       ├── hazards.yaml        # Cross-linguistic hazards
 │   │       ├── industries.yaml     # Industry profiles
+│   │       ├── base_generator.yaml # Cultural generator tuning
 │   │       └── strategies.yaml     # Phonotactics, rhythm, phonaesthetic scoring
 │   ├── checkers/                # Validation modules
 │   └── db/                      # Database modules
@@ -325,6 +326,8 @@ brandkit --help                       # Show all commands
 | `profiles` | | List Nice class profiles |
 | `industries` | | List available industries |
 | `discover` | `disc`, `d` | Automated discovery pipeline |
+| `tm-conflicts` | | Show stored trademark matches |
+| `tm-risk` | | Show high/critical trademark risk matches |
 | `reset` | | Reset database |
 
 ### Examples
