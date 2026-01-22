@@ -121,6 +121,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Codex] Tightened diversity constraints and penalties to reduce repetitive prefixes/suffixes.
 - [Codex] Moved cache directories to repo-local `data/cache` paths to avoid permission errors.
 - [Codex] Tightened quality gate thresholds and expanded rule-based syllable/ending variety to reduce homogeneity.
+- [Codex] Expanded CLI help output with a concise options guide.
+- [Codex] Added per-command help epilogs explaining key options.
+- [Codex] Added per-command help examples to CLI `-h` output.
+- [Codex] Added per-command help “See also” references to related commands.
 - Database schema cleaned up - removed 7 legacy columns:
   - Removed: `score`, `score_de`, `score_en`, `score_euphony`, `euipo_checked`, `euipo_matches`, `euipo_url`
   - Added: `score_cluster_quality`, `score_ending_quality` (previously calculated but not stored)

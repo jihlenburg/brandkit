@@ -1472,6 +1472,31 @@ def cmd_reset(args, out: Output):
 # =============================================================================
 
 def main():
+    options_guide = f"""
+Options guide:
+  --method/-m        Generation method ({", ".join(GENERATION_METHODS)})
+  --industry/-i      Industry profile ({", ".join(INDUSTRIES)})
+  --archetype/-a     Brand archetype hint (power/elegance/speed/nature/tech/trust/innovation)
+  --full/-f          Check: include trademark + domain (not just similarity)
+  --profile/-p       Trademark: Nice class profile (see `brandkit profiles`)
+  --classes/-c       Trademark: explicit Nice class list (e.g., 9,12)
+  --min-quality/-q   Discovery: minimum tier (excellent/good/acceptable/poor)
+  --target           Discovery: keep generating until N valid names found
+  --parallel         Discovery: run domain/trademark checks in parallel
+  --max-concurrent   Discovery: cap parallel checks
+  --markets          Phonetics: target market (en/de/en_de)
+Use `brandkit <command> -h` for command-specific options.
+"""
+
+    def add_parser(name, aliases, help_text, epilog_text):
+        return subparsers.add_parser(
+            name,
+            aliases=aliases,
+            help=help_text,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog=epilog_text,
+        )
+
     parser = argparse.ArgumentParser(
         prog='brandkit',
         description='Brandkit - Brand Name Generator & Validator',
@@ -1486,7 +1511,7 @@ Examples:
   %(prog)s list --available --limit 20
   %(prog)s stats
   %(prog)s discover -n 50 --method blend --profile electronics
-"""
+""" + options_guide
     )
 
     parser.add_argument('--version', '-V', action='version', version=f'%(prog)s {__version__}')
@@ -1495,7 +1520,25 @@ Examples:
     subparsers = parser.add_subparsers(dest='command', help='Commands')
 
     # --- generate ---
-    p = subparsers.add_parser('generate', aliases=['gen', 'g'], help='Generate brand names')
+    p = add_parser(
+        'generate',
+        aliases=['gen', 'g'],
+        help_text='Generate brand names',
+        epilog_text="""
+Options:
+  --method/-m     Generation method
+  --industry/-i   Industry profile
+  --archetype/-a  Brand archetype hint
+  --save/-s       Save to database
+  --verbose/-v    Include method + roots
+Examples:
+  brandkit generate -n 10 --method japanese
+  brandkit generate -n 20 --industry tech --save
+See also:
+  brandkit discover
+  brandkit list
+""",
+    )
     p.add_argument('-n', '--count', type=int, default=DEFAULT_COUNT,
                    help=f'Number of names (default: {DEFAULT_COUNT})')
     p.add_argument('--method', '-m', choices=GENERATION_METHODS, default=DEFAULT_METHOD,
@@ -1506,19 +1549,63 @@ Examples:
     p.add_argument('--verbose', '-v', action='store_true', help='Show detailed output')
 
     # --- check ---
-    p = subparsers.add_parser('check', aliases=['c'], help='Check name availability')
+    p = add_parser(
+        'check',
+        aliases=['c'],
+        help_text='Check name availability',
+        epilog_text="""
+Options:
+  --full/-f     Include trademark + domain checks
+  --profile/-p  Nice class profile
+  --classes/-c  Explicit Nice classes (e.g., 9,12)
+Examples:
+  brandkit check \"Voltix\" --full --profile camping_rv
+  brandkit check \"Voltix\" --classes 9,12
+See also:
+  brandkit tm-conflicts
+  brandkit tm-risk
+""",
+    )
     p.add_argument('name', help='Brand name to check')
     p.add_argument('--full', '-f', action='store_true', help='Full check (trademark + domain)')
     p.add_argument('--profile', '-p', help='Nice class profile')
     p.add_argument('--classes', '-c', help='Comma-separated Nice classes (e.g., 9,12)')
 
     # --- hazards ---
-    p = subparsers.add_parser('hazards', aliases=['haz', 'h'], help='Check cross-linguistic hazards')
+    p = add_parser(
+        'hazards',
+        aliases=['haz', 'h'],
+        help_text='Check cross-linguistic hazards',
+        epilog_text="""
+Options:
+  --markets/-m  Comma-separated markets (e.g., german,french,spanish)
+Examples:
+  brandkit hazards \"Gift\"
+  brandkit hazards \"Voltix\" --markets german,french
+See also:
+  brandkit check
+""",
+    )
     p.add_argument('name', help='Brand name to check')
     p.add_argument('--markets', '-m', help='Comma-separated markets (e.g., german,french,spanish)')
 
     # --- score ---
-    p = subparsers.add_parser('score', aliases=['s'], help='Get phonaesthetic score')
+    p = add_parser(
+        'score',
+        aliases=['s'],
+        help_text='Get phonaesthetic score',
+        epilog_text="""
+Options:
+  --category/-c  Category for fit scoring (tech, luxury, power, etc.)
+  --markets      Target market(s) for scoring (en/de/en_de)
+  --verbose/-v   Include rhythm analysis
+Examples:
+  brandkit score \"Lumina\"
+  brandkit score \"Voltix\" --category tech -v
+See also:
+  brandkit generate
+""",
+    )
     p.add_argument('name', help='Brand name to score')
     p.add_argument('--category', '-c', help='Category for fit scoring (tech, luxury, power, etc.)')
     p.add_argument('--markets', choices=['en', 'de', 'en_de'], default='en_de',
@@ -1526,10 +1613,34 @@ Examples:
     p.add_argument('--verbose', '-v', action='store_true', help='Show rhythm analysis')
 
     # --- stats ---
-    subparsers.add_parser('stats', help='Show database statistics')
+    add_parser('stats', aliases=[], help_text='Show database statistics', epilog_text="""
+Examples:
+  brandkit stats
+See also:
+  brandkit list
+""")
 
     # --- list ---
-    p = subparsers.add_parser('list', aliases=['ls', 'l'], help='List names from database')
+    p = add_parser(
+        'list',
+        aliases=['ls', 'l'],
+        help_text='List names from database',
+        epilog_text="""
+Options:
+  --status     Filter by status
+  --quality    Filter by quality tier
+  --available  Only names with no conflicts
+  --conflicts  Only names with conflicts
+  --limit      Max results
+  --json/-j    JSON output
+Examples:
+  brandkit list --quality excellent --limit 20
+  brandkit list --available --json
+See also:
+  brandkit stats
+  brandkit export
+""",
+    )
     p.add_argument('--status', choices=['new', 'candidate', 'shortlist', 'approved', 'rejected', 'blocked'])
     p.add_argument('--quality', choices=['excellent', 'good', 'acceptable', 'poor'])
     p.add_argument('--available', '-a', action='store_true', help='Show only available names')
@@ -1539,43 +1650,143 @@ Examples:
     p.add_argument('--json', '-j', action='store_true', help='Output as JSON')
 
     # --- export ---
-    p = subparsers.add_parser('export', help='Export database to JSON')
+    p = add_parser(
+        'export',
+        aliases=[],
+        help_text='Export database to JSON',
+        epilog_text="""
+Options:
+  --output/-o  Output file path (.json or .xlsx)
+Examples:
+  brandkit export -o names.json
+  brandkit export -o names.xlsx
+See also:
+  brandkit list
+""",
+    )
     p.add_argument('--output', '-o', help='Output file path')
 
     # --- tm-conflicts ---
-    p = subparsers.add_parser('tm-conflicts', aliases=['tmc'], help='Show trademark conflicts for review')
+    p = add_parser(
+        'tm-conflicts',
+        aliases=['tmc'],
+        help_text='Show trademark conflicts for review',
+        epilog_text="""
+Options:
+  --region/-r  Filter by region (US/EU)
+Examples:
+  brandkit tm-conflicts Voltix
+  brandkit tm-conflicts Voltix --region EU
+See also:
+  brandkit tm-risk
+""",
+    )
     p.add_argument('name', nargs='?', help='Show conflicts for specific name')
     p.add_argument('--region', '-r', choices=['US', 'EU'], help='Filter by region')
     p.set_defaults(func=cmd_tm_conflicts)
 
     # --- tm-risk ---
-    p = subparsers.add_parser('tm-risk', help='Show high/critical trademark risk matches')
+    p = add_parser(
+        'tm-risk',
+        aliases=[],
+        help_text='Show high/critical trademark risk matches',
+        epilog_text="""
+Options:
+  --limit  Max results
+Examples:
+  brandkit tm-risk --limit 20
+  brandkit tm-risk Voltix
+See also:
+  brandkit tm-conflicts
+""",
+    )
     p.add_argument('name', nargs='?', help='Show risk matches for specific name')
     p.add_argument('--limit', type=int, default=TM_RISK_LIMIT_DEFAULT,
                    help=f'Limit results (default: {TM_RISK_LIMIT_DEFAULT})')
     p.set_defaults(func=cmd_tm_risk)
 
     # --- save ---
-    p = subparsers.add_parser('save', help='Save a name to database')
+    p = add_parser(
+        'save',
+        aliases=[],
+        help_text='Save a name to database',
+        epilog_text="""
+Options:
+  --status  Initial status
+  --method  Generation method used
+Examples:
+  brandkit save \"Voltix\"
+  brandkit save \"Voltix\" --status candidate --method rule_based
+See also:
+  brandkit list
+""",
+    )
     p.add_argument('name', help='Brand name to save')
     p.add_argument('--status', default=SAVE_STATUS_DEFAULT,
                    help=f'Initial status (default: {SAVE_STATUS_DEFAULT})')
     p.add_argument('--method', help='Generation method used')
 
     # --- block ---
-    p = subparsers.add_parser('block', help='Block a name')
+    p = add_parser(
+        'block',
+        aliases=[],
+        help_text='Block a name',
+        epilog_text="""
+Options:
+  --reason/-r  Block reason
+  --notes/-n   Additional notes
+Examples:
+  brandkit block \"Voltix\" --reason negative_connotation
+  brandkit block \"Voltix\" --notes \"client rejected\"
+See also:
+  brandkit list
+""",
+    )
     p.add_argument('name', help='Brand name to block')
     p.add_argument('--reason', '-r', help='Block reason')
     p.add_argument('--notes', '-n', help='Additional notes')
 
     # --- profiles ---
-    subparsers.add_parser('profiles', help='List Nice class profiles')
+    add_parser('profiles', aliases=[], help_text='List Nice class profiles', epilog_text="""
+Examples:
+  brandkit profiles
+See also:
+  brandkit check
+""")
 
     # --- industries ---
-    subparsers.add_parser('industries', help='List available industries')
+    add_parser('industries', aliases=[], help_text='List available industries', epilog_text="""
+Examples:
+  brandkit industries
+See also:
+  brandkit generate
+""")
 
     # --- discover ---
-    p = subparsers.add_parser('discover', aliases=['disc', 'd'], help='Automated discovery pipeline')
+    p = add_parser(
+        'discover',
+        aliases=['disc', 'd'],
+        help_text='Automated discovery pipeline',
+        epilog_text="""
+Options:
+  --method/-m        Generation method
+  --profile/-p       Nice class profile
+  --target           Keep generating until N valid names found
+  --min-quality/-q   Minimum quality tier
+  --max-rounds       Max generation rounds
+  --top/-t           Top candidates per batch
+  --parallel         Parallel domain/trademark checks
+  --max-concurrent   Cap concurrent checks
+  --markets          Target market (en/de/en_de)
+  --profiling        Emit performance metrics
+  --profile-output   Save profiling JSON
+Examples:
+  brandkit discover --target 50 --min-quality excellent --parallel
+  brandkit discover -n 100 --method blend --profile electronics
+See also:
+  brandkit generate
+""",
+    )
     p.add_argument('-n', '--count', type=int, default=None,
                    help='Names per batch (default: auto based on target, or 100)')
     discover_method_default = DISCOVER_DEFAULTS.get("method", DEFAULT_METHOD)
@@ -1610,7 +1821,19 @@ Examples:
     p.add_argument('--profile-output', help='Save profiling data to JSON file')
 
     # --- reset ---
-    p = subparsers.add_parser('reset', help='Reset database (delete all data)')
+    p = add_parser(
+        'reset',
+        aliases=[],
+        help_text='Reset database (delete all data)',
+        epilog_text="""
+Options:
+  --force/-f  Skip confirmation prompt
+Examples:
+  brandkit reset --force
+See also:
+  brandkit stats
+""",
+    )
     p.add_argument('--force', '-f', action='store_true', help='Skip confirmation')
 
     # Parse
